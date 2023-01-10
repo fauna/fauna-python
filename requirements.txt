@@ -2,7 +2,7 @@
 iso8601
 requests
 future
-hyper
+httpx
 
 # dependencies required for development
 coverage

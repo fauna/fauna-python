@@ -260,7 +260,7 @@ class FaunaClient(object):
             print('| ' + msg2 + ' ' * (width - len(msg2) - 1) + '|')
             print('+' + '-' * width + '+')
 
-    def sync_last_txn_time(self, new_txn_time):
+    def sync_last_txn_time(self, new_txn_time: int):
         """
         Sync the freshest timestamp seen by this client.
 
