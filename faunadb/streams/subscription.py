@@ -8,6 +8,7 @@ class Subscription(object):
     listener functions. This class must be constructed via the FaunaClient stream
     method.
     """
+
     def __init__(self, client, expression, options=None):
         self._client = Connection(client, expression, options)
         self._dispatcher = EventDispatcher()
@@ -31,5 +32,5 @@ class Subscription(object):
         self._client.close()
 
     def __repr__(self):
-        return "stream:Subscription(state=%s, expression=%s, options=%s)"%(self._client._state,
-            self._client._query,self._client._options)
+        return "stream:Subscription(state=%s, expression=%s, options=%s)" % (
+            self._client._state, self._client._query, self._client._options)

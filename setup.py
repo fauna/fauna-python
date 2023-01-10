@@ -12,12 +12,7 @@ local_dir = path.abspath(path.dirname(__file__))
 with open(path.join(local_dir, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
-requires = [
-    "iso8601",
-    "requests",
-    "future",
-    "hyper"
-]
+requires = ["iso8601", "requests", "future", "hyper"]
 
 tests_requires = [
     "nose2",

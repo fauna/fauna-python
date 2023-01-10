@@ -1,4 +1,3 @@
-
 from faunadb._json import parse_json_or_none
 from faunadb.errors import BadRequest, PermissionDenied
 
@@ -34,13 +33,16 @@ class Event(object):
     """
     A stream event.
     """
+
     def __init__(self, event_type):
         self.type = event_type
+
 
 class ProtocolEvent(Event):
     """
     Stream protocol event.
     """
+
     def __init__(self, event_type):
         super(ProtocolEvent, self).__init__(event_type)
 
@@ -54,19 +56,22 @@ class Start(ProtocolEvent):
     :param data: Data
     :param txn: Timestamp
     """
+
     def __init__(self, parsed):
         super(Start, self).__init__('start')
         self.event = parsed['event']
         self.txn = parsed['txn']
 
     def __repr__(self):
-        return "stream:event:Start(event=%s, txn=%d)"%(self.event, self.txn)
+        return "stream:event:Start(event=%s, txn=%d)" % (self.event, self.txn)
+
 
 class Error(ProtocolEvent):
     """
     An error event is fired both for client and server errors that may occur as
     a result of a subscription.
     """
+
     def __init__(self, parsed):
         super(Error, self).__init__('error')
         self.error = None
@@ -86,7 +91,8 @@ class Error(ProtocolEvent):
             self.error = parsed
 
     def __repr__(self):
-        return "stream:event:Error(%s)"%(self.error)
+        return "stream:event:Error(%s)" % (self.error)
+
 
 class HistoryRewrite(Event):
     """
@@ -96,6 +102,7 @@ class HistoryRewrite(Event):
     :param data:  Data
     :param txn: Timestamp
     """
+
     def __init__(self, parsed):
         super(HistoryRewrite, self).__init__('history_rewrite')
         if isinstance(parsed, dict):
@@ -103,7 +110,9 @@ class HistoryRewrite(Event):
             self.txn = parsed.get('txn')
 
         def __repr__(self):
-            return "stream:event:HistoryRewrite(event=%s, txn=%s)" % (self.event, self.txn)
+            return "stream:event:HistoryRewrite(event=%s, txn=%s)" % (
+                self.event, self.txn)
+
 
 class Version(Event):
     """
@@ -113,6 +122,7 @@ class Version(Event):
     :param data:  Data
     :param txn: Timestamp
     """
+
     def __init__(self, parsed):
         super(Version, self).__init__('version')
         if isinstance(parsed, dict):
@@ -120,7 +130,9 @@ class Version(Event):
             self.txn = parsed.get('txn')
 
     def __repr__(self):
-        return "stream:event:Version(event=%s, txn=%s)" % (self.event, self.txn)
+        return "stream:event:Version(event=%s, txn=%s)" % (self.event,
+                                                           self.txn)
+
 
 class Set(Event):
     """
@@ -130,6 +142,7 @@ class Set(Event):
     :param event: Data
     :param txn: Timestamp
     """
+
     def __init__(self, parsed):
         super(Set, self).__init__('set')
         if isinstance(parsed, dict):
@@ -139,12 +152,13 @@ class Set(Event):
     def __repr__(self):
         return "stream:event:Set(event=%s, txn=%s)" % (self.event, self.txn)
 
+
 class UnknownEvent(Event):
     """
     Unknown stream event.
     """
+
     def __init__(self, parsed):
         super(UnknownEvent, self).__init__(None)
         self.event = 'unknown'
         self.event = parsed
-

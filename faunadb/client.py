@@ -40,6 +40,7 @@ class HTTPBearerAuth(AuthBase):
 
 
 class RuntimeEnvHeader:
+
     def __init__(self):
         self.pythonVersion = "{0}.{1}.{2}-{3}".format(*sys.version_info)
         self.driverVersion = pkg_version
@@ -47,40 +48,40 @@ class RuntimeEnvHeader:
         self.os = "{0}-{1}".format(platform.system(), platform.release())
 
     def getRuntimeEnv(self):
-        env = [
-            {
-                "name": "Netlify",
-                "check": lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ
-            },
-            {
-                "name": "Vercel",
-                "check": lambda: "VERCEL" in os.environ
-            },
-            {
-                "name": "Heroku",
-                "check": lambda: "PATH" in os.environ and ".heroku" in os.environ["PATH"]
-            },
-            {
-                "name": "AWS Lambda",
-                "check": lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ
-            },
-            {
-                "name": "GCP Cloud Functions",
-                "check": lambda: "_" in os.environ and "google" in os.environ["_"]
-            },
-            {
-                "name": "GCP Compute Instances",
-                "check": lambda: "GOOGLE_CLOUD_PROJECT" in os.environ
-            },
-            {
-                "name": "Azure Cloud Functions",
-                "check": lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in os.environ
-            },
-            {
-                "name": "Azure Compute",
-                "check": lambda: "ORYX_ENV_TYPE" in os.environ and "WEBSITE_INSTANCE_ID" in os.environ and os.environ["ORYX_ENV_TYPE"] == "AppService"
-            }
-        ]
+        env = [{
+            "name": "Netlify",
+            "check": lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ
+        }, {
+            "name": "Vercel",
+            "check": lambda: "VERCEL" in os.environ
+        }, {
+            "name":
+            "Heroku",
+            "check":
+            lambda: "PATH" in os.environ and ".heroku" in os.environ["PATH"]
+        }, {
+            "name": "AWS Lambda",
+            "check": lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ
+        }, {
+            "name":
+            "GCP Cloud Functions",
+            "check":
+            lambda: "_" in os.environ and "google" in os.environ["_"]
+        }, {
+            "name": "GCP Compute Instances",
+            "check": lambda: "GOOGLE_CLOUD_PROJECT" in os.environ
+        }, {
+            "name":
+            "Azure Cloud Functions",
+            "check":
+            lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in os.environ
+        }, {
+            "name":
+            "Azure Compute",
+            "check":
+            lambda: "ORYX_ENV_TYPE" in os.environ and "WEBSITE_INSTANCE_ID" in
+            os.environ and os.environ["ORYX_ENV_TYPE"] == "AppService"
+        }]
 
         try:
             recognized = next(e for e in env if e.get("check")())
@@ -91,9 +92,7 @@ class RuntimeEnvHeader:
 
     def __str__(self):
         return "driver=python-{0}; runtime=python-{1} env={2}; os={3}".format(
-            self.driverVersion, self.pythonVersion,
-            self.env, self.os
-        ).lower()
+            self.driverVersion, self.pythonVersion, self.env, self.os).lower()
 
 
 class _LastTxnTime(object):
@@ -130,6 +129,7 @@ class _LastTxnTime(object):
 
 
 class _Counter(object):
+
     def __init__(self, init_value=0):
         self.lock = threading.Lock()
         self.counter = init_value
@@ -165,18 +165,17 @@ class FaunaClient(object):
     """
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(
-            self,
-            secret,
-            domain="db.fauna.com",
-            scheme="https",
-            port=None,
-            timeout=60,
-            observer=None,
-            pool_connections=10,
-            pool_maxsize=10,
-            endpoint=None,
-            **kwargs):
+    def __init__(self,
+                 secret,
+                 domain="db.fauna.com",
+                 scheme="https",
+                 port=None,
+                 timeout=60,
+                 observer=None,
+                 pool_connections=10,
+                 pool_maxsize=10,
+                 endpoint=None,
+                 **kwargs):
         """
         :param secret:
           Auth token for the FaunaDB server.
@@ -202,12 +201,13 @@ class FaunaClient(object):
 
         self.domain = domain
         self.scheme = scheme
-        self.port = (443 if scheme ==
-                     "https" else 80) if port is None else port
+        self.port = (
+            443 if scheme == "https" else 80) if port is None else port
 
         self.auth = HTTPBearerAuth(secret)
         constructed_url = "%s://%s:%s" % (self.scheme, self.domain, self.port)
-        self.base_url = self._normalize_endpoint(endpoint) if endpoint else constructed_url
+        self.base_url = self._normalize_endpoint(
+            endpoint) if endpoint else constructed_url
         self.observer = observer
 
         self.pool_connections = pool_connections
@@ -220,10 +220,14 @@ class FaunaClient(object):
 
         if ('session' not in kwargs) or ('counter' not in kwargs):
             self.session = Session()
-            self.session.mount('https://', HTTPAdapter(pool_connections=pool_connections,
-                                                       pool_maxsize=pool_maxsize))
-            self.session.mount('http://', HTTPAdapter(pool_connections=pool_connections,
-                                                      pool_maxsize=pool_maxsize))
+            self.session.mount(
+                'https://',
+                HTTPAdapter(pool_connections=pool_connections,
+                            pool_maxsize=pool_maxsize))
+            self.session.mount(
+                'http://',
+                HTTPAdapter(pool_connections=pool_connections,
+                            pool_maxsize=pool_maxsize))
             self.counter = _Counter(1)
 
             self.session.headers.update({
@@ -283,7 +287,7 @@ class FaunaClient(object):
         return self._query_timeout_ms
 
     def _normalize_endpoint(self, endpoint):
-      return endpoint.rstrip("/\\")
+        return endpoint.rstrip("/\\")
 
     def __del__(self):
         if self.counter.decrement() == 0:
@@ -297,9 +301,20 @@ class FaunaClient(object):
         :param timeout_millis: Query timeout in milliseconds.
         :return: Converted JSON response.
         """
-        return self._execute("POST", "", _wrap(expression), with_txn_time=True, query_timeout_ms=timeout_millis)
+        return self._execute("POST",
+                             "",
+                             _wrap(expression),
+                             with_txn_time=True,
+                             query_timeout_ms=timeout_millis)
 
-    def stream(self, expression, options=None, on_start=None, on_error=None, on_version=None, on_history=None, on_set=None):
+    def stream(self,
+               expression,
+               options=None,
+               on_start=None,
+               on_error=None,
+               on_version=None,
+               on_history=None,
+               on_set=None):
         """
         Creates a stream Subscription to the result of the given read-only expression. When
         executed.
@@ -329,7 +344,12 @@ class FaunaClient(object):
         """
         Ping FaunaDB.
         """
-        return self._execute("GET", "ping", query={"scope": scope, "timeout": timeout})
+        return self._execute("GET",
+                             "ping",
+                             query={
+                                 "scope": scope,
+                                 "timeout": timeout
+                             })
 
     def new_session_client(self, secret, observer=None):
         """
@@ -359,7 +379,13 @@ class FaunaClient(object):
             raise UnexpectedError(
                 "Cannnot create a session client from a closed session", None)
 
-    def _execute(self, action, path, data=None, query=None, with_txn_time=False, query_timeout_ms=None):
+    def _execute(self,
+                 action,
+                 path,
+                 data=None,
+                 query=None,
+                 with_txn_time=False,
+                 query_timeout_ms=None):
         """Performs an HTTP action, logs it, and looks for errors."""
         if query is not None:
             query = {k: v for k, v in query.items() if v is not None}
@@ -384,10 +410,9 @@ class FaunaClient(object):
         response_raw = response.text
         response_content = parse_json_or_none(response_raw)
 
-        request_result = RequestResult(
-            action, path, query, data,
-            response_raw, response_content, response.status_code, response.headers,
-            start_time, end_time)
+        request_result = RequestResult(action, path, query, data, response_raw,
+                                       response_content, response.status_code,
+                                       response.headers, start_time, end_time)
 
         if self.observer is not None:
             self.observer(request_result)
@@ -401,6 +426,10 @@ class FaunaClient(object):
     def _perform_request(self, action, path, data, query, headers):
         """Performs an HTTP action."""
         url = self.base_url + "/" + path
-        req = Request(action, url, params=query, data=to_json(
-            data), auth=self.auth, headers=headers)
+        req = Request(action,
+                      url,
+                      params=query,
+                      data=to_json(data),
+                      auth=self.auth,
+                      headers=headers)
         return self.session.send(self.session.prepare_request(req))

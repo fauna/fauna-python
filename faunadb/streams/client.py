@@ -39,14 +39,15 @@ class Connection(object):
         if isinstance(self._fields, list):
             union = set(self._fields).union(VALID_FIELDS)
             if union != VALID_FIELDS:
-                raise Exception("Valid fields options are %s, provided %s." % (
-                    VALID_FIELDS, self._fields))
+                raise Exception("Valid fields options are %s, provided %s." %
+                                (VALID_FIELDS, self._fields))
         self._state = "idle"
         self._query = expression
         self._data = to_json(expression).encode()
         try:
-            self.conn = HTTP20Connection(
-                self._client.domain, port=self._client.port, enable_push=True)
+            self.conn = HTTP20Connection(self._client.domain,
+                                         port=self._client.port,
+                                         enable_push=True)
         except Exception as e:
             raise StreamError(e)
 
@@ -74,10 +75,12 @@ class Connection(object):
             start_time = time()
             url_params = ''
             if isinstance(self._fields, list):
-                url_params = "?%s" % (
-                    urlencode({'fields': ",".join(self._fields)}))
-            id = self.conn.request("POST", "/stream%s" %
-                                   (url_params), body=self._data, headers=headers)
+                url_params = "?%s" % (urlencode(
+                    {'fields': ",".join(self._fields)}))
+            id = self.conn.request("POST",
+                                   "/stream%s" % (url_params),
+                                   body=self._data,
+                                   headers=headers)
             self._state = 'open'
             self._event_loop(id, on_event, start_time)
         except Exception as e:
@@ -105,7 +108,8 @@ class Connection(object):
 
                 for value in result["values"]:
                     request_result = self._stream_chunk_to_request_result(
-                        response, value["raw"], value["content"], start_time, time())
+                        response, value["raw"], value["content"], start_time,
+                        time())
                     event = parse_stream_request_result_or_none(request_result)
 
                     if event is not None and hasattr(event, 'txn'):
@@ -118,9 +122,9 @@ class Connection(object):
             self.close()
             on_event(Error(e), None)
 
-    def _stream_chunk_to_request_result(self, response, raw, content, start_time, end_time):
+    def _stream_chunk_to_request_result(self, response, raw, content,
+                                        start_time, end_time):
         """ Converts a stream chunk to a RequestResult. """
-        return RequestResult(
-            "POST", "/stream", self._query, self._data,
-            raw, content, None, response.headers,
-            start_time, end_time)
+        return RequestResult("POST", "/stream", self._query, self._data, raw,
+                             content, None, response.headers, start_time,
+                             end_time)

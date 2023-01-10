@@ -10,7 +10,9 @@ def _get_or_raise(request_result, dct, key):
         return dct[key]
     else:
         raise UnexpectedError(
-            "Response JSON does not contain expected key %s" % key, request_result)
+            "Response JSON does not contain expected key %s" % key,
+            request_result)
+
 
 # region FaunaError
 
@@ -54,11 +56,12 @@ class UnexpectedError(FaunaError):
 
 
 class HttpError(FaunaError):
+
     def __init__(self, request_result):
         self.errors = HttpError._get_errors(request_result)
         """List of all :py:class:`ErrorData` objects sent by the server."""
-        super(HttpError, self).__init__(
-            self._get_description(), request_result)
+        super(HttpError, self).__init__(self._get_description(),
+                                        request_result)
 
     @staticmethod
     def _get_errors(request_result):
@@ -79,9 +82,11 @@ class BadRequest(HttpError):
 
 
 class Unauthorized(HttpError):
+
     def __init__(self, request_result):
         super(Unauthorized, self).__init__(request_result)
-        self.errors[0].description = "Unauthorized. Check that endpoint, schema, port and secret are correct during client’s instantiation"
+        self.errors[
+            0].description = "Unauthorized. Check that endpoint, schema, port and secret are correct during client’s instantiation"
 
 
 class PermissionDenied(HttpError):
@@ -106,6 +111,7 @@ class UnavailableError(HttpError):
 
 # endregion
 
+
 class ErrorData(object):
     """
     Data for one error returned by the server.
@@ -113,23 +119,28 @@ class ErrorData(object):
 
     @staticmethod
     def from_dict(dct, request_result):
-        return ErrorData(
-            _get_or_raise(request_result, dct, "code"),
-            _get_or_raise(request_result, dct, "description"),
-            dct.get("position"),
-            ErrorData.get_failures(dct, request_result),
-            ErrorData.get_cause(dct, request_result))
+        return ErrorData(_get_or_raise(request_result, dct, "code"),
+                         _get_or_raise(request_result, dct, "description"),
+                         dct.get("position"),
+                         ErrorData.get_failures(dct, request_result),
+                         ErrorData.get_cause(dct, request_result))
 
     @staticmethod
     def get_failures(dct, request_result):
         if "failures" in dct:
-            return [Failure.from_dict(failure, request_result) for failure in dct["failures"]]
+            return [
+                Failure.from_dict(failure, request_result)
+                for failure in dct["failures"]
+            ]
         return None
 
     @staticmethod
     def get_cause(dct, request_result):
         if "cause" in dct:
-            return [ErrorData.from_dict(cause, request_result) for cause in dct["cause"]]
+            return [
+                ErrorData.from_dict(cause, request_result)
+                for cause in dct["cause"]
+            ]
         return None
 
     def __init__(self, code, description, position, failures, cause=None):
@@ -173,10 +184,9 @@ class Failure(object):
 
     @staticmethod
     def from_dict(dct, request_result):
-        return Failure(
-            _get_or_raise(request_result, dct, "code"),
-            _get_or_raise(request_result, dct, "description"),
-            _get_or_raise(request_result, dct, "field"))
+        return Failure(_get_or_raise(request_result, dct, "code"),
+                       _get_or_raise(request_result, dct, "description"),
+                       _get_or_raise(request_result, dct, "field"))
 
     def __init__(self, code, description, field):
         self.code = code
@@ -187,7 +197,8 @@ class Failure(object):
         """Field of the failure in the instance."""
 
     def __repr__(self):
-        return "Failure(code=%s, description=%s, field=%s)" % (repr(self.code), repr(self.description), repr(self.field))
+        return "Failure(code=%s, description=%s, field=%s)" % (repr(
+            self.code), repr(self.description), repr(self.field))
 
     def __eq__(self, other):
         return self.code == other.code and \
