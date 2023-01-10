@@ -1,0 +1,61 @@
+name: Python Driver Tests
+on:
+  pull_request:
+    paths:
+      - "**"
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  build_and_test:
+    strategy:
+      matrix:
+        # Run in all these versions of Python
+        # current and last three python versions
+        python-version:
+          - "3.11"
+          - "3.10"
+          - "3.9"
+          - "3.8"
+        fauna-docker-service:
+          - host: "core-stable"
+            port: "8443"
+          - host: "core-nightly"
+            port: "8444"
+
+    runs-on: ubuntu-latest
+
+    services:
+      core-stable:
+        image: fauna/faunadb:latest
+        ports:
+          - 8443:8443
+
+      core-nightly:
+        # tbd: pull from gcr
+        image: fauna/faunadb:latest
+        ports:
+          - 8444:8443
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: "Install ci dependencies"
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: coverage run setup.py test 2>&1 | tee log.txt
+        env:
+          FAUNA_ENDPOINT: "http://${{ matrix.fauna-docker-version.host }}:${{ matrix.fauna-docker-version.port }}"
+          FAUNA_ROOT_KEY: secret
+          FAUNA_DOMAIN: "${{ matrix.fauna-docker-version.host }}"
+          FAUNA_SCHEME: http
+          FAUNA_PORT: "${{ matrix.fauna-docker-version.port }}"

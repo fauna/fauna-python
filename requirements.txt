@@ -1,0 +1,8 @@
+# package runtime dependencies
+iso8601
+requests
+future
+hyper
+
+# dependencies required for development
+coverage
