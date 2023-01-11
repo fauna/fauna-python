@@ -2,7 +2,9 @@
 iso8601
 requests
 future
-httpx
+httpx[http2]
 
 # dependencies required for development
-coverage
+pytest
+pytest-env
+pytest-cov

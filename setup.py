@@ -15,8 +15,9 @@ with open(path.join(local_dir, "README.rst"), encoding="utf-8") as f:
 requires = ["iso8601", "requests", "future", "httpx"]
 
 tests_requires = [
-    "nose2",
-    "nose2[coverage_plugin]",
+    "pytest",
+    "pytest-env",
+    "pytest-cov",
 ]
 
 extras_require = {

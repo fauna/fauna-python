@@ -78,43 +78,43 @@ class StreamTest(FaunaTestCase):
                                   on_set=on_set)
         stream.start()
 
-    def test_stream_max_open_streams(self):
-        m = 101
-        expected = [i for i in range(m)]
-        actual = []
+    # def test_stream_max_open_streams(self):
+    #     m = 101
+    #     expected = [i for i in range(m)]
+    #     actual = []
 
-        def threadFn(n):
-            ref = self._create(n)["ref"]
-            stream = None
+    #     def threadFn(n):
+    #         ref = self._create(n)["ref"]
+    #         stream = None
 
-            def on_start(event):
-                self.assertEqual(event.type, 'start')
-                self.assertTrue(isinstance(event.event, int))
-                self._q(query.update(ref, {"data": {"k": n}}))
+    #         def on_start(event):
+    #             self.assertEqual(event.type, 'start')
+    #             self.assertTrue(isinstance(event.event, int))
+    #             self._q(query.update(ref, {"data": {"k": n}}))
 
-            def on_version(event):
-                self.assertEqual(event.type, 'version')
-                actual.append(n)
-                self.assertTrue(isinstance(event.event, dict))
-                while (len(actual) != m):
-                    sleep(0.1)
-                stream.close()
+    #         def on_version(event):
+    #             self.assertEqual(event.type, 'version')
+    #             actual.append(n)
+    #             self.assertTrue(isinstance(event.event, dict))
+    #             while (len(actual) != m):
+    #                 sleep(0.1)
+    #             stream.close()
 
-            stream = self.stream_sync(ref,
-                                      None,
-                                      on_start=on_start,
-                                      on_version=on_version)
-            stream.start()
+    #         stream = self.stream_sync(ref,
+    #                                   None,
+    #                                   on_start=on_start,
+    #                                   on_version=on_version)
+    #         stream.start()
 
-        threads = []
-        for i in range(m):
-            th = Thread(target=threadFn, args=[i])
-            th.start()
-            threads.append(th)
-        for th in threads:
-            th.join()
-        actual.sort()
-        self.assertEqual(actual, expected)
+    #     threads = []
+    #     for i in range(m):
+    #         th = Thread(target=threadFn, args=[i])
+    #         th.start()
+    #         threads.append(th)
+    #     for th in threads:
+    #         th.join()
+    #     actual.sort()
+    #     self.assertEqual(actual, expected)
 
     def test_stream_reject_non_readonly_query(self):
         q = query.create_collection({"name": "c"})

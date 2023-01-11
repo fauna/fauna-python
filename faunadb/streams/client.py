@@ -80,7 +80,7 @@ class Connection(object):
                     {'fields': ",".join(self._fields)}))
             id = self.conn.stream("POST",
                                   "/stream%s" % (url_params),
-                                  body=self._data,
+                                  content=self._data,
                                   headers=dict(headers))
             self._state = 'open'
             self._event_loop(id, on_event, start_time)
