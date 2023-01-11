@@ -7,9 +7,19 @@ class RequestResult(object):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, method, path, query, request_content, response_raw,
-                 response_content, status_code, response_headers, start_time,
-                 end_time):
+    def __init__(
+        self,
+        method,
+        path,
+        query,
+        request_content,
+        response_raw,
+        response_content,
+        status_code,
+        response_headers,
+        start_time,
+        end_time,
+    ):
         self.method = method
         """"GET" or "POST"."""
         self.path = path

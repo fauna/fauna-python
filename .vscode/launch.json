@@ -1,0 +1,48 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "pytest -k test_stream_on_document_reference",
+      "type": "python",
+      "request": "launch",
+      "stopOnEntry": false,
+      "module": "pytest",
+      "args": ["-sv", "-k", "test_stream_on_document_reference"],
+      "cwd": "${workspaceRoot}",
+      "justMyCode": false
+    },
+
+    {
+      "name": "pytest -k test_start_active_stream",
+      "type": "python",
+      "request": "launch",
+      "stopOnEntry": false,
+      "module": "pytest",
+      "args": ["-sv", "-k", "test_start_active_stream"],
+      "cwd": "${workspaceRoot}",
+      "justMyCode": false
+    },
+
+    {
+      "name": "pytest -k test_stream_auth_revalidation",
+      "type": "python",
+      "request": "launch",
+      "stopOnEntry": false,
+      "module": "pytest",
+      "args": ["-sv", "-k", "test_stream_auth_revalidation"],
+      "cwd": "${workspaceRoot}",
+      "justMyCode": false
+    },
+
+    {
+      "name": "pytest -k test_stream_max_open_streams",
+      "type": "python",
+      "request": "launch",
+      "stopOnEntry": false,
+      "module": "pytest",
+      "args": ["-sv", "-k", "test_stream_max_open_streams"],
+      "cwd": "${workspaceRoot}",
+      "justMyCode": false
+    }
+  ]
+}

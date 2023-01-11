@@ -46,16 +46,16 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
       - name: "Install ci dependencies"
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt --use-pep517
 
       - name: Run tests
-        run: pytest -v --cov=faunadb --cov-context=test || echo "Test suite failed but succeeding anyway for now"
+        run: pytest -v --cov=faunadb --cov-context=test
         env:
           FAUNA_ENDPOINT: "http://${{ matrix.fauna-docker-service.host }}:${{ matrix.fauna-docker-service.port }}"
           FAUNA_ROOT_KEY: secret
@@ -74,4 +74,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: html-code-coverage-report
-          path: ./htmlcode
+          path: ./htmlcov

@@ -4,7 +4,7 @@
     "editor.defaultFormatter": "ms-python.python",
     "editor.detectIndentation": false,
     "editor.insertSpaces": true,
-    "editor.tabSize": 2,
+    "editor.tabSize": 4,
     "editor.formatOnSave": true
   },
   "[concourse-pipeline-yaml]": {
