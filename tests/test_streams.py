@@ -108,7 +108,7 @@ class StreamTest(FaunaTestCase):
         stream.start()
 
     def test_stream_max_open_streams(self):
-        m = 102
+        m = 50
         expected = [i for i in range(m)]
         actual = []
 

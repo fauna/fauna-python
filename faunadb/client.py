@@ -177,8 +177,8 @@ class FaunaClient(object):
                  port=None,
                  timeout=60,
                  observer=None,
-                 pool_connections=10,
-                 pool_maxsize=10,
+                 pool_connections=100,
+                 pool_maxsize=100,
                  endpoint=None,
                  **kwargs):
         """
@@ -226,7 +226,8 @@ class FaunaClient(object):
         self.timeout = timeout
         if ('session' not in kwargs) or ('counter' not in kwargs):
             headers = {
-                "Keep-Alive": "timeout=5",
+                # not a supported or necessary header in http2 -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Keep-Alive
+                # "Keep-Alive": "timeout=5",
                 "Accept-Encoding": "gzip",
                 "Content-Type": "application/json;charset=utf-8",
                 "X-Fauna-Driver": "python",
@@ -241,12 +242,17 @@ class FaunaClient(object):
                 http1=False,
                 http2=True,
                 # auth=self.auth,
-                timeout=timeout,
+                timeout=httpx.Timeout(
+                    connect=timeout,
+                    read=timeout,
+                    write=timeout,
+                    pool=timeout,
+                ),
                 headers=headers,
                 limits=httpx.Limits(
                     max_connections=pool_maxsize,
                     max_keepalive_connections=pool_maxsize,
-                    keepalive_expiry=5,
+                    keepalive_expiry=None,
                 ))
             self.counter = _Counter(1)
         else:

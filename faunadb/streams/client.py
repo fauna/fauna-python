@@ -60,7 +60,12 @@ class Connection(object):
                 http2=True,
                 http1=False,
                 base_url=base_url,
-                timeout=None,
+                timeout=httpx.Timeout(
+                    connect=5,
+                    read=None,
+                    write=None,
+                    pool=5,
+                ),
                 limits=httpx.Limits(
                     max_keepalive_connections=5,
                     max_connections=10,

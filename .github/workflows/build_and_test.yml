@@ -21,35 +21,35 @@ jobs:
           - "3.8"
         fauna-docker-service:
           # because we don't run tests in docker, tests have to use ports mapped onto the host ubuntu system
-          - name: "core-stable"
-            host: "localhost"
+          - name: "fauna/faunadb:latest"
+            host: "core"
             port: "8443"
-          - name: "core-nightly"
-            host: "localhost"
-            port: "8444"
+          # if we had a nightly image, we could run the testsuite against it by uncommented this
+          # - name: "fauna/faunadb:nightly"
+          #   host: "localhost"
+          #   port: "8443"
 
+    timeout-minutes: 5
     runs-on: ubuntu-latest
 
-    services:
-      core-stable:
-        image: fauna/faunadb:latest
-        ports:
-          - 8443:8443
+    container:
+      image: python:${{ matrix.python-version}}
 
-      core-nightly:
-        # tbd: pull from gcr
-        image: fauna/faunadb:latest
-        ports:
-          - 8444:8443
+    services:
+      core:
+        image: ${{ matrix.fauna-docker-service.name }}
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
+      # - name: Setup Python
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: ${{ matrix.python-version }}
+      #     cache: "pip"
+
+      - name: Show file descriptor limit
+        run: ulimit -a
 
       - name: "Install ci dependencies"
         run: pip install -r requirements.txt --use-pep517
