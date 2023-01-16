@@ -1,3 +1,4 @@
+from typing import Any
 import os
 import platform
 import sys
@@ -6,9 +7,7 @@ import threading
 from builtins import object
 from time import time
 
-from requests import Request, Session, get
-from requests.adapters import HTTPAdapter
-from requests.auth import AuthBase
+import httpx
 
 from faunadb import __api_version__ as api_version
 from faunadb import __version__ as pkg_version
@@ -19,7 +18,7 @@ from faunadb.request_result import RequestResult
 from faunadb.streams import Subscription
 
 
-class HTTPBearerAuth(AuthBase):
+class HTTPBearerAuth:
     """Creates a bearer base auth object"""
 
     def auth_header(self):
@@ -48,9 +47,11 @@ class RuntimeEnvHeader:
         self.os = "{0}-{1}".format(platform.system(), platform.release())
 
     def getRuntimeEnv(self):
-        env = [{
-            "name": "Netlify",
-            "check": lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ
+        env: list[dict[str, Any]] = [{
+            "name":
+            "Netlify",
+            "check":
+            lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ
         }, {
             "name": "Vercel",
             "check": lambda: "VERCEL" in os.environ
@@ -60,16 +61,20 @@ class RuntimeEnvHeader:
             "check":
             lambda: "PATH" in os.environ and ".heroku" in os.environ["PATH"]
         }, {
-            "name": "AWS Lambda",
-            "check": lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ
+            "name":
+            "AWS Lambda",
+            "check":
+            lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ
         }, {
             "name":
             "GCP Cloud Functions",
             "check":
             lambda: "_" in os.environ and "google" in os.environ["_"]
         }, {
-            "name": "GCP Compute Instances",
-            "check": lambda: "GOOGLE_CLOUD_PROJECT" in os.environ
+            "name":
+            "GCP Compute Instances",
+            "check":
+            lambda: "GOOGLE_CLOUD_PROJECT" in os.environ
         }, {
             "name":
             "Azure Cloud Functions",
@@ -218,36 +223,38 @@ class FaunaClient(object):
         if self._query_timeout_ms is not None:
             self._query_timeout_ms = int(self._query_timeout_ms)
 
+        self.timeout = timeout
         if ('session' not in kwargs) or ('counter' not in kwargs):
-            self.session = Session()
-            self.session.mount(
-                'https://',
-                HTTPAdapter(pool_connections=pool_connections,
-                            pool_maxsize=pool_maxsize))
-            self.session.mount(
-                'http://',
-                HTTPAdapter(pool_connections=pool_connections,
-                            pool_maxsize=pool_maxsize))
-            self.counter = _Counter(1)
-
-            self.session.headers.update({
+            headers = {
                 "Keep-Alive": "timeout=5",
                 "Accept-Encoding": "gzip",
                 "Content-Type": "application/json;charset=utf-8",
                 "X-Fauna-Driver": "python",
                 "X-FaunaDB-API-Version": api_version,
                 "X-Driver-Env": str(RuntimeEnvHeader())
-            })
+            }
+
             if self._query_timeout_ms is not None:
-                self.session.headers["X-Query-Timeout"] = str(
-                    self._query_timeout_ms)
-            self.session.timeout = timeout
+                headers["X-Query-Timeout"] = str(self._query_timeout_ms)
+
+            self.session = httpx.Client(
+                http1=False,
+                http2=True,
+                # auth=self.auth,
+                timeout=timeout,
+                headers=headers,
+                limits=httpx.Limits(
+                    max_connections=pool_maxsize,
+                    max_keepalive_connections=pool_maxsize,
+                    keepalive_expiry=5,
+                ))
+            self.counter = _Counter(1)
         else:
             self.session = kwargs['session']
             self.counter = kwargs['counter']
 
     def check_new_version(self):
-        response = get('https://pypi.org/pypi/faunadb/json')
+        response = httpx.get('https://pypi.org/pypi/faunadb/json')
         latest_version = response.json().get('info').get('version')
 
         if latest_version > pkg_version:
@@ -363,11 +370,12 @@ class FaunaClient(object):
         :return:
         """
         if self.counter.get_and_increment() > 0:
+
             return FaunaClient(secret=secret,
                                domain=self.domain,
                                scheme=self.scheme,
                                port=self.port,
-                               timeout=self.session.timeout,
+                               timeout=self.timeout,
                                observer=observer or self.observer,
                                session=self.session,
                                counter=self.counter,
@@ -410,9 +418,18 @@ class FaunaClient(object):
         response_raw = response.text
         response_content = parse_json_or_none(response_raw)
 
-        request_result = RequestResult(action, path, query, data, response_raw,
-                                       response_content, response.status_code,
-                                       response.headers, start_time, end_time)
+        request_result = RequestResult(
+            action,
+            path,
+            query,
+            data,
+            response_raw,
+            response_content,
+            response.status_code,
+            response.headers,
+            start_time,
+            end_time,
+        )
 
         if self.observer is not None:
             self.observer(request_result)
@@ -426,10 +443,16 @@ class FaunaClient(object):
     def _perform_request(self, action, path, data, query, headers):
         """Performs an HTTP action."""
         url = self.base_url + "/" + path
-        req = Request(action,
-                      url,
-                      params=query,
-                      data=to_json(data),
-                      auth=self.auth,
-                      headers=headers)
-        return self.session.send(self.session.prepare_request(req))
+
+        req = self.session.build_request(
+            action,
+            url,
+            params=query,
+            content=to_json(data),
+            headers=headers,
+        )
+
+        req = self.auth(req)
+
+        response = self.session.send(req)
+        return response

@@ -7,7 +7,7 @@ from os import environ
 from unittest import TestCase
 # pylint: disable=redefined-builtin
 from builtins import object, range
-from requests import codes
+from httpx import codes
 
 from faunadb._json import to_json, parse_json
 from faunadb.client import FaunaClient
@@ -29,7 +29,7 @@ class FaunaTestCase(TestCase):
         super(FaunaTestCase, cls).setUpClass()
 
         # Turn off annoying logging about reset connections.
-        getLogger("requests").setLevel(WARNING)
+        # getLogger("requests").setLevel(WARNING)
 
         cls.root_client = cls._get_client()
 
@@ -37,7 +37,8 @@ class FaunaTestCase(TestCase):
         cls.db_name = "faunadb-python-test" + rnd
         cls.db_ref = query.database(cls.db_name)
 
-        if cls.root_client.query(query.exists(cls.db_ref)):
+        db_exists = cls.root_client.query(query.exists(cls.db_ref))
+        if db_exists:
             cls.root_client.query(query.delete(cls.db_ref))
 
         cls.root_client.query(query.create_database({"name": cls.db_name}))
@@ -122,7 +123,7 @@ class FaunaTestCase(TestCase):
         return cm.exception
 
 
-def mock_client(response_text, status_code=codes.ok):
+def mock_client(response_text, status_code=codes.OK):
     c = FaunaClient(secret=None)
     c.session = _MockSession(response_text, status_code)
     return c
@@ -137,12 +138,12 @@ class _MockSession(object):
     def close(self):
         pass
 
-    def prepare_request(self, *args):
-        pass
-
-    def send(self, *args):
-        # pylint: disable=unused-argument
+    def build_request(self, *args, **kwords):
         return _MockResponse(self.status_code, self.response_text, {})
+
+    def send(self, req, *args):
+        # pylint: disable=unused-argument
+        return req
 
 
 _MockResponse = namedtuple('MockResponse', ['status_code', 'text', 'headers'])

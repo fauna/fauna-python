@@ -1,4 +1,4 @@
-from requests import codes
+from httpx import codes
 
 from faunadb import query
 from faunadb.errors import ErrorData, Failure, BadRequest, InternalError, \
@@ -98,14 +98,14 @@ class ErrorsTest(FaunaTestCase):
         # pylint: disable=line-too-long
         code_client = mock_client(
             '{"errors": [{"code": "internal server error", "description": "sample text", "stacktrace": []}]}',
-            codes.internal_server_error)
+            codes.INTERNAL_SERVER_ERROR)
         self._assert_http_error(lambda: code_client.query("error"),
                                 InternalError, "internal server error")
 
     def test_unavailable_error(self):
         client = mock_client(
             '{"errors": [{"code": "unavailable", "description": "on vacation"}]}',
-            codes.unavailable)
+            codes.SERVICE_UNAVAILABLE)
         self._assert_http_error(lambda: client.query(''), UnavailableError,
                                 "unavailable")
 

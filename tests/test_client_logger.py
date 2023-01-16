@@ -65,8 +65,9 @@ class ClientLoggerTest(FaunaTestCase):
 
     def get_logged(self, client_action):
         logged_box = []
-        client = self.root_client.new_session_client(secret=self.server_key,
-                                                     observer=logger(
-                                                         logged_box.append))
+        client = self.root_client.new_session_client(
+            secret=self.server_key,
+            observer=logger(logged_box.append),
+        )
         client_action(client)
         return logged_box[0]

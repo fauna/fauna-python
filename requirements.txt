@@ -1,6 +1,5 @@
 # package runtime dependencies
 iso8601
-requests
 future
 httpx[http2]
 

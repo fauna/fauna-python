@@ -2,7 +2,7 @@
 # pylint: disable=redefined-builtin
 from builtins import object
 
-from requests import codes
+from httpx import codes
 
 
 def _get_or_raise(request_result, dct, key):
@@ -29,17 +29,17 @@ class FaunaError(Exception):
         # pylint: disable=no-member, too-many-return-statements
         if 200 <= code <= 299:
             pass
-        elif code == codes.bad_request:
+        elif code == codes.BAD_REQUEST:
             raise BadRequest(request_result)
-        elif code == codes.unauthorized:
+        elif code == codes.UNAUTHORIZED:
             raise Unauthorized(request_result)
-        elif code == codes.forbidden:
+        elif code == codes.FORBIDDEN:
             raise PermissionDenied(request_result)
-        elif code == codes.not_found:
+        elif code == codes.NOT_FOUND:
             raise NotFound(request_result)
-        elif code == codes.internal_server_error:
+        elif code == codes.INTERNAL_SERVER_ERROR:
             raise InternalError(request_result)
-        elif code == codes.unavailable:
+        elif code == codes.SERVICE_UNAVAILABLE:
             raise UnavailableError(request_result)
         else:
             raise UnexpectedError("Unexpected status code.", request_result)
