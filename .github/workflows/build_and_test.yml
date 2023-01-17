@@ -16,9 +16,9 @@ jobs:
         # current and last three python versions
         python-version:
           - "3.11"
-          # - "3.10"
-          # - "3.9"
-          # - "3.8"
+          - "3.10"
+          - "3.9"
+          - "3.8"
         fauna-docker-service:
           # because we don't run tests in docker, tests have to use ports mapped onto the host ubuntu system
           - name: "fauna/faunadb:latest"
