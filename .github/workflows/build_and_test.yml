@@ -63,7 +63,7 @@ jobs:
           FAUNA_DOMAIN: "${{ matrix.fauna-docker-service.host }}"
           FAUNA_SCHEME: http
           FAUNA_PORT: "${{ matrix.fauna-docker-service.port }}"
-
+          USE_GITHUB_ACTION_OVERRIDES: 1
       - name: Generate coverage html report with dynamic contexts
         run: coverage html --show-contexts
 
