@@ -37,7 +37,16 @@ class StreamTest(FaunaTestCase):
         return cls._q(query.create(cls.collection_ref, {"data": data}))
 
     @classmethod
-    def _q(cls, query_json):
+    def _q(
+        cls,
+        query_json,
+        sync_transaction_time_against_max_stream_client=False,
+    ):
+        if sync_transaction_time_against_max_stream_client:
+            cls.client.sync_last_txn_time(
+                cls.max_stream_client.get_last_txn_time())
+            cls.max_stream_client.sync_last_txn_time(
+                cls.client.get_last_txn_time())
         return cls.client.query(query_json)
 
     @classmethod
@@ -149,7 +158,12 @@ class StreamTest(FaunaTestCase):
             def on_start(event):
                 self.assertEqual(event.type, 'start')
                 self.assertTrue(isinstance(event.event, int))
-                self._q(query.update(ref, {"data": {"k": n}}))
+                self._q(
+                    query.update(ref, {"data": {
+                        "k": n
+                    }}),
+                    sync_transaction_time_against_max_stream_client=True,
+                )
 
             def on_version(event):
                 self.assertEqual(event.type, 'version')

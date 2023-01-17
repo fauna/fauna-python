@@ -55,7 +55,7 @@ jobs:
         run: pip install -r requirements.txt --use-pep517
 
       - name: Run tests
-        run: pytest -v --cov=faunadb --cov-context=test
+        run: env HTTPX_LOG_LEVEL=trace pytest --capture=no -v --cov=faunadb --cov-context=test -k test_stream_max_open_streams
         env:
           FAUNA_ENDPOINT: "http://${{ matrix.fauna-docker-service.host }}:${{ matrix.fauna-docker-service.port }}"
           FAUNA_ROOT_KEY: secret
