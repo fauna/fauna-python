@@ -30,9 +30,6 @@ class FaunaTestCase(TestCase):
     def setUpClass(cls):
         super(FaunaTestCase, cls).setUpClass()
 
-        # Turn off annoying logging about reset connections.
-        # getLogger("requests").setLevel(WARNING)
-
         cls.root_client = cls._get_client()
 
         rnd = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
