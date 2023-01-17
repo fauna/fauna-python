@@ -18,14 +18,7 @@ requires = [
     "httpx[http2]",
 ]
 
-tests_requires = [
-    "pytest",
-    "pytest-env",
-    "pytest-cov",
-]
-
 extras_require = {
-    "test": tests_requires,
     "lint": ["pylint"],
 }
 
@@ -58,6 +51,4 @@ setup(
     packages=["faunadb", "faunadb.streams"],
     install_requires=requires,
     extras_require=extras_require,
-    tests_require=tests_requires,
-    test_suite="nose2.collector.collector",
 )
