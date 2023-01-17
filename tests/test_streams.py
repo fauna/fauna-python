@@ -23,6 +23,12 @@ class StreamTest(FaunaTestCase):
         cls.collection_ref = cls._q(
             query.create_collection({"name": "stream_test_coll"}))["ref"]
 
+        # in order to test max streams on this client, we need to make sure there aren't any other streams open
+        cls.max_stream_client = cls.root_client.new_session_client(
+            secret=cls.server_key,
+            use_separate_connection_pool=True,
+        )
+
     #region Helpers
 
     @classmethod
@@ -46,6 +52,27 @@ class StreamTest(FaunaTestCase):
         if on_error is None:
             on_error = _on_unhandled_error
         return cls.client.stream(
+            expression,
+            options,
+            on_start,
+            on_error,
+            on_version,
+            on_history,
+            on_set,
+        )
+
+    @classmethod
+    def max_stream_sync(cls,
+                        expression,
+                        options=None,
+                        on_start=None,
+                        on_error=None,
+                        on_version=None,
+                        on_history=None,
+                        on_set=None):
+        if on_error is None:
+            on_error = _on_unhandled_error
+        return cls.max_stream_client.stream(
             expression,
             options,
             on_start,
@@ -108,8 +135,11 @@ class StreamTest(FaunaTestCase):
         stream.start()
 
     def test_stream_max_open_streams(self):
-        m = 50
-        expected = [i for i in range(m)]
+        # note: this parameter is set by the server to value 100
+        # if the value below is set to 101 or greater then this test will hang forever
+        # since none of the threads started below can ever call stream.close()
+        max_streams_per_connection_from_server = 100
+        expected = [i for i in range(max_streams_per_connection_from_server)]
         actual = []
 
         def threadFn(n):
@@ -126,18 +156,18 @@ class StreamTest(FaunaTestCase):
                 # actual.append(n)
                 actual.append(event.event['document']['data']['n'])
                 self.assertTrue(isinstance(event.event, dict))
-                while (len(actual) != m):
+                while (len(actual) != max_streams_per_connection_from_server):
                     sleep(0.1)
                 stream.close()
 
-            stream = self.stream_sync(ref,
-                                      None,
-                                      on_start=on_start,
-                                      on_version=on_version)
+            stream = self.max_stream_sync(ref,
+                                          None,
+                                          on_start=on_start,
+                                          on_version=on_version)
             stream.start()
 
         threads = []
-        for i in range(m):
+        for i in range(max_streams_per_connection_from_server):
             th = Thread(target=threadFn, args=[i])
             th.start()
             threads.append(th)

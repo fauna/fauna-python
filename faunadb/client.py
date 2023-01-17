@@ -177,8 +177,8 @@ class FaunaClient(object):
                  port=None,
                  timeout=60,
                  observer=None,
-                 pool_connections=100,
-                 pool_maxsize=100,
+                 pool_connections=10,
+                 pool_maxsize=10,
                  endpoint=None,
                  **kwargs):
         """
@@ -224,7 +224,8 @@ class FaunaClient(object):
             self._query_timeout_ms = int(self._query_timeout_ms)
 
         self.timeout = timeout
-        if ('session' not in kwargs) or ('counter' not in kwargs):
+        if ('session' not in kwargs
+                or kwargs['session'] == None) or ('counter' not in kwargs):
             headers = {
                 # not a supported or necessary header in http2 -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Keep-Alive
                 # "Keep-Alive": "timeout=5",
@@ -364,7 +365,10 @@ class FaunaClient(object):
                                  "timeout": timeout
                              })
 
-    def new_session_client(self, secret, observer=None):
+    def new_session_client(self,
+                           secret,
+                           use_separate_connection_pool=False,
+                           observer=None):
         """
         Create a new client from the existing config with a given secret.
         The returned client share its parent underlying resources.
@@ -376,15 +380,16 @@ class FaunaClient(object):
         :return:
         """
         if self.counter.get_and_increment() > 0:
-
             return FaunaClient(secret=secret,
                                domain=self.domain,
                                scheme=self.scheme,
                                port=self.port,
                                timeout=self.timeout,
                                observer=observer or self.observer,
-                               session=self.session,
-                               counter=self.counter,
+                               session=self.session if
+                               use_separate_connection_pool == False else None,
+                               counter=self.counter if
+                               use_separate_connection_pool == False else None,
                                pool_connections=self.pool_connections,
                                pool_maxsize=self.pool_maxsize,
                                last_txn_time=self._last_txn_time,
