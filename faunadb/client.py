@@ -232,8 +232,6 @@ class FaunaClient(object):
         if ('session' not in kwargs
                 or kwargs['session'] == None) or ('counter' not in kwargs):
             headers = {
-                # not a supported or necessary header in http2 -- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Keep-Alive
-                # "Keep-Alive": "timeout=5",
                 "Accept-Encoding": "gzip",
                 "Content-Type": "application/json;charset=utf-8",
                 "X-Fauna-Driver": "python",
@@ -247,7 +245,6 @@ class FaunaClient(object):
             self.session = httpx.Client(
                 http1=False,
                 http2=True,
-                # auth=self.auth,
                 timeout=httpx.Timeout(
                     connect=timeout,
                     read=timeout,
@@ -376,10 +373,13 @@ class FaunaClient(object):
                            observer=None):
         """
         Create a new client from the existing config with a given secret.
-        The returned client share its parent underlying resources.
+        If use_separate_connection_pool is false then the returned client share its parent underlying resources.
+        If true, the client will use a separate connection pool.
 
         :param secret:
           Credentials to use when sending requests.
+        :param use_separate_connection_pool:
+          If true, the new client will not re-use the connection pool associated with the existing client
         :param observer:
           Callback that will be passed a :any:`RequestResult` after every completed request.
         :return:
