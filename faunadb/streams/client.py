@@ -123,6 +123,8 @@ class Connection(object):
                     on_event(event, request_result)
                     if self._client.observer is not None:
                         self._client.observer(request_result)
+                    if self._state == "closed":
+                        break
                 if self._state == "closed":
                     break
         except Exception as e:
