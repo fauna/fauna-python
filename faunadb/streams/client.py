@@ -56,6 +56,11 @@ class Connection(object):
         """
         self._state = 'closed'
 
+        # NOTE: we don't close the connection or try to reach in and close the stream or anything like that
+        # instead we simply set this local state which induces the self._event_loop() method to exit
+        # this in turn exits the `with block` inside of subscribe which triggers the httpx framework's lifecycle management which does the right thing
+        # (eg, ending the stream, transition the connection in the connection pool to idle state, and right-sizing the connection pool by closing any idle connections if any have hit idle expiry timer )
+
     def subscribe(self, on_event):
         """Initiates the stream subscription."""
         if self._state != "idle":
