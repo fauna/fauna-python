@@ -42,12 +42,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # - name: Setup Python
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: ${{ matrix.python-version }}
-      #     cache: "pip"
-
       - name: Show file descriptor limit
         run: ulimit -a
 
