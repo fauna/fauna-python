@@ -1,6 +1,5 @@
-from __future__ import division
+from typing import cast
 from datetime import date, datetime
-from time import sleep
 
 from faunadb.errors import BadRequest, NotFound
 from faunadb.objects import FaunaTime, Ref, SetRef, _Expr, Native, Query
@@ -123,7 +122,9 @@ class QueryTest(FaunaTestCase):
             "x": 1,
             "y": 2
         }, query.var("x"))), 1)
-        self.assertEqual(self._q(query.let(x=1, y=2).in_(query.var("x"))), 1)
+
+        let_expr = cast(query.LetBindings, query.let(x=1, y=2))
+        self.assertEqual(self._q(let_expr.in_(query.var("x"))), 1)
 
     def test_if(self):
         self.assertEqual(self._q(query.if_(True, "t", "f")), "t")

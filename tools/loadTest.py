@@ -3,7 +3,8 @@ from faunadb.objects import Ref
 from faunadb.client import FaunaClient
 from os import environ
 from random import randrange, random
-from threading import Timer
+# eh?? -- this import is not used afaict
+# from threading import Timer
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import argparse

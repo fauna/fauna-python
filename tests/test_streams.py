@@ -1,4 +1,4 @@
-from __future__ import division
+from typing import cast
 
 import os
 from threading import Thread
@@ -93,8 +93,7 @@ class StreamTest(FaunaTestCase):
     #endregion
 
     def test_stream_on_document_reference(self):
-        ref = self._create(None)["ref"]
-        stream = None
+        ref = self._create()["ref"]
 
         def on_start(event):
             self.assertEqual(event.type, 'start')
@@ -105,10 +104,9 @@ class StreamTest(FaunaTestCase):
         stream.start()
 
     def test_stream_on_set(self):
-        stream = None
 
         def on_start(evt):
-            self._create(None)
+            self._create()
 
         def on_set(evt):
             self.assertEqual(evt.type, 'set')
@@ -121,19 +119,18 @@ class StreamTest(FaunaTestCase):
         stream.start()
 
     def test_stream_on_set_with_write_that_leads_to_more_streaming(self):
-        stream = None
 
         count = 1
 
         def on_start(evt):
-            self._create(None)
+            self._create()
 
         def on_set(evt):
             self.assertEqual(evt.type, 'set')
             self.assertEqual(evt.event['action'], 'add')
             nonlocal count
             count += 1
-            self._create(None)
+            self._create()
             if count >= 10:
                 stream.close()
 
@@ -161,7 +158,6 @@ class StreamTest(FaunaTestCase):
 
         def threadFn(n):
             ref = self._create(n)["ref"]
-            stream = None
 
             def on_start(event):
                 self.assertEqual(event.type, 'start')
@@ -204,7 +200,6 @@ class StreamTest(FaunaTestCase):
 
     def test_stream_reject_non_readonly_query(self):
         q = query.create_collection({"name": "c"})
-        stream = None
 
         def on_error(error):
             self.assertEqual(error.type, 'error')
@@ -218,7 +213,7 @@ class StreamTest(FaunaTestCase):
 
     def test_stream_select_fields(self):
         ref = self._create()["ref"]
-        stream = None
+
         fields = {"document", "diff"}
 
         def on_start(event):
@@ -243,12 +238,12 @@ class StreamTest(FaunaTestCase):
 
     def test_stream_update_last_txn_time(self):
         ref = self._create()["ref"]
-        last_txn_time = self.client.get_last_txn_time()
-        stream = None
+        last_txn_time = cast(int, self.client.get_last_txn_time())
 
         def on_start(event):
             self.assertEqual(event.type, 'start')
-            self.assertTrue(self.client.get_last_txn_time() > last_txn_time)
+            self.assertTrue(
+                cast(int, self.client.get_last_txn_time()) > last_txn_time)
             #for start event, last_txn_time maybe be updated to response X-Txn-Time header
             # or event.txn. What is guaranteed is the most recent is used- hence >=.
             self.assertTrue(self.client.get_last_txn_time() >= event.txn)
@@ -279,8 +274,7 @@ class StreamTest(FaunaTestCase):
         stream.start()
 
     def test_start_active_stream(self):
-        ref = self._create(None)["ref"]
-        stream = None
+        ref = self._create()["ref"]
 
         def on_start(event):
             self.assertEqual(event.type, 'start')
@@ -293,7 +287,6 @@ class StreamTest(FaunaTestCase):
 
     def test_stream_auth_revalidation(self):
         ref = self._create()["ref"]
-        stream = None
 
         server_key = self.root_client.query(
             query.create_key({

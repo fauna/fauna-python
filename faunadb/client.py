@@ -1,11 +1,11 @@
-from typing import Any
+from typing import Callable, cast
 import os
 import platform
 import sys
 import threading
-# pylint: disable=redefined-builtin
-from builtins import object
+
 from time import time
+from dataclasses import dataclass
 
 import httpx
 
@@ -47,51 +47,55 @@ class RuntimeEnvHeader:
         self.os = "{0}-{1}".format(platform.system(), platform.release())
 
     def getRuntimeEnv(self):
-        env: list[dict[str, Any]] = [{
-            "name":
-            "Netlify",
-            "check":
-            lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ
-        }, {
-            "name": "Vercel",
-            "check": lambda: "VERCEL" in os.environ
-        }, {
-            "name":
-            "Heroku",
-            "check":
-            lambda: "PATH" in os.environ and ".heroku" in os.environ["PATH"]
-        }, {
-            "name":
-            "AWS Lambda",
-            "check":
-            lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ
-        }, {
-            "name":
-            "GCP Cloud Functions",
-            "check":
-            lambda: "_" in os.environ and "google" in os.environ["_"]
-        }, {
-            "name":
-            "GCP Compute Instances",
-            "check":
-            lambda: "GOOGLE_CLOUD_PROJECT" in os.environ
-        }, {
-            "name":
-            "Azure Cloud Functions",
-            "check":
-            lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in os.environ
-        }, {
-            "name":
-            "Azure Compute",
-            "check":
-            lambda: "ORYX_ENV_TYPE" in os.environ and "WEBSITE_INSTANCE_ID" in
-            os.environ and os.environ["ORYX_ENV_TYPE"] == "AppService"
-        }]
+
+        @dataclass
+        class EnvChecker:
+            name: str
+            check: Callable[[], bool]
+
+        env: list[EnvChecker] = [
+            EnvChecker(
+                name="Netlify",
+                check=lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ,
+            ),
+            EnvChecker(
+                name="Vercel",
+                check=lambda: "VERCEL" in os.environ,
+            ),
+            EnvChecker(
+                name="Heroku",
+                check=lambda: "PATH" in os.environ and ".heroku" in os.environ[
+                    "PATH"],
+            ),
+            EnvChecker(
+                name="AWS Lambda",
+                check=lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ),
+            EnvChecker(
+                name="GCP Cloud Functions",
+                check=lambda: "_" in os.environ and "google" in os.environ["_"
+                                                                           ],
+            ),
+            EnvChecker(
+                name="GCP Compute Instances",
+                check=lambda: "GOOGLE_CLOUD_PROJECT" in os.environ,
+            ),
+            EnvChecker(
+                name="Azure Cloud Functions",
+                check=lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in os
+                .environ,
+            ),
+            EnvChecker(
+                name="Azure Compute",
+                check=lambda: "ORYX_ENV_TYPE" in os.environ and
+                "WEBSITE_INSTANCE_ID" in os.environ and os.environ[
+                    "ORYX_ENV_TYPE"] == "AppService",
+            ),
+        ]
 
         try:
-            recognized = next(e for e in env if e.get("check")())
+            recognized = next(e for e in env if e.check())
             if recognized is not None:
-                return recognized.get("name")
+                return recognized.name
         except:
             return "Unknown"
 
@@ -105,7 +109,7 @@ class _LastTxnTime(object):
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._time = None
+        self._time: None | int = None
 
     @property
     def time(self):
@@ -218,7 +222,8 @@ class FaunaClient(object):
         self.pool_connections = pool_connections
         self.pool_maxsize = pool_maxsize
 
-        self._last_txn_time = kwargs.get('last_txn_time') or _LastTxnTime()
+        self._last_txn_time = cast(
+            _LastTxnTime, kwargs.get('last_txn_time')) or _LastTxnTime()
         self._query_timeout_ms = kwargs.get('query_timeout_ms')
         if self._query_timeout_ms is not None:
             self._query_timeout_ms = int(self._query_timeout_ms)
@@ -257,8 +262,8 @@ class FaunaClient(object):
                 ))
             self.counter = _Counter(1)
         else:
-            self.session = kwargs['session']
-            self.counter = kwargs['counter']
+            self.session: httpx.Client = kwargs['session']
+            self.counter: _Counter = kwargs['counter']
 
     def check_new_version(self):
         response = httpx.get('https://pypi.org/pypi/faunadb/json')

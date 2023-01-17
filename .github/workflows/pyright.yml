@@ -29,10 +29,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install project deps
         run: pip install -r requirements.txt
 
       - name: Run pyright type-checker
-        run: pyright . || echo "pyright failing but allowing this to pass ci for now.  TODO remove this"
+        run: pyright .

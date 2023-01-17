@@ -1,23 +1,10 @@
-import typing
+from typing import cast, Any
 from time import time
 
 # python3
 from urllib.parse import urlencode
 
 import httpx
-
-from httpx._decoders import (
-    ByteChunker, )
-
-from httpx._exceptions import (
-    StreamClosed,
-    StreamConsumed,
-    ReadError,
-    WriteError,
-    request_context,
-)
-from httpx._types import (
-    SyncByteStream, )
 
 from faunadb._json import parse_json_or_none, stream_content_to_json, to_json
 from faunadb.request_result import RequestResult
@@ -36,16 +23,19 @@ class Connection(object):
     subscription.
     """
 
-    def __init__(self, client: 'faunadb.client.FaunaClient', expression,
-                 options):
+    def __init__(
+        self,
+        client: 'faunadb.client.FaunaClient',
+        expression,
+        options,
+    ):
         self._client = client
-        self.options = options
-        self.conn = None
+        self._options = options
         self._fields = None
-        if isinstance(self.options, dict):
-            self._fields = self.options.get("fields", None)
-        elif hasattr(self.options, "fields"):
-            self._fields = self.options.field
+        if isinstance(self._options, dict):
+            self._fields = self._options.get("fields", None)
+        elif hasattr(self._options, "fields"):
+            self._fields = self._options.field
         if isinstance(self._fields, list):
             union = set(self._fields).union(VALID_FIELDS)
             if union != VALID_FIELDS:
@@ -129,7 +119,7 @@ class Connection(object):
                     event = parse_stream_request_result_or_none(request_result)
 
                     if event is not None and hasattr(event, 'txn'):
-                        self._client.sync_last_txn_time(int(event.txn))
+                        self._client.sync_last_txn_time(cast(Any, event).txn)
                     on_event(event, request_result)
                     if self._client.observer is not None:
                         self._client.observer(request_result)

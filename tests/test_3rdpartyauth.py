@@ -37,6 +37,8 @@ class ThirdPartyAuthTest(FaunaTestCase):
     def _assert_insufficient_permissions(self, q):
         self.assertRaises(PermissionDenied, lambda: self._q(q))
 
+    #endregion
+
     def test_create_access_providers(self):
         providerName = 'provider_'
         issuerName = 'issuer_'

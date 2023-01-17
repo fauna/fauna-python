@@ -1,3 +1,4 @@
+from typing import cast
 import string
 import random
 import warnings
@@ -7,7 +8,8 @@ from os import environ
 from unittest import TestCase
 # pylint: disable=redefined-builtin
 from builtins import object, range
-from httpx import codes
+
+import httpx
 
 from faunadb._json import to_json, parse_json
 from faunadb.client import FaunaClient
@@ -123,10 +125,10 @@ class FaunaTestCase(TestCase):
         return cm.exception
 
 
-def mock_client(response_text, status_code=codes.OK):
+def mock_client(response_text, status_code=httpx.codes.OK):
     c = FaunaClient(secret=None)
-    c.session = _MockSession(response_text, status_code)
-    return c
+    c.session = cast(httpx.Client, _MockSession(response_text, status_code))
+    return cast(FaunaClient, c)
 
 
 class _MockSession(object):

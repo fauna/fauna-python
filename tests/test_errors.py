@@ -1,3 +1,4 @@
+from typing import cast, Any
 from httpx import codes
 
 from faunadb import query
@@ -39,7 +40,7 @@ class ErrorsTest(FaunaTestCase):
     def test_unexpected_error_code(self):
         self.assertRaises(
             UnexpectedError,
-            lambda: mock_client('{"errors": []}', 1337).query(''))
+            lambda: mock_client('{"errors": []}', cast(Any, 1337)).query(''))
 
     #endregion
 
@@ -184,6 +185,8 @@ class ErrorsTest(FaunaTestCase):
             repr(err),
             "ErrorData(code='code', description='desc', position=['pos'], failures=[Failure(code='code', description='desc', field=['a', 'b'])], cause=None)"
         )
+
+    #endregion
 
     #region private
 

@@ -1,3 +1,4 @@
+from typing import cast
 import sys
 import os
 import platform
@@ -39,14 +40,14 @@ class ClientTest(FaunaTestCase):
         self.assertEqual(client.get_query_timeout(), 5000)
 
     def test_last_txn_time(self):
-        old_time = self.client.get_last_txn_time()
+        old_time = cast(int, self.client.get_last_txn_time())
         self.client.query({})
-        new_time = self.client.get_last_txn_time()
+        new_time = cast(int, self.client.get_last_txn_time())
         self.assertTrue(
             old_time < new_time)  # client.query should update last-txn-time
 
     def test_last_txn_time_upated(self):
-        first_seen = self.client.get_last_txn_time()
+        first_seen = cast(int, self.client.get_last_txn_time())
 
         new_time = first_seen - 12000
         self.client.sync_last_txn_time(new_time)
