@@ -14,18 +14,11 @@ with open(path.join(local_dir, "README.rst"), encoding="utf-8") as f:
 
 requires = [
     "iso8601",
-    "requests",
     "future",
-    "hyper"
-]
-
-tests_requires = [
-    "nose2",
-    "nose2[coverage_plugin]",
+    "httpx[http2]",
 ]
 
 extras_require = {
-    "test": tests_requires,
     "lint": ["pylint"],
 }
 
@@ -58,6 +51,4 @@ setup(
     packages=["faunadb", "faunadb.streams"],
     install_requires=requires,
     extras_require=extras_require,
-    tests_require=tests_requires,
-    test_suite="nose2.collector.collector",
 )

@@ -57,8 +57,15 @@ def to_json(dct, pretty=False, sort_keys=False):
     Converts a :any`_Expr` into a request body, calling :any:`to_fauna_json`.
     """
     if pretty:
-        return dumps(dct, cls=_FaunaJSONEncoder, sort_keys=True, indent=2, separators=(", ", ": "))
-    return dumps(dct, cls=_FaunaJSONEncoder, sort_keys=sort_keys, separators=(",", ":"))
+        return dumps(dct,
+                     cls=_FaunaJSONEncoder,
+                     sort_keys=True,
+                     indent=2,
+                     separators=(", ", ": "))
+    return dumps(dct,
+                 cls=_FaunaJSONEncoder,
+                 sort_keys=sort_keys,
+                 separators=(",", ":"))
 
 
 def stream_content_to_json(buffer):
@@ -79,11 +86,12 @@ def stream_content_to_json(buffer):
                 values.append({"content": slice.decode(), "raw": slice})
                 buffer = buffer[pos].encode()
 
-    return {"buffer": buffer,  "values": values}
+    return {"buffer": buffer, "values": values}
 
 
 class _FaunaJSONEncoder(JSONEncoder):
     """Converts :any:`_Expr`, :any:`datetime`, :any:`date` to JSON."""
+
     # pylint: disable=method-hidden,arguments-differ
 
     def default(self, obj):
@@ -97,4 +105,5 @@ class _FaunaJSONEncoder(JSONEncoder):
             return {"@bytes": urlsafe_b64encode(obj).decode('utf-8')}
         else:
             raise UnexpectedError(
-                "Unserializable object {} of type {}".format(obj, type(obj)), None)
+                "Unserializable object {} of type {}".format(obj, type(obj)),
+                None)

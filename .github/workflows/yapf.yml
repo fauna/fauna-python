@@ -1,0 +1,35 @@
+name: Python Driver YAPF Check
+
+on:
+  pull_request:
+    paths:
+      - "**"
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  yapf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+          cache: pip
+
+      - name: Install yapf
+        run: pip install yapf
+
+      - name: Check Format
+        run: |
+          python -m yapf \
+            --recursive \
+            --parallel \
+            --exclude '.venv' \
+            --diff \
+            --verbose \
+            .

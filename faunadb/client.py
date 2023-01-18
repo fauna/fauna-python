@@ -1,14 +1,13 @@
+from typing import Callable, cast
 import os
 import platform
 import sys
 import threading
-# pylint: disable=redefined-builtin
-from builtins import object
-from time import time
 
-from requests import Request, Session, get
-from requests.adapters import HTTPAdapter
-from requests.auth import AuthBase
+from time import time
+from dataclasses import dataclass
+
+import httpx
 
 from faunadb import __api_version__ as api_version
 from faunadb import __version__ as pkg_version
@@ -19,7 +18,7 @@ from faunadb.request_result import RequestResult
 from faunadb.streams import Subscription
 
 
-class HTTPBearerAuth(AuthBase):
+class HTTPBearerAuth:
     """Creates a bearer base auth object"""
 
     def auth_header(self):
@@ -40,6 +39,7 @@ class HTTPBearerAuth(AuthBase):
 
 
 class RuntimeEnvHeader:
+
     def __init__(self):
         self.pythonVersion = "{0}.{1}.{2}-{3}".format(*sys.version_info)
         self.driverVersion = pkg_version
@@ -47,53 +47,61 @@ class RuntimeEnvHeader:
         self.os = "{0}-{1}".format(platform.system(), platform.release())
 
     def getRuntimeEnv(self):
-        env = [
-            {
-                "name": "Netlify",
-                "check": lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ
-            },
-            {
-                "name": "Vercel",
-                "check": lambda: "VERCEL" in os.environ
-            },
-            {
-                "name": "Heroku",
-                "check": lambda: "PATH" in os.environ and ".heroku" in os.environ["PATH"]
-            },
-            {
-                "name": "AWS Lambda",
-                "check": lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ
-            },
-            {
-                "name": "GCP Cloud Functions",
-                "check": lambda: "_" in os.environ and "google" in os.environ["_"]
-            },
-            {
-                "name": "GCP Compute Instances",
-                "check": lambda: "GOOGLE_CLOUD_PROJECT" in os.environ
-            },
-            {
-                "name": "Azure Cloud Functions",
-                "check": lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in os.environ
-            },
-            {
-                "name": "Azure Compute",
-                "check": lambda: "ORYX_ENV_TYPE" in os.environ and "WEBSITE_INSTANCE_ID" in os.environ and os.environ["ORYX_ENV_TYPE"] == "AppService"
-            }
+
+        @dataclass
+        class EnvChecker:
+            name: str
+            check: Callable[[], bool]
+
+        env: list[EnvChecker] = [
+            EnvChecker(
+                name="Netlify",
+                check=lambda: "NETLIFY_IMAGES_CDN_DOMAIN" in os.environ,
+            ),
+            EnvChecker(
+                name="Vercel",
+                check=lambda: "VERCEL" in os.environ,
+            ),
+            EnvChecker(
+                name="Heroku",
+                check=lambda: "PATH" in os.environ and ".heroku" in os.environ[
+                    "PATH"],
+            ),
+            EnvChecker(
+                name="AWS Lambda",
+                check=lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ),
+            EnvChecker(
+                name="GCP Cloud Functions",
+                check=lambda: "_" in os.environ and "google" in os.environ["_"
+                                                                           ],
+            ),
+            EnvChecker(
+                name="GCP Compute Instances",
+                check=lambda: "GOOGLE_CLOUD_PROJECT" in os.environ,
+            ),
+            EnvChecker(
+                name="Azure Cloud Functions",
+                check=lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in os
+                .environ,
+            ),
+            EnvChecker(
+                name="Azure Compute",
+                check=lambda: "ORYX_ENV_TYPE" in os.environ and
+                "WEBSITE_INSTANCE_ID" in os.environ and os.environ[
+                    "ORYX_ENV_TYPE"] == "AppService",
+            ),
         ]
 
         try:
-            recognized = next(e for e in env if e.get("check")())
+            recognized = next(e for e in env if e.check())
             if recognized is not None:
-                return recognized.get("name")
+                return recognized.name
         except:
             return "Unknown"
 
     def __str__(self):
         return "driver=python-{0}; runtime=python-{1} env={2}; os={3}".format(
-            self.driverVersion, self.pythonVersion,
-            self.env, self.os
-        ).lower()
+            self.driverVersion, self.pythonVersion, self.env, self.os).lower()
 
 
 class _LastTxnTime(object):
@@ -101,7 +109,7 @@ class _LastTxnTime(object):
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._time = None
+        self._time: None | int = None
 
     @property
     def time(self):
@@ -130,6 +138,7 @@ class _LastTxnTime(object):
 
 
 class _Counter(object):
+
     def __init__(self, init_value=0):
         self.lock = threading.Lock()
         self.counter = init_value
@@ -165,18 +174,17 @@ class FaunaClient(object):
     """
 
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(
-            self,
-            secret,
-            domain="db.fauna.com",
-            scheme="https",
-            port=None,
-            timeout=60,
-            observer=None,
-            pool_connections=10,
-            pool_maxsize=10,
-            endpoint=None,
-            **kwargs):
+    def __init__(self,
+                 secret,
+                 domain="db.fauna.com",
+                 scheme="https",
+                 port=None,
+                 timeout=60,
+                 observer=None,
+                 pool_connections=10,
+                 pool_maxsize=10,
+                 endpoint=None,
+                 **kwargs):
         """
         :param secret:
           Auth token for the FaunaDB server.
@@ -202,48 +210,60 @@ class FaunaClient(object):
 
         self.domain = domain
         self.scheme = scheme
-        self.port = (443 if scheme ==
-                     "https" else 80) if port is None else port
+        self.port = (
+            443 if scheme == "https" else 80) if port is None else port
 
         self.auth = HTTPBearerAuth(secret)
         constructed_url = "%s://%s:%s" % (self.scheme, self.domain, self.port)
-        self.base_url = self._normalize_endpoint(endpoint) if endpoint else constructed_url
+        self.base_url = self._normalize_endpoint(
+            endpoint) if endpoint else constructed_url
         self.observer = observer
 
         self.pool_connections = pool_connections
         self.pool_maxsize = pool_maxsize
 
-        self._last_txn_time = kwargs.get('last_txn_time') or _LastTxnTime()
+        self._last_txn_time = cast(
+            _LastTxnTime, kwargs.get('last_txn_time')) or _LastTxnTime()
         self._query_timeout_ms = kwargs.get('query_timeout_ms')
         if self._query_timeout_ms is not None:
             self._query_timeout_ms = int(self._query_timeout_ms)
 
-        if ('session' not in kwargs) or ('counter' not in kwargs):
-            self.session = Session()
-            self.session.mount('https://', HTTPAdapter(pool_connections=pool_connections,
-                                                       pool_maxsize=pool_maxsize))
-            self.session.mount('http://', HTTPAdapter(pool_connections=pool_connections,
-                                                      pool_maxsize=pool_maxsize))
-            self.counter = _Counter(1)
-
-            self.session.headers.update({
-                "Keep-Alive": "timeout=5",
+        self.timeout = timeout
+        if ('session' not in kwargs
+                or kwargs['session'] == None) or ('counter' not in kwargs):
+            headers = {
                 "Accept-Encoding": "gzip",
                 "Content-Type": "application/json;charset=utf-8",
                 "X-Fauna-Driver": "python",
                 "X-FaunaDB-API-Version": api_version,
                 "X-Driver-Env": str(RuntimeEnvHeader())
-            })
+            }
+
             if self._query_timeout_ms is not None:
-                self.session.headers["X-Query-Timeout"] = str(
-                    self._query_timeout_ms)
-            self.session.timeout = timeout
+                headers["X-Query-Timeout"] = str(self._query_timeout_ms)
+
+            self.session = httpx.Client(
+                http1=False,
+                http2=True,
+                timeout=httpx.Timeout(
+                    connect=timeout,
+                    read=timeout,
+                    write=timeout,
+                    pool=timeout,
+                ),
+                headers=headers,
+                limits=httpx.Limits(
+                    max_connections=pool_maxsize,
+                    max_keepalive_connections=pool_maxsize,
+                    keepalive_expiry=None,
+                ))
+            self.counter = _Counter(1)
         else:
-            self.session = kwargs['session']
-            self.counter = kwargs['counter']
+            self.session: httpx.Client = kwargs['session']
+            self.counter: _Counter = kwargs['counter']
 
     def check_new_version(self):
-        response = get('https://pypi.org/pypi/faunadb/json')
+        response = httpx.get('https://pypi.org/pypi/faunadb/json')
         latest_version = response.json().get('info').get('version')
 
         if latest_version > pkg_version:
@@ -256,7 +276,7 @@ class FaunaClient(object):
             print('| ' + msg2 + ' ' * (width - len(msg2) - 1) + '|')
             print('+' + '-' * width + '+')
 
-    def sync_last_txn_time(self, new_txn_time):
+    def sync_last_txn_time(self, new_txn_time: int):
         """
         Sync the freshest timestamp seen by this client.
 
@@ -283,7 +303,7 @@ class FaunaClient(object):
         return self._query_timeout_ms
 
     def _normalize_endpoint(self, endpoint):
-      return endpoint.rstrip("/\\")
+        return endpoint.rstrip("/\\")
 
     def __del__(self):
         if self.counter.decrement() == 0:
@@ -297,9 +317,20 @@ class FaunaClient(object):
         :param timeout_millis: Query timeout in milliseconds.
         :return: Converted JSON response.
         """
-        return self._execute("POST", "", _wrap(expression), with_txn_time=True, query_timeout_ms=timeout_millis)
+        return self._execute("POST",
+                             "",
+                             _wrap(expression),
+                             with_txn_time=True,
+                             query_timeout_ms=timeout_millis)
 
-    def stream(self, expression, options=None, on_start=None, on_error=None, on_version=None, on_history=None, on_set=None):
+    def stream(self,
+               expression,
+               options=None,
+               on_start=None,
+               on_error=None,
+               on_version=None,
+               on_history=None,
+               on_set=None):
         """
         Creates a stream Subscription to the result of the given read-only expression. When
         executed.
@@ -329,15 +360,26 @@ class FaunaClient(object):
         """
         Ping FaunaDB.
         """
-        return self._execute("GET", "ping", query={"scope": scope, "timeout": timeout})
+        return self._execute("GET",
+                             "ping",
+                             query={
+                                 "scope": scope,
+                                 "timeout": timeout
+                             })
 
-    def new_session_client(self, secret, observer=None):
+    def new_session_client(self,
+                           secret,
+                           use_separate_connection_pool=False,
+                           observer=None):
         """
         Create a new client from the existing config with a given secret.
-        The returned client share its parent underlying resources.
+        If use_separate_connection_pool is false then the returned client share its parent underlying resources.
+        If true, the client will use a separate connection pool.
 
         :param secret:
           Credentials to use when sending requests.
+        :param use_separate_connection_pool:
+          If true, the new client will not re-use the connection pool associated with the existing client
         :param observer:
           Callback that will be passed a :any:`RequestResult` after every completed request.
         :return:
@@ -347,10 +389,12 @@ class FaunaClient(object):
                                domain=self.domain,
                                scheme=self.scheme,
                                port=self.port,
-                               timeout=self.session.timeout,
+                               timeout=self.timeout,
                                observer=observer or self.observer,
-                               session=self.session,
-                               counter=self.counter,
+                               session=self.session if
+                               use_separate_connection_pool == False else None,
+                               counter=self.counter if
+                               use_separate_connection_pool == False else None,
                                pool_connections=self.pool_connections,
                                pool_maxsize=self.pool_maxsize,
                                last_txn_time=self._last_txn_time,
@@ -359,7 +403,13 @@ class FaunaClient(object):
             raise UnexpectedError(
                 "Cannnot create a session client from a closed session", None)
 
-    def _execute(self, action, path, data=None, query=None, with_txn_time=False, query_timeout_ms=None):
+    def _execute(self,
+                 action,
+                 path,
+                 data=None,
+                 query=None,
+                 with_txn_time=False,
+                 query_timeout_ms=None):
         """Performs an HTTP action, logs it, and looks for errors."""
         if query is not None:
             query = {k: v for k, v in query.items() if v is not None}
@@ -385,9 +435,17 @@ class FaunaClient(object):
         response_content = parse_json_or_none(response_raw)
 
         request_result = RequestResult(
-            action, path, query, data,
-            response_raw, response_content, response.status_code, response.headers,
-            start_time, end_time)
+            action,
+            path,
+            query,
+            data,
+            response_raw,
+            response_content,
+            response.status_code,
+            response.headers,
+            start_time,
+            end_time,
+        )
 
         if self.observer is not None:
             self.observer(request_result)
@@ -401,6 +459,16 @@ class FaunaClient(object):
     def _perform_request(self, action, path, data, query, headers):
         """Performs an HTTP action."""
         url = self.base_url + "/" + path
-        req = Request(action, url, params=query, data=to_json(
-            data), auth=self.auth, headers=headers)
-        return self.session.send(self.session.prepare_request(req))
+
+        req = self.session.build_request(
+            action,
+            url,
+            params=query,
+            content=to_json(data),
+            headers=headers,
+        )
+
+        req = self.auth(req)
+
+        response = self.session.send(req)
+        return response

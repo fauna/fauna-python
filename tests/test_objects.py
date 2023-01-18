@@ -5,70 +5,75 @@ from faunadb.objects import FaunaTime, Ref, SetRef, Native
 from faunadb import query
 from tests.helpers import FaunaTestCase
 
+
 class ObjectsTest(FaunaTestCase):
-  @classmethod
-  def setUpClass(cls):
-    super(ObjectsTest, cls).setUpClass()
-    cls.ref = Ref("123", Ref("frogs", Native.COLLECTIONS))
-    cls.json_ref = ('{"@ref":{'
-                    '"collection":{"@ref":{"collection":{"@ref":{"id":"collections"}},"id":"frogs"}},'
-                    '"id":"123"'
-                    '}}')
 
-  def test_obj(self):
-    self.assertParseJson({"a": 1, "b": 2}, '{"@obj": {"a": 1, "b": 2}}')
+    @classmethod
+    def setUpClass(cls):
+        super(ObjectsTest, cls).setUpClass()
+        cls.ref = Ref("123", Ref("frogs", Native.COLLECTIONS))
+        cls.json_ref = (
+            '{"@ref":{'
+            '"collection":{"@ref":{"collection":{"@ref":{"id":"collections"}},"id":"frogs"}},'
+            '"id":"123"'
+            '}}')
 
-  def test_ref(self):
-    self.assertJson(self.ref, self.json_ref)
+    def test_obj(self):
+        self.assertParseJson({"a": 1, "b": 2}, '{"@obj": {"a": 1, "b": 2}}')
 
-    self.assertRaises(ValueError, lambda: Ref(None))
+    def test_ref(self):
+        self.assertJson(self.ref, self.json_ref)
 
-    ref = Ref("123", Native.KEYS)
-    self.assertEqual(ref.id(), "123")
-    self.assertEqual(ref.collection(), Native.KEYS)
-    self.assertEqual(ref.database(), None)
+        self.assertRaises(ValueError, lambda: Ref(None))
 
-    self.assertRegexCompat(
-      repr(ref),
-      r"Ref\(id=123, collection=Ref\(id=keys\)\)"
-    )
+        ref = Ref("123", Native.KEYS)
+        self.assertEqual(ref.id(), "123")
+        self.assertEqual(ref.collection(), Native.KEYS)
+        self.assertEqual(ref.database(), None)
 
-  def test_set(self):
-    index = Ref("frogs_by_size", Native.INDEXES)
-    json_index = '{"@ref":{"collection":{"@ref":{"id":"indexes"}},"id":"frogs_by_size"}}'
-    match = SetRef(query.match(index, self.ref))
-    json_match = '{"@set":{"match":%s,"terms":%s}}' % (json_index, self.json_ref)
-    self.assertJson(match, json_match)
+        self.assertRegexCompat(repr(ref),
+                               r"Ref\(id=123, collection=Ref\(id=keys\)\)")
 
-    self.assertNotEqual(
-      match,
-      SetRef(query.match(index, query.ref(query.collection("frogs"), "456")))
-    )
+    def test_set(self):
+        index = Ref("frogs_by_size", Native.INDEXES)
+        json_index = '{"@ref":{"collection":{"@ref":{"id":"indexes"}},"id":"frogs_by_size"}}'
+        match = SetRef(query.match(index, self.ref))
+        json_match = '{"@set":{"match":%s,"terms":%s}}' % (json_index,
+                                                           self.json_ref)
+        self.assertJson(match, json_match)
 
-  def test_time_conversion(self):
-    dt = datetime.now(iso8601.UTC)
-    self.assertEqual(FaunaTime(dt).to_datetime(), dt)
+        self.assertNotEqual(
+            match,
+            SetRef(
+                query.match(index, query.ref(query.collection("frogs"),
+                                             "456"))))
 
-    # Must be time zone aware.
-    self.assertRaises(ValueError, lambda: FaunaTime(datetime.utcnow()))
+    def test_time_conversion(self):
+        dt = datetime.now(iso8601.UTC)
+        self.assertEqual(FaunaTime(dt).to_datetime(), dt)
 
-    dt = datetime.fromtimestamp(0, iso8601.UTC)
-    ft = FaunaTime(dt)
-    self.assertEqual(ft, FaunaTime("1970-01-01T00:00:00Z"))
-    self.assertEqual(ft.to_datetime(), dt)
+        # Must be time zone aware.
+        self.assertRaises(ValueError, lambda: FaunaTime(datetime.utcnow()))
 
-  def test_time(self):
-    test_ts = FaunaTime("1970-01-01T00:00:00.123456789Z")
-    test_ts_json = '{"@ts":"1970-01-01T00:00:00.123456789Z"}'
-    self.assertJson(test_ts, test_ts_json)
+        dt = datetime.fromtimestamp(0, iso8601.UTC)
+        ft = FaunaTime(dt)
+        self.assertEqual(ft, FaunaTime("1970-01-01T00:00:00Z"))
+        self.assertEqual(ft.to_datetime(), dt)
 
-    self.assertToJson(datetime.fromtimestamp(0, iso8601.UTC), '{"@ts":"1970-01-01T00:00:00Z"}')
+    def test_time(self):
+        test_ts = FaunaTime("1970-01-01T00:00:00.123456789Z")
+        test_ts_json = '{"@ts":"1970-01-01T00:00:00.123456789Z"}'
+        self.assertJson(test_ts, test_ts_json)
 
-    self.assertEqual(repr(test_ts), "FaunaTime('1970-01-01T00:00:00.123456789Z')")
+        self.assertToJson(datetime.fromtimestamp(0, iso8601.UTC),
+                          '{"@ts":"1970-01-01T00:00:00Z"}')
 
-    self.assertNotEqual(test_ts, FaunaTime("some_other_time"))
+        self.assertEqual(repr(test_ts),
+                         "FaunaTime('1970-01-01T00:00:00.123456789Z')")
 
-  def test_date(self):
-    test_date = date(1970, 1, 1)
-    test_date_json = '{"@date":"1970-01-01"}'
-    self.assertJson(test_date, test_date_json)
+        self.assertNotEqual(test_ts, FaunaTime("some_other_time"))
+
+    def test_date(self):
+        test_date = date(1970, 1, 1)
+        test_date_json = '{"@date":"1970-01-01"}'
+        self.assertJson(test_date, test_date_json)
