@@ -1,50 +1,14 @@
 from unittest import TestCase
 from iso8601 import parse_date
 
-from faunadb.objects import Ref, SetRef, FaunaTime, Query, Native
 from faunadb._json import parse_json
 
 
 class DeserializationTest(TestCase):
 
-    def test_ref(self):
-        self.assertJson('{"@ref":{"id":"collections"}}', Native.COLLECTIONS)
-
-        self.assertJson(
-            '{"@ref":{"id":"widgets","collection":{"@ref":{"id":"collections"}}}}',
-            Ref("widgets", Native.COLLECTIONS))
-
-        self.assertJson(
-            """{
-                      "@ref":{
-                        "id":"widgets",
-                         "collection":{"@ref":{"id":"collections"}},
-                         "database":{
-                           "@ref":{
-                             "id":"db",
-                             "collection":{"@ref":{"id":"databases"}}
-                           }
-                         }
-                      }
-                    }""",
-            Ref("widgets", Native.COLLECTIONS, Ref("db", Native.DATABASES)))
-
-    def test_set_ref(self):
-        self.assertJson(
-            """{
-                      "@set":{
-                        "match":{"@ref":{"id":"widgets","collection":{"@ref":{"id":"collections"}}}},
-                        "terms":"Laptop"
-                      }
-                    }""",
-            SetRef({
-                "match": Ref("widgets", Native.COLLECTIONS),
-                "terms": "Laptop"
-            }))
-
     def test_fauna_time(self):
-        self.assertJson('{"@ts":"1970-01-01T00:00:00.123456789Z"}',
-                        FaunaTime('1970-01-01T00:00:00.123456789Z'))
+        self.assertJson('{"@time":"1970-01-01T00:00:00.123456789Z"}',
+                        parse_date('1970-01-01T00:00:00.123456789Z'))
 
     def test_date(self):
         self.assertJson('{"@date":"1970-01-01"}',

@@ -1,24 +1,129 @@
-from typing import Callable, cast
+from typing import Callable, cast, Any, Optional, SupportsInt, TypeVar, Generic
 import os
 import platform
 import sys
 import threading
 
 from time import time
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, MISSING
 
 import httpx
 
 from faunadb import __api_version__ as api_version
 from faunadb import __version__ as pkg_version
-from faunadb._json import parse_json_or_none, to_json
+from faunadb._json import parse_json_or_none, to_json, _FaunaJSONEncoder
 from faunadb.errors import FaunaError, UnexpectedError, _get_or_raise
-from faunadb.query import _wrap
+
 from faunadb.request_result import RequestResult
-from faunadb.streams import Subscription
+# from faunadb.streams import Subscription
 
 
-class HTTPBearerAuth:
+class _Constants:
+
+    EndpointProduction = "https://db.fauna.com"
+    EndpointPreview = "https://db.fauna-preview.com"
+    EndpointLocal = "http://localhost:8443"
+
+    # default fauna client settings
+    DefaultEndpoint = EndpointProduction
+
+    # default http client settings
+    DefaultHttpConnectTimeout = 1 * 60
+    DefaultHttpReadTimeout = 1 * 60
+    DefaultHttpWriteTimeout = 1 * 60
+    DefaultHttpPoolTimeout = DefaultHttpReadTimeout
+    DefaultKeepaliveExpiry = 4  # wait this long before timing out idle connections
+    DefaultMaxConnections = 20
+    DefaultMaxIdleConnections = 20
+
+    # well-known fauna headers
+    HeaderAuthorization = "Authorization"
+    HeaderContentType = "Content-Type"
+    HeaderTxnTime = "X-Txn-Time"
+    HeaderLastSeenTxn = "X-Last-Seen-Txn"
+    HeaderLinearized = "X-Linearized"
+    HeaderMaxContentionRetries = "X-Max-Contention-Retries"
+    HeaderTimeoutMs = "X-Timeout-Ms"
+    # HeaderTypeChecking = "X-Fauna-Type-Checking"
+
+
+T = TypeVar('T')
+
+
+class _SettingFromEnviron(Generic[T]):
+
+    def __init__(
+        self,
+        var_name: str,
+        default_value: str,
+        adapt_from_str: Callable[[str], T],
+    ):
+        self.__var_name = var_name
+        self.__default_value = default_value
+        self.__adapt_from_str = adapt_from_str
+
+    def __call__(self) -> T:
+        return self.__adapt_from_str(
+            os.environ.get(self.__var_name, default=self.__default_value))
+
+
+def _fancy_bool_from_str(val: str) -> bool:
+    return val.lower() in ["1", "true", "yes", "y"]
+
+
+class _Environment:
+
+    EnvFaunaEndpoint = _SettingFromEnviron(
+        "FAUNA_ENDPOINT",
+        _Constants.EndpointProduction,
+        str,
+    )
+    """environment variable for Fauna Client HTTP endpoint"""
+
+    EnvFaunaSecret = _SettingFromEnviron(
+        "FAUNA_SECRET",
+        "",
+        str,
+    )
+    """environment variable for Fauna Client authentication"""
+
+    EnvFaunaMaxConns = _SettingFromEnviron(
+        "FAUNA_MAX_CONNS",
+        "10",
+        int,
+    )
+    """environment variable for Fauna Client Max Connections per FaunaClient instance"""
+
+    EnvFaunaTimeout = _SettingFromEnviron(
+        "FAUNA_TIMEOUT",
+        "60",
+        int,
+    )
+    """environment variable for Fauna Client Read-Idle Timeout"""
+
+    EnvFaunaTypeCheckEnabled = _SettingFromEnviron(
+        "FAUNA_TYPE_CHECK_ENABLED",
+        "1",
+        _fancy_bool_from_str,
+    )
+    """environment variable for Fauna Client Request TypeChecking"""
+
+    EnvFaunaTrackTxnTimeEnabled = _SettingFromEnviron(
+        "FAUNA_TRACK_TXN_TIME_ENABLED",
+        "1",
+        _fancy_bool_from_str,
+    )
+    """environment variable for Fauna Client automatic tracking of last transaction time"""
+
+    EnvFaunaVerboseDebugEnabled = _SettingFromEnviron(
+        "FAUNA_VERBOSE_DEBUG_ENABLED",
+        "0",
+        _fancy_bool_from_str,
+    )
+    """environment variable for Fauna Client verbose debugging mode"""
+
+
+class _HTTPBearerAuth:
     """Creates a bearer base auth object"""
 
     def auth_header(self):
@@ -34,11 +139,11 @@ class HTTPBearerAuth:
         return not self == other
 
     def __call__(self, r):
-        r.headers['Authorization'] = self.auth_header()
+        r.headers[_Constants.HeaderAuthorization] = self.auth_header()
         return r
 
 
-class RuntimeEnvHeader:
+class _RuntimeEnvHeader:
 
     def __init__(self):
         self.pythonVersion = "{0}.{1}.{2}-{3}".format(*sys.version_info)
@@ -107,9 +212,12 @@ class RuntimeEnvHeader:
 class _LastTxnTime(object):
     """Wraps tracking the last transaction time supplied from the database."""
 
-    def __init__(self):
+    def __init__(
+        self,
+        time: Optional[str] = None,
+    ):
         self._lock = threading.Lock()
-        self._time: None | int = None
+        self._time = time
 
     @property
     def time(self):
@@ -124,9 +232,9 @@ class _LastTxnTime(object):
         t = self.time
         if t is None:
             return {}
-        return {"X-Last-Seen-Txn": str(t)}
+        return {_Constants.HeaderLastSeenTxn: str(t)}
 
-    def update_txn_time(self, new_txn_time):
+    def update_txn_time(self, new_txn_time: int):
         """Updates the internal transaction time.
         In order to maintain a monotonically-increasing value, `newTxnTime`
         is discarded if it is behind the current timestamp."""
@@ -137,144 +245,286 @@ class _LastTxnTime(object):
                 self._time = max(self._time, new_txn_time)
 
 
-class _Counter(object):
+@dataclass(frozen=True)
+class FaunaClientConfiguration:
 
-    def __init__(self, init_value=0):
-        self.lock = threading.Lock()
-        self.counter = init_value
+    endpoint: str = _Environment.EnvFaunaEndpoint()
+    """
+    Determines which fauna endpoint to connect to
+    Value can be one of 'Production', 'Preview', 'Local' or a fully qualified url providing the fauna endpoint to use.
+    Default Behavior
+     If this argument is None, then the driver checks the value of env var FAUNA_ENDPOINT.  If the env var is not provided, then defaults to 'Production'
+    """
 
-    def __str__(self):
-        return "Counter(%s)" % self.counter
+    secret: Optional[str] = _Environment.EnvFaunaSecret()
+    """
+    A secret for your Fauna DB, used to authorize your queries.
+    @see https://docs.fauna.com/fauna/current/security/keys
+    """
 
-    def get_and_increment(self):
-        with self.lock:
-            counter = self.counter
-            self.counter += 1
-            return counter
+    max_conns: SupportsInt = _Environment.EnvFaunaMaxConns()
+    """
+    The maximum number of connections to a make to Fauna from an instance of the FaunaClient
 
-    def decrement(self):
-        with self.lock:
-            self.counter -= 1
-            return self.counter
+    Default Behavior
+     If this argument is None, then the driver checks the value of env var FAUNA_MAX_CONNECTIONS.  If the env var is not provided, then defaults to 10
+    """
+
+    track_txn_time_enabled: bool = _Environment.EnvFaunaTrackTxnTimeEnabled()
+    """
+    Set to true to configure the driver to automatically advance the transaction time associated with this fauna client after every received response
+
+    Default Behavior:
+     If this argument is None, then the driver checks the env var FAUNA_TRACK_TXN_TIME_ENABLED.  If that env var is not provided, then defaults to True
+    """
+
+    type_check_enabled: bool = _Environment.EnvFaunaTypeCheckEnabled()
+    """
+    Set to true to configure the fauna-server to run type-checking on the query before executing it
+    
+    Default Behavior:
+     If this argument is None, then the driver checks the env var FAUNA_TYPE_CHECK_ENABLED.  If the env var is not provided, then defaults to True
+    """
+
+    timeout_ms: Optional[SupportsInt] = None
+    """
+    The timeout of each query, in milliseconds. This controls the maximum amount of
+    time Fauna will execute your query before marking it failed.
+    Can be overridden per-request
+
+    Default Behavior:
+     Query timeout is determined by the fauna service
+    """
+
+    linearized: Optional[bool] = None
+    """
+    If true, unconditionally run the query as strictly serialized.
+    This affects read-only transactions. Transactions which write
+    will always be strictly serialized.
+    Can be overridden per-request
+    """
+
+    max_contention_retries: Optional[SupportsInt] = None
+    """
+    The max number of times to retry the query if contention is encountered.
+    Can be overridden per-request
+    """
+
+    tags: Optional[dict[str, str]] = None
+    """
+    Tags to add to each query sent by this FaunaClient instance -- these can be used to categorize and search queries in logs/telemetry
+    Can be overridden per-request
+    """
+
+    traceparent: Optional[str] = None
+    """
+    A traceparent provided back via logging and telemetry.
+    Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    Can be overridden per-request
+    """
+
+    last_txn_time: Optional[str] = None
+    """
+    An ISO-8601 timestamp to use as the initial value for the last transaction time observed by this client.  (useful primarily from testing contexts)
+    If `track_txn_time_enabled` is not set to False then the client will update this value as requests arrive.
+    Note: if desired and regardless of the value of track_txn_time_enabled, the effect of this value can be overridden per-request via the `last_txn` request field 
+    """
+
+
+@dataclass(frozen=True)
+class _FaunaClientConfiguration:
+    """Validated version of FaunaClientConfiguration with non-optional values determined"""
+
+    endpoint: str
+    secret: str
+    max_conns: int
+    track_txn_time_enabled: bool
+    type_check_enabled: bool
+    timeout_ms: Optional[int] = None
+    linearized: Optional[bool] = None
+    max_contention_retries: Optional[int] = None
+    tags: Optional[dict[str, str]] = None
+    traceparent: Optional[str] = None
+    last_txn_time: Optional[str] = None
+
+    @classmethod
+    def _normalize_endpoint(cls, url: str):
+        return url.rstrip("/\\")
+
+    @classmethod
+    def from_fauna_client_configuration(cls, obj: FaunaClientConfiguration):
+        endpoint = cls._normalize_endpoint(obj.endpoint)
+
+        secret = obj.secret
+        if secret is None:
+            raise ValueError(
+                """You must provide a secret to the fauna driver. Set it
+            in an environment variable named FAUNA_SECRET or pass it to the FaunaClient
+            constructor.""")
+
+        max_conns = int(obj.max_conns)
+        track_txn_time_enabled = obj.track_txn_time_enabled
+        type_check_enabled = obj.type_check_enabled
+        timeout_ms = int(obj.timeout_ms) if obj.timeout_ms else None
+        max_contention_retries = int(
+            obj.max_contention_retries) if obj.max_contention_retries else None
+        tags = obj.tags
+        traceparent = obj.traceparent
+        last_txn_time = obj.last_txn_time
+
+        config = _FaunaClientConfiguration(
+            endpoint=endpoint,
+            secret=secret,
+            max_conns=max_conns,
+            track_txn_time_enabled=track_txn_time_enabled,
+            type_check_enabled=type_check_enabled,
+            timeout_ms=timeout_ms,
+            max_contention_retries=max_contention_retries,
+            tags=tags,
+            traceparent=traceparent,
+            last_txn_time=last_txn_time,
+        )
+
+        return config
+
+    def merging_fauna_request_configuration(
+        self,
+        obj: Optional['FaunaRequestParameters'] = None,
+    ):
+
+        if obj is None:
+            return self
+
+        return _FaunaClientConfiguration(
+            **self,
+            **obj._to_non_default_dict(),
+        )
+
+
+@dataclass(frozen=True)
+class FaunaRequestParameters:
+
+    def _to_non_default_dict(self):
+        """Return dict representation of this dataclass filtering out any values which were not specified to constructor"""
+        d = {}
+        for field in fields(self):
+            if (field.default is MISSING):
+                continue
+            d[field.name] = getattr(self, field.name)
+        return d
+
+    secret: Optional[str] = None
+    """
+    A secret for your Fauna DB, used to authorize your queries.
+    @see https://docs.fauna.com/fauna/current/security/keys
+    """
+
+    last_txn: Optional[str] = None
+    """
+    The ISO-8601 timestamp of the last transaction the client has previously observed.
+    This client will track this by default, however, if you wish to override
+    this value for a given request set this value.
+    """
+
+    linearized: Optional[bool] = None
+    """
+    If true, unconditionally run the query as strictly serialized.
+    This affects read-only transactions. Transactions which write
+    will always be strictly serialized.
+    Overrides the optional setting for the client.
+    """
+
+    timeout_ms: Optional[SupportsInt] = None
+    """
+    The timeout to use in this query in milliseconds.
+    Overrides the timeout for the client.
+    """
+
+    max_contention_retries: Optional[SupportsInt] = None
+    """
+    The max number of times to retry the query if contention is encountered.
+    Overrides the optional setting for the client.
+    """
+
+    type_check_enabled: Optional[bool] = None
+    """
+    Optional. Set to true to configure the fauna-server to run type-checking on the query before executing it
+    Default: If this argument is None, then the driver checks the env var FAUNA_TYPE_CHECK_ENABLED.  If the env var is not provided, then defaults to True
+    """
+
+    tags: Optional[dict[str, str]] = None
+    """
+    Tags provided back via logging and telemetry.
+    Overrides the optional setting on the client.
+    """
+
+    traceparent: Optional[str] = None
+    """
+    A traceparent provided back via logging and telemetry.
+    Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    Overrides the optional setting for the client.
+    """
 
 
 class FaunaClient(object):
     """
-    Directly communicates with FaunaDB via JSON.
-
-    For data sent to the server, the ``to_fauna_json`` method will be called on any values.
-    It is encouraged to pass e.g. :any:`Ref` objects instead of raw JSON data.
-
-    All methods return a converted JSON response.
-    This is a dict containing lists, ints, floats, strings, and other dicts.
-    Any :any:`Ref`, :any:`SetRef`, :any:`FaunaTime`, or :class:`datetime.date`
-    values in it will also be parsed.
-    (So instead of ``{"@ref": {"id": "frogs", "class": {"@ref": {"id": "classes"}}}}``,
-    you will get ``Ref("frogs", Native.CLASSES)``.)
+    Directly communicates with Fauna via JSON.
     """
 
-    # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self,
-                 secret,
-                 domain="db.fauna.com",
-                 scheme="https",
-                 port=None,
-                 timeout=60,
-                 observer=None,
-                 pool_connections=10,
-                 pool_maxsize=10,
-                 endpoint=None,
-                 **kwargs):
+    def __init__(
+        self,
+        configuration: Optional[FaunaClientConfiguration] = None,
+        observer: Optional[Callable[[RequestResult], Any]] = None,
+        request_client: httpx.Client = httpx.Client(
+            trust_env=False,
+            http1=False,
+            http2=True,
+            timeout=httpx.Timeout(
+                connect=_Constants.DefaultHttpConnectTimeout,
+                read=_Constants.DefaultHttpReadTimeout,
+                write=_Constants.DefaultHttpWriteTimeout,
+                pool=_Constants.DefaultHttpPoolTimeout,
+            ),
+            limits=httpx.Limits(
+                max_connections=_Constants.DefaultMaxConnections,
+                max_keepalive_connections=_Constants.DefaultMaxIdleConnections,
+                keepalive_expiry=_Constants.DefaultKeepaliveExpiry,
+            ),
+        ),
+    ):
         """
-        :param secret:
-          Auth token for the FaunaDB server.
-        :param domain:
-          Base URL for the FaunaDB server.
-        :param scheme:
-          ``"http"`` or ``"https"``.
-        :param port:
-          Port of the FaunaDB server.
-        :param timeout:
-          Read timeout in seconds.
+        :param configuration:
+          Driver configuration parameters
         :param observer:
-          Callback that will be passed a :any:`RequestResult` after every completed request.
-        :param pool_connections:
-          The number of connection pools to cache.
-        :param pool_maxsize:
-          The maximum number of connections to save in the pool.
-        :param endpoint:
-          Full URL for the FaunaDB server.
+          Optional. Callback that will be passed a :any:`RequestResult` after every completed request.
+        :param request_client:
+          Optional, An instance of httpx.Client to use to issue http requests
+          Defaults to using a global shared instance
+          You may provide your own values for this parameter gain more control of things parameters like network layer timeouts and connection pooling, however sticking with the default shared instance is recommended
         """
 
-        self.check_new_version()
+        if configuration is None:
+            configuration = FaunaClientConfiguration()
 
-        self.domain = domain
-        self.scheme = scheme
-        self.port = (
-            443 if scheme == "https" else 80) if port is None else port
+        self.configuration = _FaunaClientConfiguration.from_fauna_client_configuration(
+            configuration)
 
-        self.auth = HTTPBearerAuth(secret)
-        constructed_url = "%s://%s:%s" % (self.scheme, self.domain, self.port)
-        self.base_url = self._normalize_endpoint(
-            endpoint) if endpoint else constructed_url
         self.observer = observer
 
-        self.pool_connections = pool_connections
-        self.pool_maxsize = pool_maxsize
+        self._auth = _HTTPBearerAuth(self.configuration.secret)
 
-        self._last_txn_time = cast(
-            _LastTxnTime, kwargs.get('last_txn_time')) or _LastTxnTime()
-        self._query_timeout_ms = kwargs.get('query_timeout_ms')
-        if self._query_timeout_ms is not None:
-            self._query_timeout_ms = int(self._query_timeout_ms)
+        # immutable, don't mutate it!  that's the only reason this is threadsafe
+        self._headers = {
+            "Accept-Encoding": "gzip",
+            _Constants.HeaderContentType: "application/json;charset=utf-8",
+            "X-Fauna-Driver": "python",
+            # "X-FaunaDB-API-Version": api_version,
+            "X-Driver-Env": str(_RuntimeEnvHeader())
+        }
 
-        self.timeout = timeout
-        if ('session' not in kwargs
-                or kwargs['session'] == None) or ('counter' not in kwargs):
-            headers = {
-                "Accept-Encoding": "gzip",
-                "Content-Type": "application/json;charset=utf-8",
-                "X-Fauna-Driver": "python",
-                "X-FaunaDB-API-Version": api_version,
-                "X-Driver-Env": str(RuntimeEnvHeader())
-            }
-
-            if self._query_timeout_ms is not None:
-                headers["X-Query-Timeout"] = str(self._query_timeout_ms)
-
-            self.session = httpx.Client(
-                http1=False,
-                http2=True,
-                timeout=httpx.Timeout(
-                    connect=timeout,
-                    read=timeout,
-                    write=timeout,
-                    pool=timeout,
-                ),
-                headers=headers,
-                limits=httpx.Limits(
-                    max_connections=pool_maxsize,
-                    max_keepalive_connections=pool_maxsize,
-                    keepalive_expiry=None,
-                ))
-            self.counter = _Counter(1)
-        else:
-            self.session: httpx.Client = kwargs['session']
-            self.counter: _Counter = kwargs['counter']
-
-    def check_new_version(self):
-        response = httpx.get('https://pypi.org/pypi/faunadb/json')
-        latest_version = response.json().get('info').get('version')
-
-        if latest_version > pkg_version:
-            msg1 = "New fauna version available {} => {}".format(
-                pkg_version, latest_version)
-            msg2 = "Changelog: https://github.com/fauna/faunadb-python/blob/v4/CHANGELOG.md"
-            width = 80
-            print('+' + '-' * width + '+')
-            print('| ' + msg1 + ' ' * (width - len(msg1) - 1) + '|')
-            print('| ' + msg2 + ' ' * (width - len(msg2) - 1) + '|')
-            print('+' + '-' * width + '+')
+        # driver state -- must be threadsafe
+        self.session = request_client
+        self._last_txn_time = _LastTxnTime(self.configuration.last_txn_time)
 
     def sync_last_txn_time(self, new_txn_time: int):
         """
@@ -300,16 +550,47 @@ class FaunaClient(object):
         """
         Get the query timeout for all queries.
         """
-        return self._query_timeout_ms
+        return self.configuration.timeout_ms
 
-    def _normalize_endpoint(self, endpoint):
-        return endpoint.rstrip("/\\")
+    def new_session_client(
+            self,
+            configuration: Optional[FaunaRequestParameters] = None,
+            observer: Optional[Callable[[RequestResult], Any]] = None,
+            request_client: Optional[httpx.Client] = None):
+        """
+        Create a new client from an existing config with overridden settings
 
-    def __del__(self):
-        if self.counter.decrement() == 0:
-            self.session.close()
+        :param configuration:
+          Settings to change on new fauna client instance
+        :param observer:
+          Callback that will be passed a :any:`RequestResult` after every completed request.
+        :param request_client:
+          client instance to use, if None will use `request_client` from existing `FaunaClient` instance
+        :return:
+        """
 
-    def query(self, expression, timeout_millis=None):
+        merged_config = self.configuration.merging_fauna_request_configuration(
+            configuration)
+
+        return FaunaClient(
+            configuration=FaunaClientConfiguration(
+                **{
+                    **merged_config.__dict__,
+                    **{
+                        "last_txn_time": self.get_last_txn_time()
+                    }
+                }),
+            observer=observer if observer is not None else self.observer,
+            request_client=request_client
+            if request_client is not None else self.session,
+        )
+
+    def query(
+        self,
+        fql: str,
+        arguments: Any = None,
+        params: Optional[FaunaRequestParameters] = None,
+    ):
         """
         Use the FaunaDB query API.
 
@@ -317,116 +598,54 @@ class FaunaClient(object):
         :param timeout_millis: Query timeout in milliseconds.
         :return: Converted JSON response.
         """
-        return self._execute("POST",
-                             "",
-                             _wrap(expression),
-                             with_txn_time=True,
-                             query_timeout_ms=timeout_millis)
+        return self._execute(
+            "POST",
+            "/query/1",
+            fql=fql,
+            arguments=arguments,
+            params=params,
+        )
 
-    def stream(self,
-               expression,
-               options=None,
-               on_start=None,
-               on_error=None,
-               on_version=None,
-               on_history=None,
-               on_set=None):
-        """
-        Creates a stream Subscription to the result of the given read-only expression. When
-        executed.
-
-        The subscription returned by this method does not issue any requests until
-        the subscription's start method is called. Make sure to
-        subscribe to the events of interest, otherwise the received events are simply
-        ignored.
-
-        :param expression:   A read-only expression.
-        :param    options:   Object that configures the stream subscription. E.g set fields to return
-        :param   on_start:   Callback for the stream's start event.
-        :param   on_error:   Callback for the stream's error event.
-        :param   on_version: Callback for the stream's version events.
-        :param   on_history: Callback for the stream's history_rewrite events.
-        :param   on_set:     Callback for the stream's set events.
-        """
-        subscription = Subscription(self, expression, options)
-        subscription.on('start', on_start)
-        subscription.on('error', on_error)
-        subscription.on('version', on_version)
-        subscription.on('history_rewrite', on_history)
-        subscription.on('set', on_set)
-        return subscription
-
-    def ping(self, scope=None, timeout=None):
-        """
-        Ping FaunaDB.
-        """
-        return self._execute("GET",
-                             "ping",
-                             query={
-                                 "scope": scope,
-                                 "timeout": timeout
-                             })
-
-    def new_session_client(self,
-                           secret,
-                           use_separate_connection_pool=False,
-                           observer=None):
-        """
-        Create a new client from the existing config with a given secret.
-        If use_separate_connection_pool is false then the returned client share its parent underlying resources.
-        If true, the client will use a separate connection pool.
-
-        :param secret:
-          Credentials to use when sending requests.
-        :param use_separate_connection_pool:
-          If true, the new client will not re-use the connection pool associated with the existing client
-        :param observer:
-          Callback that will be passed a :any:`RequestResult` after every completed request.
-        :return:
-        """
-        if self.counter.get_and_increment() > 0:
-            return FaunaClient(secret=secret,
-                               domain=self.domain,
-                               scheme=self.scheme,
-                               port=self.port,
-                               timeout=self.timeout,
-                               observer=observer or self.observer,
-                               session=self.session if
-                               use_separate_connection_pool == False else None,
-                               counter=self.counter if
-                               use_separate_connection_pool == False else None,
-                               pool_connections=self.pool_connections,
-                               pool_maxsize=self.pool_maxsize,
-                               last_txn_time=self._last_txn_time,
-                               query_timeout_ms=self._query_timeout_ms)
-        else:
-            raise UnexpectedError(
-                "Cannnot create a session client from a closed session", None)
-
-    def _execute(self,
-                 action,
-                 path,
-                 data=None,
-                 query=None,
-                 with_txn_time=False,
-                 query_timeout_ms=None):
+    def _execute(
+        self,
+        action,
+        path,
+        fql: str,
+        arguments: Any,
+        params: Optional[FaunaRequestParameters] = None,
+    ):
         """Performs an HTTP action, logs it, and looks for errors."""
-        if query is not None:
-            query = {k: v for k, v in query.items() if v is not None}
+        c = self.configuration.merging_fauna_request_configuration(params)
 
-        headers = {}
+        headers = self._headers.copy()
 
-        if query_timeout_ms is not None:
-            headers["X-Query-Timeout"] = str(query_timeout_ms)
-
-        if with_txn_time:
+        if c.timeout_ms is not None:
+            headers[_Constants.HeaderTimeoutMs] = str(c.timeout_ms)
+        if c.track_txn_time_enabled:
             headers.update(self._last_txn_time.request_header)
 
+        request_content: dict[str, Any] = {
+            "format": "typed",
+            "query": fql,
+        }
+
+        # note: we convert to typed format
+        # but we don't actually convert this to a json string ...
+        # because the whole payload including the query is a json string
+        # instead we convert to a pojo containing the tagged format ...
+        if arguments is not None:
+            request_content["arguments"] = _FaunaJSONEncoder().encode(
+                arguments)
+
+        if c.type_check_enabled:
+            request_content["typecheck"] = c.type_check_enabled
+
         start_time = time()
-        response = self._perform_request(action, path, data, query, headers)
+        response = self._perform_request(action, path, request_content,
+                                         headers)
         end_time = time()
 
-        if with_txn_time:
+        if c.track_txn_time_enabled:
             if "X-Txn-Time" in response.headers:
                 new_txn_time = int(response.headers["X-Txn-Time"])
                 self.sync_last_txn_time(new_txn_time)
@@ -437,8 +656,7 @@ class FaunaClient(object):
         request_result = RequestResult(
             action,
             path,
-            query,
-            data,
+            request_content,
             response_raw,
             response_content,
             response.status_code,
@@ -454,21 +672,26 @@ class FaunaClient(object):
             raise UnexpectedError("Invalid JSON.", request_result)
 
         FaunaError.raise_for_status_code(request_result)
-        return _get_or_raise(request_result, response_content, "resource")
+        return _get_or_raise(request_result, response_content, "data")
 
-    def _perform_request(self, action, path, data, query, headers):
+    def _perform_request(
+        self,
+        action: str,
+        path: str,
+        request_content: Any,
+        headers,
+    ):
         """Performs an HTTP action."""
-        url = self.base_url + "/" + path
+        url = self.configuration.endpoint + path
 
         req = self.session.build_request(
             action,
             url,
-            params=query,
-            content=to_json(data),
+            json=request_content,
             headers=headers,
         )
 
-        req = self.auth(req)
+        req = self._auth(req)
 
         response = self.session.send(req)
         return response

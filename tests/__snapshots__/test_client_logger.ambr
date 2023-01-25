@@ -1,0 +1,47 @@
+# name: test_logging
+  dict({
+    'request': dict({
+      'json': dict({
+        'format': 'typed',
+        'query': '{x: 123}',
+        'typecheck': True,
+      }),
+      'method': 'POST',
+      'path': '/query/1',
+    }),
+    'response': dict({
+      'code': 200,
+      'content': dict({
+        'data': dict({
+          'x': 123,
+        }),
+        'static_type': '{ x: 123 }',
+        'summary': '',
+      }),
+      'headers': dict({
+        'content-length': '107',
+        'content-type': 'application/json;charset=utf-8',
+        'x-byte-read-ops': '0',
+        'x-byte-write-ops': '0',
+        'x-compute-ops': '1',
+        'x-faunadb-build': '23.01.00-3af33d3',
+        'x-query-bytes-in': '59',
+        'x-query-bytes-out': '107',
+        'x-read-ops': '0',
+        'x-storage-bytes-read': '0',
+        'x-storage-bytes-write': '0',
+        'x-txn-retries': '0',
+        'x-write-ops': '0',
+      }),
+      'raw': dict({
+        'data': dict({
+          'x': dict({
+            '@int': '123',
+          }),
+        }),
+        'static_type': '{ x: 123 }',
+        'summary': '',
+      }),
+    }),
+  })
+# ---

@@ -1,12 +1,10 @@
 from base64 import decode, urlsafe_b64decode, urlsafe_b64encode
-from datetime import date, datetime
+from datetime import datetime
 from json import JSONEncoder, dumps, loads
 
 from iso8601 import parse_date
 
 from faunadb.errors import UnexpectedError
-from faunadb.objects import FaunaTime, Native, Query, Ref, SetRef
-from faunadb.query import _Expr
 
 
 def parse_json(json_string):
@@ -29,25 +27,23 @@ def _parse_json_hook(dct):
     """
     Looks for FaunaDB types in a JSON object and converts to them if possible.
     """
-    if "@ref" in dct:
-        ref = dct["@ref"]
-
-        if (not "collection" in ref) and (not "database" in ref):
-            return Native.from_name(ref["id"])
-
-        return Ref(ref["id"], ref.get("collection"), ref.get("database"))
-    if "@obj" in dct:
-        return dct["@obj"]
-    if "@set" in dct:
-        return SetRef(dct["@set"])
-    if "@query" in dct:
-        return Query(dct["@query"])
-    if "@ts" in dct:
-        return FaunaTime(dct["@ts"])
+    if "@int" in dct:
+        return int(dct["@int"])
+    if "@long" in dct:
+        return int(dct["@long"])
+    if "@double" in dct:
+        return float(dct["@double"])
+    if "@object" in dct:
+        return dct["@object"]
+    if "@module" in dct:
+        raise NotImplemented("@module not implemented")
     if "@date" in dct:
         return parse_date(dct["@date"]).date()
-    if "@bytes" in dct:
-        return bytearray(urlsafe_b64decode(dct["@bytes"].encode()))
+    if "@time" in dct:
+        return parse_date(dct["@time"])
+    if "@doc" in dct:
+        raise NotImplemented("@doc not implemented")
+
     return dct
 
 
@@ -66,6 +62,38 @@ def to_json(dct, pretty=False, sort_keys=False):
                  cls=_FaunaJSONEncoder,
                  sort_keys=sort_keys,
                  separators=(",", ":"))
+
+
+class _FaunaJSONEncoder(JSONEncoder):
+    """Converts values to JSON 'tagged' format."""
+
+    int_ranage = [-2**32 + 1, -2**32 - 1]
+    long_range = [-2**64 + 1, -2**64 - 1]
+
+    def default(self, obj):
+        if isinstance(obj, int) and -2**31 + 1 <= obj <= 2**31 - 1:
+            return {"@int": repr(obj)}
+        elif isinstance(obj, int) and -2**63 + 1 <= obj <= 2**63 - 1:
+            return {"@long": repr(obj)}
+        elif isinstance(obj, int):
+            raise ValueError(
+                "Precision loss when converting int to Fauna tagged format")
+        elif isinstance(obj, float):
+            return {"@double": repr(obj)}
+        elif isinstance(obj, datetime):
+            value = obj.isoformat()
+            if len(value) == 10:
+                return {"@date": value}
+            else:
+                return {"@time": value}
+        elif isinstance(obj, dict):
+            if any(i.startswith("@") for i in obj.keys()):
+                return {"@object": obj}
+            return obj
+        else:
+            raise UnexpectedError(
+                "Unserializable object {} of type {}".format(obj, type(obj)),
+                None)
 
 
 def stream_content_to_json(buffer):
@@ -87,23 +115,3 @@ def stream_content_to_json(buffer):
                 buffer = buffer[pos].encode()
 
     return {"buffer": buffer, "values": values}
-
-
-class _FaunaJSONEncoder(JSONEncoder):
-    """Converts :any:`_Expr`, :any:`datetime`, :any:`date` to JSON."""
-
-    # pylint: disable=method-hidden,arguments-differ
-
-    def default(self, obj):
-        if isinstance(obj, _Expr):
-            return obj.to_fauna_json()
-        elif isinstance(obj, datetime):
-            return FaunaTime(obj).to_fauna_json()
-        elif isinstance(obj, date):
-            return {"@date": obj.isoformat()}
-        elif isinstance(obj, (bytes, bytearray)):
-            return {"@bytes": urlsafe_b64encode(obj).decode('utf-8')}
-        else:
-            raise UnexpectedError(
-                "Unserializable object {} of type {}".format(obj, type(obj)),
-                None)

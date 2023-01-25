@@ -6,22 +6,23 @@ from collections import namedtuple
 from logging import getLogger, WARNING
 from os import environ
 from unittest import TestCase
-# pylint: disable=redefined-builtin
-from builtins import object, range
+import pytest
 
 import httpx
 
 from faunadb._json import to_json, parse_json
-from faunadb.client import FaunaClient
-from faunadb import query
+from faunadb.client import FaunaClient, FaunaClientConfiguration
 
 _FAUNA_ROOT_KEY = environ["FAUNA_ROOT_KEY"]
-# If None, these have defaults in FaunaClient.
-_FAUNA_DOMAIN = environ.get("FAUNA_DOMAIN")
-_FAUNA_SCHEME = environ.get("FAUNA_SCHEME")
-_FAUNA_PORT = environ.get("FAUNA_PORT")
+_FAUNA_ENDPOINT = environ["FAUNA_ENDPOINT"]
 
-_FAUNA_QUERY_TIMEOUT_MS = environ.get("FAUNA_QUERY_TIMEOUT_MS")
+
+@pytest.fixture(scope="module") 
+def root_client():
+    return FaunaClient(configuration=FaunaClientConfiguration(
+        secret=_FAUNA_ROOT_KEY,
+        endpoint=_FAUNA_ENDPOINT,
+    ))
 
 
 class FaunaTestCase(TestCase):
@@ -34,32 +35,35 @@ class FaunaTestCase(TestCase):
 
         rnd = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
         cls.db_name = "faunadb-python-test" + rnd
-        cls.db_ref = query.database(cls.db_name)
+        # cls.db_ref = query.database(cls.db_name)
 
-        db_exists = cls.root_client.query(query.exists(cls.db_ref))
-        if db_exists:
-            cls.root_client.query(query.delete(cls.db_ref))
+        cls.client = cls.root_client.new_session_client()
 
-        cls.root_client.query(query.create_database({"name": cls.db_name}))
+        # db_exists = cls.root_client.query(query.exists(cls.db_ref))
+        # if db_exists:
+        #     cls.root_client.query(query.delete(cls.db_ref))
 
-        cls.server_key = cls.root_client.query(
-            query.create_key({
-                "database": cls.db_ref,
-                "role": "server"
-            }))["secret"]
-        cls.client = cls.root_client.new_session_client(secret=cls.server_key)
+        # cls.root_client.query(query.create_database({"name": cls.db_name}))
 
-        cls.admin_key = cls.root_client.query(
-            query.create_key({
-                "database": cls.db_ref,
-                "role": "admin"
-            }))["secret"]
-        cls.admin_client = cls.root_client.new_session_client(
-            secret=cls.admin_key)
+        # cls.server_key = cls.root_client.query(
+        #     query.create_key({
+        #         "database": cls.db_ref,
+        #         "role": "server"
+        #     }))["secret"]
+        # cls.client = cls.root_client.new_session_client(secret=cls.server_key)
+
+        # cls.admin_key = cls.root_client.query(
+        #     query.create_key({
+        #         "database": cls.db_ref,
+        #         "role": "admin"
+        #     }))["secret"]
+        # cls.admin_client = cls.root_client.new_session_client(
+        #     secret=cls.admin_key)
 
     @classmethod
     def tearDownClass(cls):
-        cls.root_client.query(query.delete(cls.db_ref))
+        pass
+        # cls.root_client.query(query.delete(cls.db_ref))
 
     def assertJson(self, obj, json):
         self.assertToJson(obj, json)
@@ -88,32 +92,14 @@ class FaunaTestCase(TestCase):
 
     @classmethod
     def _get_client(cls):
-        args = {
-            "domain": _FAUNA_DOMAIN,
-            "scheme": _FAUNA_SCHEME,
-            "port": _FAUNA_PORT,
-            "query_timeout_ms": _FAUNA_QUERY_TIMEOUT_MS
-        }
-        # If None, use default instead
-        non_null_args = {k: v for k, v in args.items() if v is not None}
-        return FaunaClient(secret=_FAUNA_ROOT_KEY, **non_null_args)
+        return FaunaClient(configuration=FaunaClientConfiguration(
+            secret=_FAUNA_ROOT_KEY,
+            endpoint=_FAUNA_ENDPOINT,
+        ))
 
     @classmethod
     def _get_fauna_endpoint(cls):
-        return "%s://%s:%s" % (_FAUNA_SCHEME, _FAUNA_DOMAIN, _FAUNA_PORT)
-
-    @classmethod
-    def _get_client_from_endpoint(cls):
-        args = {
-            "endpoint": cls._get_fauna_endpoint(),
-            "domain": "bad domain",
-            "scheme": "bad scheme",
-            "port": "bad port",
-            "query_timeout_ms": _FAUNA_QUERY_TIMEOUT_MS
-        }
-        # If None, use default instead
-        non_null_args = {k: v for k, v in args.items() if v is not None}
-        return FaunaClient(secret=_FAUNA_ROOT_KEY, **non_null_args)
+        return _FAUNA_ENDPOINT
 
     def assert_raises(self, exception_class, action):
         """Like self.assertRaises and returns the exception too."""
@@ -123,7 +109,7 @@ class FaunaTestCase(TestCase):
 
 
 def mock_client(response_text, status_code=httpx.codes.OK):
-    c = FaunaClient(secret=None)
+    c = FaunaClient()
     c.session = cast(httpx.Client, _MockSession(response_text, status_code))
     return cast(FaunaClient, c)
 
