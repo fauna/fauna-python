@@ -1,5 +1,5 @@
 from base64 import decode, urlsafe_b64decode, urlsafe_b64encode
-from datetime import datetime
+from datetime import datetime, date
 from json import JSONEncoder, dumps, loads
 
 from iso8601 import parse_date
@@ -53,47 +53,46 @@ def to_json(dct, pretty=False, sort_keys=False):
     Converts a :any`_Expr` into a request body, calling :any:`to_fauna_json`.
     """
     if pretty:
-        return dumps(dct,
-                     cls=_FaunaJSONEncoder,
+        return dumps(encode_as_tagged(dct),
                      sort_keys=True,
                      indent=2,
                      separators=(", ", ": "))
-    return dumps(dct,
-                 cls=_FaunaJSONEncoder,
+    return dumps(encode_as_tagged(dct),
                  sort_keys=sort_keys,
                  separators=(",", ":"))
 
 
-class _FaunaJSONEncoder(JSONEncoder):
-    """Converts values to JSON 'tagged' format."""
-
-    int_ranage = [-2**32 + 1, -2**32 - 1]
-    long_range = [-2**64 + 1, -2**64 - 1]
-
-    def default(self, obj):
-        if isinstance(obj, int) and -2**31 + 1 <= obj <= 2**31 - 1:
-            return {"@int": repr(obj)}
-        elif isinstance(obj, int) and -2**63 + 1 <= obj <= 2**63 - 1:
-            return {"@long": repr(obj)}
-        elif isinstance(obj, int):
-            raise ValueError(
-                "Precision loss when converting int to Fauna tagged format")
-        elif isinstance(obj, float):
-            return {"@double": repr(obj)}
-        elif isinstance(obj, datetime):
-            value = obj.isoformat()
-            if len(value) == 10:
-                return {"@date": value}
-            else:
-                return {"@time": value}
-        elif isinstance(obj, dict):
-            if any(i.startswith("@") for i in obj.keys()):
-                return {"@object": obj}
-            return obj
-        else:
-            raise UnexpectedError(
-                "Unserializable object {} of type {}".format(obj, type(obj)),
-                None)
+def encode_as_tagged(obj):
+    if isinstance(obj, int) and -2**31 + 1 <= obj <= 2**31 - 1:
+        return {"@int": repr(obj)}
+    elif isinstance(obj, int) and -2**63 + 1 <= obj <= 2**63 - 1:
+        return {"@long": repr(obj)}
+    elif isinstance(obj, int):
+        raise ValueError(
+            "Precision loss when converting int to Fauna tagged format")
+    elif isinstance(obj, float):
+        return {"@double": repr(obj)}
+    elif isinstance(obj, str):
+        return obj
+    elif isinstance(obj, datetime):
+        return {"@time": obj.strftime('%Y-%m-%dT%H:%M:%SZ')}
+    elif isinstance(obj, date):
+        return {"@date": obj.isoformat()}
+    elif isinstance(obj, dict):
+        if any(i.startswith("@") for i in obj.keys()):
+            return {
+                "@object": {k: encode_as_tagged(v)
+                            for k, v in obj.items()}
+            }
+        return {k: encode_as_tagged(v) for k, v in obj.items()}
+    else:
+        try:
+            iterable = iter(obj)
+            return [encode_as_tagged(i) for i in iterable]
+        except TypeError:
+            pass
+        raise UnexpectedError(
+            "Unserializable object {} of type {}".format(obj, type(obj)), None)
 
 
 def stream_content_to_json(buffer):

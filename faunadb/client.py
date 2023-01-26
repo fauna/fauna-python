@@ -11,7 +11,7 @@ import httpx
 
 from faunadb import __api_version__ as api_version
 from faunadb import __version__ as pkg_version
-from faunadb._json import parse_json_or_none, to_json, _FaunaJSONEncoder
+from faunadb._json import parse_json_or_none, to_json, encode_as_tagged
 from faunadb.errors import FaunaError, UnexpectedError, _get_or_raise
 
 from faunadb.request_result import RequestResult
@@ -634,8 +634,7 @@ class FaunaClient(object):
         # because the whole payload including the query is a json string
         # instead we convert to a pojo containing the tagged format ...
         if arguments is not None:
-            request_content["arguments"] = _FaunaJSONEncoder().encode(
-                arguments)
+            request_content["arguments"] = encode_as_tagged(arguments)
 
         if c.type_check_enabled:
             request_content["typecheck"] = c.type_check_enabled

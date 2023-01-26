@@ -1,0 +1,19 @@
+# name: test_date
+  datetime.date(1970, 1, 1)
+# ---
+# name: test_empty_array
+  list([
+  ])
+# ---
+# name: test_fauna_time
+  datetime.datetime(1970, 1, 1, 0, 0, 0, 123456, tzinfo=datetime.timezone.utc)
+# ---
+# name: test_number
+  1
+# ---
+# name: test_number.1
+  3.14
+# ---
+# name: test_string
+  'a string'
+# ---
