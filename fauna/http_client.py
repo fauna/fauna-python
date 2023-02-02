@@ -1,5 +1,5 @@
 import abc
-from typing import Optional, ItemsView, Iterator
+from typing import Optional, Iterator, Mapping, Any
 import httpx
 
 DefaultHttpConnectTimeout = 1 * 60
@@ -14,7 +14,7 @@ DefaultMaxIdleConnections = 20
 class HTTPResponse(abc.ABC):
 
     @abc.abstractmethod
-    def headers(self) -> ItemsView[str, str]:
+    def headers(self) -> Mapping[str, str]:
         pass
 
     @abc.abstractmethod
@@ -34,13 +34,40 @@ class HTTPResponse(abc.ABC):
         pass
 
 
+class HTTPClient(abc.ABC):
+
+    # TODO(lucas): initialize base class with default retry strategy
+
+    @abc.abstractmethod
+    def request(
+        self,
+        method: str,
+        url: str,
+        headers: Mapping[str, str],
+        data: Mapping[str, Any],
+    ) -> HTTPResponse:
+        pass
+
+    @abc.abstractmethod
+    def stream(
+        self,
+        url: str,
+        headers: Mapping[str, str],
+        data: Mapping[str, Any],
+    ) -> HTTPResponse:
+        pass
+
+
 class HTTPXResponse(HTTPResponse):
 
     def __init__(self, response: httpx.Response):
         self._r = response
 
-    def headers(self) -> ItemsView[str, str]:
-        return self._r.headers.items()
+    def headers(self) -> Mapping[str, str]:
+        h = {}
+        for (k, v) in self._r.headers.items():
+            h[k] = v
+        return h
 
     def status_code(self) -> int:
         return self._r.status_code
@@ -53,19 +80,6 @@ class HTTPXResponse(HTTPResponse):
 
     def close(self) -> None:
         self._r.close()
-
-
-class HTTPClient(abc.ABC):
-
-    # TODO(lucas): initialize base class with default retry strategy
-
-    @abc.abstractmethod
-    def request(self, method, url, headers, data) -> HTTPResponse:
-        pass
-
-    @abc.abstractmethod
-    def stream(self, url, headers, data) -> HTTPResponse:
-        pass
 
 
 class HTTPXClient(HTTPClient):
@@ -92,13 +106,34 @@ class HTTPXClient(HTTPClient):
                 ),
             )
 
-    def request(self, method, url, headers, data) -> HTTPResponse:
-        request = self._c.build_request(method, url, data=data, headers=headers)
-        response = self._c.send(request, stream=False, )
+    def request(
+        self,
+        method: str,
+        url: str,
+        headers: Mapping[str, str],
+        data: Mapping[str, Any],
+    ) -> HTTPResponse:
+
+        request = self._c.build_request(
+            method,
+            url,
+            data=data,
+            headers=headers,
+        )
+
+        response = self._c.send(
+            request,
+            stream=False,
+        )
 
         return HTTPXResponse(response)
 
-    def stream(self, url, headers, data) -> Iterator[HTTPResponse]:
+    def stream(
+        self,
+        url: str,
+        headers: Mapping[str, str],
+        data: Mapping[str, Any],
+    ) -> Iterator[HTTPResponse]:
         response = self._c.stream("POST", url, data=data, headers=headers)
         for r in response:
             yield HTTPXResponse(r)
