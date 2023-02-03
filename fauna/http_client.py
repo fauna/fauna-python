@@ -1,14 +1,7 @@
 import abc
 from typing import Optional, Iterator, Mapping, Any
-import httpx
 
-DefaultHttpConnectTimeout = 1 * 60
-DefaultHttpReadTimeout = 1 * 60
-DefaultHttpWriteTimeout = 1 * 60
-DefaultHttpPoolTimeout = DefaultHttpReadTimeout
-DefaultIdleConnectionTimeout = 4
-DefaultMaxConnections = 20
-DefaultMaxIdleConnections = 20
+import httpx
 
 
 class HTTPResponse(abc.ABC):
@@ -84,27 +77,9 @@ class HTTPXResponse(HTTPResponse):
 
 class HTTPXClient(HTTPClient):
 
-    def __init__(self, client: Optional[httpx.Client] = None):
+    def __init__(self, client: httpx.Client):
         super(HTTPXClient, self).__init__()
-
-        if client is not None:
-            self._c = client
-        else:
-            self._c = httpx.Client(
-                http1=False,
-                http2=True,
-                timeout=httpx.Timeout(
-                    connect=DefaultHttpConnectTimeout,
-                    read=DefaultHttpReadTimeout,
-                    write=DefaultHttpWriteTimeout,
-                    pool=DefaultHttpPoolTimeout,
-                ),
-                limits=httpx.Limits(
-                    max_connections=DefaultMaxConnections,
-                    max_keepalive_connections=DefaultMaxIdleConnections,
-                    keepalive_expiry=DefaultIdleConnectionTimeout,
-                ),
-            )
+        self._c = client
 
     def request(
         self,
@@ -117,7 +92,7 @@ class HTTPXClient(HTTPClient):
         request = self._c.build_request(
             method,
             url,
-            data=data,
+            json=data,
             headers=headers,
         )
 
@@ -134,6 +109,4 @@ class HTTPXClient(HTTPClient):
         headers: Mapping[str, str],
         data: Mapping[str, Any],
     ) -> Iterator[HTTPResponse]:
-        response = self._c.stream("POST", url, data=data, headers=headers)
-        for r in response:
-            yield HTTPXResponse(r)
+        raise NotImplementedError()

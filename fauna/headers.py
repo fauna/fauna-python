@@ -25,6 +25,22 @@ class _Header:
     DriverEnv = "X-Driver-Env"
 
 
+class _Auth:
+    """Creates an auth helper object"""
+
+    def bearer(self):
+        return "Bearer {}".format(self.secret)
+
+    def __init__(self, secret):
+        self.secret = secret
+
+    def __eq__(self, other):
+        return self.secret == getattr(other, 'secret', None)
+
+    def __ne__(self, other):
+        return not self == other
+
+
 class _DriverEnvironment:
 
     def __init__(self):
