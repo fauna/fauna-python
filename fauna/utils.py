@@ -15,7 +15,7 @@ class _LastTxnTime(object):
 
     def __init__(
         self,
-        time: Optional[str] = None,
+        time: Optional[int] = None,
     ):
         self._lock = threading.Lock()
         self._time = time
