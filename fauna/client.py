@@ -107,7 +107,7 @@ class Client(object):
         """
         self._last_txn_time.update_txn_time(new_transaction_time)
 
-    def get_last_transaction_time(self) -> Optional[str]:
+    def get_last_transaction_time(self) -> Optional[int]:
         """
         Get the last timestamp seen by this client.
         :return:
@@ -170,6 +170,6 @@ class Client(object):
             ]
             if len(x_txn_time_headers) == 1:
                 new_txn_time = int(x_txn_time_headers[0][1])
-                self.sync_last_txn_time(new_txn_time)
+                self.set_last_transaction_time(new_txn_time)
 
         return response
