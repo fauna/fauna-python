@@ -5,4 +5,8 @@ __author__ = "Fauna, Inc"
 __license__ = "MPL 2.0"
 __copyright__ = "2023 Fauna, Inc"
 
+from .client import Client
 from .headers import Header
+from .http_client import HTTPClient, HTTPResponse, HTTPXClient
+
+global_http_client = None
