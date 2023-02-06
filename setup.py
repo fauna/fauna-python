@@ -3,9 +3,9 @@ from os import path
 
 from setuptools import setup
 
-from faunadb import __author__ as pkg_author
-from faunadb import __license__ as pkg_license
-from faunadb import __version__ as pkg_version
+from fauna import __author__ as pkg_author
+from fauna import __license__ as pkg_license
+from fauna import __version__ as pkg_version
 
 # Load the README file for use in the long description
 local_dir = path.abspath(path.dirname(__file__))
@@ -23,11 +23,11 @@ extras_require = {
 }
 
 setup(
-    name="faunadb",
+    name="fauna",
     version=pkg_version,
-    description="FaunaDB Python driver",
+    description="Fauna Python driver for FQL 10+",
     long_description=long_description,
-    url="https://github.com/fauna/faunadb-python",
+    url="https://github.com/fauna/fauna-python",
     author=pkg_author,
     author_email="priority@fauna.com",
     license=pkg_license,
@@ -35,12 +35,11 @@ setup(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Database",
         "Topic :: Database :: Front-Ends",
         "Operating System :: MacOS :: MacOS X",
@@ -48,7 +47,7 @@ setup(
         "Operating System :: Unix",
     ],
     keywords="faunadb fauna",
-    packages=["faunadb", "faunadb.streams"],
+    packages=["fauna"],
     install_requires=requires,
     extras_require=extras_require,
 )
