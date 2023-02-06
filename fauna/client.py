@@ -65,19 +65,13 @@ class Client(object):
         else:
             if fauna.global_http_client is None:
                 read_timeout: Optional[timedelta] = DefaultHttpReadTimeout
-
-                if query_timeout is not None:
-                    read_timeout_buffer: timedelta = timedelta(seconds=2)
-                    read_timeout = query_timeout + read_timeout_buffer
+                read_timeout_s: Optional[float] = None
+                if read_timeout is not None:
+                    read_timeout_s = read_timeout.total_seconds()
 
                 write_timeout_s = DefaultHttpWriteTimeout.total_seconds()
                 pool_timeout_s = DefaultHttpPoolTimeout.total_seconds()
                 idle_timeout_s = DefaultIdleConnectionTimeout.total_seconds()
-
-                # Default is no read timeout
-                read_timeout_s: Optional[float] = None
-                if read_timeout is not None:
-                    read_timeout_s = read_timeout.total_seconds()
 
                 import httpx
                 c = HTTPXClient(
