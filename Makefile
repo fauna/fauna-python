@@ -30,7 +30,7 @@ install:
 	pip install pdoc3
 
 docs:
-	pdoc faunadb --html -o docs
+	pdoc fauna --html -o docs
 
 all: test lint
 
@@ -40,10 +40,10 @@ test:
 coverage:
 	python -Wd -m nose2 --with-coverage --coverage-report html
 
-lint: lint-faunadb lint-tests
+lint: lint-fauna lint-tests
 
-lint-faunadb:
-	pylint faunadb --reports=n --indent-string='  ' --indent-after-paren=2 --disable=invalid-name,locally-disabled,missing-docstring,too-few-public-methods,too-many-arguments
+lint-fauna:
+	pylint fauna --reports=n --indent-string='  ' --indent-after-paren=2 --disable=invalid-name,locally-disabled,missing-docstring,too-few-public-methods,too-many-arguments
 
 lint-tests:
 	pylint tests --reports=n --indent-string='  ' --indent-after-paren=2 --disable=invalid-name,locally-disabled,missing-docstring,too-few-public-methods,too-many-arguments,no-member,no-self-use,protected-access,relative-import,too-many-public-methods
