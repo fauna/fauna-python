@@ -1,14 +1,14 @@
-FaunaDB Python
+Fauna Python
 ==============
 
 .. image:: https://img.shields.io/codecov/c/github/fauna/faunadb-python/master.svg?maxAge=21600
- :target: https://codecov.io/gh/fauna/faunadb-python
+ :target: https://codecov.io/gh/fauna/fauna-python
 .. image:: https://img.shields.io/pypi/v/faunadb.svg?maxAge=21600
- :target: https://pypi.python.org/pypi/faunadb
+ :target: https://pypi.python.org/pypi/fauna
 .. image:: https://img.shields.io/badge/license-MPL_2.0-blue.svg?maxAge=2592000
- :target: https://raw.githubusercontent.com/fauna/faunadb-python/main/LICENSE
+ :target: https://raw.githubusercontent.com/fauna/fauna-python/main/LICENSE
 
-Python driver for `FaunaDB <https://fauna.com>`_.
+Python driver for `Fauna <https://fauna.com>`_.
 
 
 Installation
@@ -16,7 +16,7 @@ Installation
 
 .. code-block:: bash
 
-    $ pip install faunadb
+    $ pip install fauna
 
 
 Compatibility
@@ -43,15 +43,7 @@ Basic Usage
 
 .. code-block:: python
 
-    from faunadb import query as q
-    from faunadb.objects import Ref
-    from faunadb.client import FaunaClient
-
-    client = FaunaClient(secret="your-secret-here")
-
-    indexes = client.query(q.paginate(q.indexes()))
-
-    print(indexes)
+    # TODO
 
 Document Streaming
 ------------------
@@ -63,72 +55,7 @@ The streaming API is blocking by default, the choice and mechanism for handling 
 
 .. code-block:: python
 
-    from faunadb import query as q
-    from faunadb.objects import Ref
-    from faunadb.client import FaunaClient
-
-    client = FaunaClient(secret="your-secret-here")
-
-    coll = client.query(q.create_collection({"name":"sc"}))
-    doc  = client.query(q.create(coll["ref"], {"data":{"x": 0}}))
-
-    stream = None
-    def on_start(event):
-        print("started stream at %s"%(event.txn))
-        client.query(q.update(doc["ref"], {"data": {"x": "updated"}}))
-
-    def on_version(event):
-        print("on_version event at %s"%(event.txn))
-        print("    event: %s"%(event.event))
-        stream.close()
-
-    def on_error(event):
-        print("Received error event %s"%(event))
-    options = {"fields": ["document", "diff"]}
-    stream = client.stream(doc["ref"], options, on_start, on_error, on_version)
-    stream.start()
-
-Observing Metrics
------------------
-
-Its possible to observe each query's metrics by providing an "observer" callback.
-
-More information on query metrics is available in the `FaunaDB Documentation <https://docs.fauna.com/fauna/current/learn/understanding/billing#perquery>`__.
-
-Here is a simple example:
-
-.. code-block:: python
-
-    from faunadb import query as q
-    from faunadb.client import FaunaClient
-    from faunadb.errors import FaunaError
-
-    # The observer callback, which takes the HTTP response for a query
-    def observe(response):
-        h = response.response_headers
-        print('bytesOut:', h["x-compute-ops"])
-        print('queryTime:', h["x-query-time"])
-        print('readOps:', h["x-byte-read-ops"])
-        print('writeOps:', h["x-byte-write-ops"])
-        print('retries:', h["x-txn-retries"])
-
-    # Connect to a local Fauna Dev instance
-    client = FaunaClient(
-        secret="secret",
-        domain="localhost",
-        scheme="http",
-        port=8443,
-        observer=observe
-    )
-
-    try:
-        result = client.query(
-            q.paginate(q.collections())
-        )
-    except FaunaError as err:
-        print("err: ", err)
-    else:
-        print(result)
+    # TODO
 
 Building it yourself
 --------------------
@@ -150,9 +77,6 @@ Testing
 To run the tests you must have a FaunaDB database available.
 Then set the environment variable ``FAUNA_ROOT_KEY`` to your database's root key.
 If you use FaunaDB cloud, this is the password you log in with.
-
-Tip: Setting the ``FAUNA_QUERY_TIMEOUT_MS`` environment variable will
-set a timeout in milliseconds for all queries.
 
 Then run ``make test``.
 To test a single test, use e.g. ``python -m unittest tests.test_client.ClientTest.test_ping``.
@@ -178,7 +102,7 @@ GitHub pull requests are very welcome.
 License
 -------
 
-Copyright 2020 `Fauna, Inc. <https://fauna.com>`_
+Copyright 2023 `Fauna, Inc. <https://fauna.com>`_
 
 Licensed under the Mozilla Public License, Version 2.0 (the
 "License"); you may not use this software except in compliance with
