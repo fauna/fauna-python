@@ -118,8 +118,10 @@ class Client(object):
         """
         Get the query timeout for all queries.
         """
-        return timedelta(milliseconds=self._query_timeout_ms
-                         ) if self._query_timeout_ms is not None else None
+        if self._query_timeout_ms is not None:
+            return timedelta(milliseconds=self._query_timeout_ms)
+        else:
+            return None
 
     def query(
             self,
