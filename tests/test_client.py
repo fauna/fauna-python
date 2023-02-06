@@ -1,4 +1,3 @@
-import os
 from datetime import timedelta
 
 import httpx
@@ -7,8 +6,8 @@ import fauna
 from fauna import Client, HTTPXClient
 
 
-def test_client_defaults():
-    del os.environ["FAUNA_ENDPOINT"]
+def test_client_defaults(monkeypatch):
+    monkeypatch.delenv("FAUNA_ENDPOINT")
     client = Client()
 
     assert client.max_contention_retries is None
@@ -20,16 +19,19 @@ def test_client_defaults():
     assert client.session == fauna.global_http_client
 
 
-def test_client_env_overrides():
-    os.environ["FAUNA_SECRET"] = "secret"
+def test_client_env_overrides(monkeypatch):
+    ep = "my_fauna_endpoint"
+    secret = "my_secret"
+    monkeypatch.setenv("FAUNA_ENDPOINT", ep)
+    monkeypatch.setenv("FAUNA_SECRET", secret)
     client = Client()
 
-    assert client.endpoint == "http://localhost:8443"
-    assert client._auth.secret == "secret"
+    assert client.endpoint == ep
+    assert client._auth.secret == secret
 
 
 def test_client_only_creates_one_global_http_client():
-    assert fauna.global_http_client is None
+    fauna.global_http_client = None
 
     Client()
     http_client = fauna.global_http_client
