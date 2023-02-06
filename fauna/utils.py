@@ -40,10 +40,7 @@ class _LastTxnTime(object):
         In order to maintain a monotonically-increasing value, `newTxnTime`
         is discarded if it is behind the current timestamp."""
         with self._lock:
-            if self._time is None:
-                self._time = new_txn_time
-            else:
-                self._time = max(self._time, new_txn_time)
+            self._time = max(self._time or 0, new_txn_time)
 
 
 T = TypeVar('T')

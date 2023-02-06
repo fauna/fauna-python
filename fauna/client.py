@@ -7,7 +7,7 @@ from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.utils import _Environment, _LastTxnTime
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
-DefaultHttpReadTimeout = None
+DefaultHttpReadTimeout: Optional[timedelta] = None
 DefaultHttpWriteTimeout = timedelta(seconds=5)
 DefaultHttpPoolTimeout = timedelta(seconds=5)
 DefaultIdleConnectionTimeout = timedelta(seconds=5)
@@ -70,6 +70,15 @@ class Client(object):
                     read_timeout_buffer: timedelta = timedelta(seconds=2)
                     read_timeout = query_timeout + read_timeout_buffer
 
+                write_timeout_s = DefaultHttpWriteTimeout.total_seconds()
+                pool_timeout_s = DefaultHttpPoolTimeout.total_seconds()
+                idle_timeout_s = DefaultIdleConnectionTimeout.total_seconds()
+
+                # Default is no read timeout
+                read_timeout_s: Optional[float] = None
+                if read_timeout is not None:
+                    read_timeout_s = read_timeout.total_seconds()
+
                 import httpx
                 c = HTTPXClient(
                     httpx.Client(
@@ -77,17 +86,14 @@ class Client(object):
                         http2=True,
                         timeout=httpx.Timeout(
                             connect=DefaultMaxConnections,
-                            read=read_timeout.total_seconds() *
-                            1000 if read_timeout is not None else None,
-                            write=DefaultHttpWriteTimeout.total_seconds() *
-                            1000,
-                            pool=DefaultHttpPoolTimeout.total_seconds() * 1000,
+                            read=read_timeout_s,
+                            write=write_timeout_s,
+                            pool=pool_timeout_s,
                         ),
                         limits=httpx.Limits(
                             max_connections=DefaultMaxConnections,
                             max_keepalive_connections=DefaultMaxIdleConnections,
-                            keepalive_expiry=DefaultIdleConnectionTimeout.
-                            total_seconds() * 1000,
+                            keepalive_expiry=idle_timeout_s,
                         ),
                     ))
                 fauna.global_http_client = c
@@ -165,11 +171,8 @@ class Client(object):
         )
 
         if self.track_last_transaction_time:
-            x_txn_time_headers = [
-                item for item in response.headers() if item[0] == "X-Txn-Time"
-            ]
-            if len(x_txn_time_headers) == 1:
-                new_txn_time = int(x_txn_time_headers[0][1])
-                self.set_last_transaction_time(new_txn_time)
+            if "X-Txn-Time" in response.headers():
+                x_txn_time = response.headers()["X-Txn-Time"]
+                self.set_last_transaction_time(int(x_txn_time))
 
         return response
