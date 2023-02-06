@@ -20,15 +20,17 @@ def test_client_defaults(monkeypatch):
 
 
 def test_client_env_overrides(monkeypatch):
+    ep = "my_fauna_endpoint"
+    monkeypatch.setenv("FAUNA_ENDPOINT", ep)
     monkeypatch.setenv("FAUNA_SECRET", "secret")
     client = Client()
 
-    assert client.endpoint == "http://localhost:8443"
+    assert client.endpoint == ep
     assert client._auth.secret == "secret"
 
 
 def test_client_only_creates_one_global_http_client():
-    assert fauna.global_http_client is None
+    fauna.global_http_client = None
 
     Client()
     http_client = fauna.global_http_client
