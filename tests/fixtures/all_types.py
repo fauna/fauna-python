@@ -11,20 +11,22 @@ fixture_typed_string = '{"bugs_coll": {"@mod": "Bugs"}, "bug": {"@doc": "Bugs:12
                        '"employee": {"@int": "5"}, "time": {"@time": "2023-02-08T14:22:01.000001Z"}}]}'
 
 fixture_untyped = {
-    "bugs_coll": Module("Bugs"),
-    "bug": DocumentReference.from_string("Bugs:123"),
+    "bugs_coll":
+    Module("Bugs"),
+    "bug":
+    DocumentReference.from_string("Bugs:123"),
     "name":
-        "fir",
+    "fir",
     "age":
-        200,
+    200,
     "birthdate":
-        date(1823, 2, 8),
+    date(1823, 2, 8),
     "molecules":
-        999999999999999999,
+    999999999999999999,
     "circumference":
-        3.82,
+    3.82,
     "created_at":
-        datetime(2003, 2, 8, 13, 28, 12, 555, tzinfo=timezone.utc),
+    datetime(2003, 2, 8, 13, 28, 12, 555, tzinfo=timezone.utc),
     "extras": {
         "nest": {
             "num_sticks": 58,
@@ -50,10 +52,14 @@ fixture_untyped = {
 }
 
 fixture_typed = {
-    'bugs_coll': {'@mod': 'Bugs'},
-    'bug': {'@doc': 'Bugs:123'},
+    'bugs_coll': {
+        '@mod': 'Bugs'
+    },
+    'bug': {
+        '@doc': 'Bugs:123'
+    },
     'name':
-        'fir',
+    'fir',
     'age': {
         '@int': '200'
     },

@@ -10,13 +10,12 @@ from fauna.models import DocumentReference, Module
 
 
 def _int(obj: int):
-    if -2 ** 31 + 1 <= obj <= 2 ** 31 - 1:
+    if -2**31 + 1 <= obj <= 2**31 - 1:
         return {"@int": repr(obj)}
-    elif -2 ** 63 + 1 <= obj <= 2 ** 63 - 1:
+    elif -2**63 + 1 <= obj <= 2**63 - 1:
         return {"@long": repr(obj)}
     else:
-        raise ValueError(
-            "Precision loss when converting int to Fauna type")
+        raise ValueError("Precision loss when converting int to Fauna type")
 
 
 def _bool(obj: bool):
@@ -64,24 +63,21 @@ _encoder_map = {
 
 
 def encode_to_typed(obj: Any) -> Any:
-    return _encode_to_typed(obj)
-
-
-def _encode_to_typed(obj: Any) -> Mapping[str, Any] | str | Sequence[Mapping[str, Any] | str | None]:
     if type(obj) in _encoder_map:
         return _encoder_map[type(obj)](obj)
     elif isinstance(obj, dict):
-        _out = {k: _encode_to_typed(v) for k, v in obj.items()}
+        _out = {k: encode_to_typed(v) for k, v in obj.items()}
         if any(i.startswith("@") for i in obj.keys()):
             return _obj(_out)
         return _out
     else:
         try:
             iterable = iter(obj)
-            return [_encode_to_typed(i) for i in iterable]
+            return [encode_to_typed(i) for i in iterable]
         except Exception as e:
             raise ValueError(
-                "Object {} of type {} cannot be encoded".format(obj, type(obj)), None) from e
+                "Object {} of type {} cannot be encoded".format(
+                    obj, type(obj)), None) from e
 
 
 def decode_from_json(value: str):

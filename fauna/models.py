@@ -1,5 +1,3 @@
-
-
 class DocumentReference:
 
     def __init__(self, collection_name: str, ref_id: str):
@@ -19,7 +17,8 @@ class DocumentReference:
     def from_string(ref: str):
         rs = ref.split(":")
         if len(rs) != 2:
-            raise ValueError("Expects string of format <CollectionName>:<RefID>")
+            raise ValueError(
+                "Expects string of format <CollectionName>:<RefID>")
         return DocumentReference(rs[0], rs[1])
 
 
