@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, date
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from iso8601 import parse_date
 
@@ -19,7 +19,7 @@ def _int(obj: int):
 
 
 def _bool(obj: bool):
-    return {"@bool": repr(obj)}
+    return obj
 
 
 def _float(obj: float):
@@ -31,7 +31,7 @@ def _str(obj: str):
 
 
 def _datetime(obj: datetime):
-    return {"@time": obj.strftime('%Y-%m-%dT%H:%M:%S.%fZ')}
+    return {"@time": obj.isoformat(sep="T")}
 
 
 def _date(obj: date):
@@ -85,23 +85,40 @@ def decode_from_json(value: str):
 
 
 def _decode_hook(dct: dict):
-    if "@bool" in dct:
-        return dct["@bool"] in ['true', 'True', 1, True]
-    if "@int" in dct:
-        return int(dct["@int"])
-    if "@long" in dct:
-        return int(dct["@long"])
-    if "@double" in dct:
-        return float(dct["@double"])
-    if "@object" in dct:
-        return dct["@object"]
-    if "@mod" in dct:
-        return Module(dct["@mod"])
-    if "@time" in dct:
-        return parse_date(dct["@time"])
-    if "@date" in dct:
-        return parse_date(dct["@date"]).date()
-    if "@doc" in dct:
-        return DocumentReference.from_string(dct["@doc"])
+
+    try:
+        if "@int" in dct:
+            i = dct["@int"]
+            if not isinstance(i, int):
+                return int(i)
+        if "@long" in dct:
+            j = dct["@long"]
+            if not isinstance(j, int):
+                return int(j)
+        if "@double" in dct:
+            d = dct["@double"]
+            if not isinstance(d, float):
+                return float(d)
+        if "@object" in dct:
+            return dct["@object"]
+        if "@mod" in dct:
+            m = dct["@mod"]
+            if not isinstance(m, Module):
+                return Module(m)
+        if "@time" in dct:
+            t = dct["@time"]
+            if not isinstance(t, datetime):
+                return parse_date(t)
+        if "@date" in dct:
+            dt = dct["@date"]
+            if not isinstance(dt, date):
+                return parse_date(dt).date()
+        if "@doc" in dct:
+            doc = dct["@doc"]
+            if not isinstance(doc, DocumentReference):
+                return DocumentReference.from_string(doc)
+    except:
+        # band-aid to handle scenarios where users have conflicting fields that don't match the type
+        pass
 
     return dct
