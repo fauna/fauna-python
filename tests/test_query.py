@@ -46,7 +46,7 @@ def test_query():
     with httpx.Client() as mockClient:
         c = Client(http_client=HTTPXClient(mockClient))
 
-        lineraized=True,
+            lineraized=True,
             "not used, just sending to a mock client",
         query_timeout_ms=5000,
     ))
