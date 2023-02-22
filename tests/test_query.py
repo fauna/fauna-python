@@ -2,10 +2,11 @@ from typing import Mapping
 import json
 
 import httpx
+
 from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
-from fauna.client import QueryOptions
+from fauna import Client
 from fauna.client import QueryOptions
 
 
@@ -24,11 +25,24 @@ def test_query():
 
 
     httpx_mock: HTTPXMock,
-    query_timeout_ms: int,
-        secret="secret",
-        endpoint="http://localhost:8443",
-    max_contention_retries: int,
-    )
+def test_query_with_opts():
+    def custom_response(request: httpx.Request):
+        assert request.headers[Header.Linearized] == "true"
+        assert request.headers[Header.Tags] == "hello=world"
+        assert request.headers[Header.TimeoutMs] == "5000"
+
+        return httpx.Response(
+            status_code=200, json={"url": str(request.url)},
+        )
+
+    httpx_mock.add_callback(custom_response)
+
+
+    with httpx.Client() as mockClient:
+        c = Client(
+    c = Client(secret="secret")
+
+    res = c.query(
 
     def validate_headers(request: httpx.Request):
         assert request.headers[Header.Linearized] == str(linearized).lower()
@@ -40,16 +54,15 @@ def test_query():
         return httpx.Response(
             status_code=200,
             json={"url": str(request.url)},
-        "Math.abs(-5.123e3)",
-        QueryOptions(
-        tags="hello=world",
+            "Math.abs(-5.123e3)",
+            QueryOptions(
+            tags="hello=world",
     with httpx.Client() as mockClient:
         c = Client(http_client=HTTPXClient(mockClient))
 
-            lineraized=True,
+            linearized=True,
             "not used, just sending to a mock client",
-        query_timeout_ms=5000,
-    ))
+            query_timeout_ms=5000,
+        ))
                 traceparent=traceparent,
-                max_contention_retries=max_contention_retries,
-    assert "error" not in as_json
+    as_json = json.loads(res.read().decode("utf-8"))

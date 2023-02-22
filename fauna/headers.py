@@ -16,7 +16,7 @@ class Header:
     TypeChecking = "X-Type-Checking"
     Tags = "X-Query-Tags"
     Traceparent = "Traceparent"
-
+    Traceparent = "Traceparent"
 
 class _Header:
     AcceptEncoding = "Accept-Encoding"
@@ -24,13 +24,7 @@ class _Header:
     ContentType = "Content-Type"
     Driver = "X-Driver"
     DriverEnv = "X-Driver-Env"
-    Linearized = "X-Linearized"
-    TimeoutMs = "X-Timeout"
     Format = "X-Format"
-    MaxContentionRetries = "X-Max-Contention-Retries"
-    Tags = "X-Query-Tags"
-    Traceparent = "Traceparent"
-    TxnTime = "X-Txn-Time"
 
 
 class _Auth:
