@@ -19,7 +19,7 @@ class QueryOptions:
 
     def __init__(
         self,
-        lineraized: Optional[bool] = None,
+        linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout_ms: Optional[int] = None,
         tags: Optional[str] = None,
@@ -27,8 +27,8 @@ class QueryOptions:
     ):
         self._headers: dict[str, str] = {}
 
-        if lineraized is not None:
-            self._headers[_Header.Lineraized] = str(lineraized).lower()
+        if linearized is not None:
+            self._headers[_Header.Linearized] = str(linearized).lower()
 
         if max_contention_retries is not None and max_contention_retries > 0:
             self._headers[

@@ -24,7 +24,7 @@ def test_query_with_opts():
         "Math.abs(-5.123e3)",
         QueryOptions(
             tags="hello=world",
-            lineraized=True,
+            linearized=True,
             query_timeout_ms=5000,
         ))
     # TODO: assert HTTP Client Request Headers contain expected values

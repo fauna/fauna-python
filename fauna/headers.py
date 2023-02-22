@@ -23,7 +23,7 @@ class _Header:
     ContentType = "Content-Type"
     Driver = "X-Driver"
     DriverEnv = "X-Driver-Env"
-    Lineraized = "X-Lineraized"
+    Linearized = "X-Linearized"
     TimeoutMs = "X-Timeout"
     Format = "X-Format"
     MaxContentionRetries = "X-Max-Contention-Retries"
