@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Optional, Mapping
+from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
@@ -43,7 +43,7 @@ class QueryOptions:
         if traceparent is not None:
             self._headers[_Header.Traceparent] = traceparent
 
-    def headers(self) -> dict[str, str]:
+    def headers(self) -> Dict[str, str]:
         return self._headers
 
 
