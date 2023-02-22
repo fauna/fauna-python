@@ -24,7 +24,13 @@ class _Header:
     ContentType = "Content-Type"
     Driver = "X-Driver"
     DriverEnv = "X-Driver-Env"
+    Lineraized = "X-Lineraized"
+    TimeoutMs = "X-Timeout"
     Format = "X-Format"
+    MaxContentionRetries = "X-Max-Contention-Retries"
+    Tags = "X-Tags"
+    Traceparent = "Traceparent"
+    TxnTime = "X-Txn-Time"
 
 
 class _Auth:

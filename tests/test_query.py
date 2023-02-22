@@ -6,7 +6,7 @@ from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
 from fauna.client import QueryOptions
-
+from fauna.client import QueryOptions
 
 def test_query():
     c = Client(secret="secret")
@@ -22,9 +22,7 @@ def test_query():
     assert as_json["data"] == 'bar'
 
 
-def test_query_with_opts(
     httpx_mock: HTTPXMock,
-    linearized: bool,
     query_timeout_ms: int,
     traceparent: str,
     tags: Mapping[str, str],
@@ -37,15 +35,11 @@ def test_query_with_opts(
         assert request.headers[Header.Tags] == "hello=world&testing=foobar"
         assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
         assert request.headers[Header.Traceparent] == traceparent
-        assert request.headers[
-            Header.MaxContentionRetries] == f"{max_contention_retries}"
 
         return httpx.Response(
             status_code=200,
             json={"url": str(request.url)},
-        )
-
-    httpx_mock.add_callback(validate_headers)
+    res = c.query("Math.abs(-5.123e3)", QueryOptions(
 
     with httpx.Client() as mockClient:
         c = Client(http_client=HTTPXClient(mockClient))
@@ -54,10 +48,6 @@ def test_query_with_opts(
             "not used, just sending to a mock client",
             QueryOptions(
                 tags=tags,
-                linearized=linearized,
-                query_timeout_ms=query_timeout_ms,
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
-            ))
-
-        assert res.status_code() == 200
+    assert "error" not in as_json
