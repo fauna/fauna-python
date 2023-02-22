@@ -15,6 +15,38 @@ DefaultMaxConnections = 20
 DefaultMaxIdleConnections = 20
 
 
+class QueryOptions:
+
+    def __init__(
+        self,
+        lineraized: Optional[bool] = None,
+        max_contention_retries: Optional[int] = None,
+        query_timeout_ms: Optional[int] = None,
+        tags: Optional[str] = None,
+        traceparent: Optional[str] = None,
+    ):
+        self._headers: dict[str, str] = {}
+
+        if lineraized is not None:
+            self._headers[_Header.Lineraized] = str(lineraized).lower()
+
+        if max_contention_retries is not None and max_contention_retries > 0:
+            self._headers[
+                _Header.MaxContentionRetries] = f"{max_contention_retries}"
+
+        if query_timeout_ms is not None and query_timeout_ms > 0:
+            self._headers[_Header.TimeoutMs] = f"{query_timeout_ms}"
+
+        if tags is not None:
+            self._headers[_Header.Tags] = tags
+
+        if traceparent is not None:
+            self._headers[_Header.Traceparent] = traceparent
+
+    def headers(self) -> dict[str, str]:
+        return self._headers
+
+
 class Client(object):
 
     def __init__(
@@ -124,24 +156,28 @@ class Client(object):
             return None
 
     def query(
-            self,
-            fql: str,  # TODO(lucas) use a home-baked fql expression type
+        self,
+        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        opts: Optional[QueryOptions] = None,
     ):
         """
         Use the Fauna query API.
 
         :param fql: A string, but will eventually be a query expression.
+        :param opts: (Optional) Query Options
         :return: Response. TODO(lucas): refine contract
         """
         return self._execute(
             "/query/1",
             fql=fql,
+            opts=opts,
         )
 
     def _execute(
-            self,
-            path,
-            fql: str,  # TODO(lucas) use a home-baked fql expression type
+        self,
+        path,
+        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        opts: Optional[QueryOptions] = None,
     ):
 
         headers = self._headers.copy()
@@ -152,6 +188,10 @@ class Client(object):
 
         if self.track_last_transaction_time:
             headers.update(self._last_txn_time.request_header)
+
+        if opts is not None:
+            for k, v in opts.headers().items():
+                headers[k] = v
 
         data: dict[str, Any] = {
             "typecheck": False,
