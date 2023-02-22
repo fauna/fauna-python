@@ -2,7 +2,6 @@ from typing import Mapping
 import json
 
 import httpx
-
 from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
@@ -25,26 +24,29 @@ def test_query():
 
 
     httpx_mock: HTTPXMock,
-def test_query_with_opts():
-    linearized: bool = True
-    tags: str = "hello=world"
-    query_timeout_ms: int = 5000
-    traceparent: str = "happy-little-fox"
-    max_contention_retries: int = 5
+def test_query_with_opts(httpx_mock: HTTPXMock):
+    httpx_mock: HTTPXMock,
+    linearized:bool,
+    query_timeout_ms:int,
+    traceparent:str,
+    tags:str,
+    max_contention_retries:int,
+):
 
     def validate_headers(request: httpx.Request):
         assert request.headers[Header.Linearized] == str(linearized).lower()
         assert request.headers[Header.Tags] == tags
         assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
         assert request.headers[Header.Traceparent] == traceparent
-        assert request.headers[Header.MaxContentionRetries] == f"{max_contention_retries}"
+        assert request.headers[
+            Header.MaxContentionRetries] == f"{max_contention_retries}"
 
         return httpx.Response(
-            status_code=200, json={"url": str(request.url)},
+            status_code=200,
+            json={"url": str(request.url)},
         )
 
     httpx_mock.add_callback(validate_headers)
-
 
     with httpx.Client() as mockClient:
             secret="secret",
