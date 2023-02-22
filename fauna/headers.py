@@ -17,6 +17,7 @@ class Header:
     Tags = "X-Query-Tags"
     Traceparent = "Traceparent"
 
+
 class _Header:
     AcceptEncoding = "Accept-Encoding"
     Authorization = "Authorization"
