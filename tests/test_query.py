@@ -22,30 +22,37 @@ def test_query():
 
 
 def test_query_with_opts(httpx_mock: HTTPXMock):
-    def custom_response(request: httpx.Request):
-        assert request.headers[Header.Linearized] == "true"
-        assert request.headers[Header.Tags] == "hello=world"
-        assert request.headers[Header.TimeoutMs] == "5000"
+    linearized: bool = True
+    tags: str = "hello=world"
+    query_timeout_ms: int = 5000
+    traceparent: str = "happy-little-fox"
+    max_contention_retries: int = 5
+
+    def validate_headers(request: httpx.Request):
+        assert request.headers[Header.Linearized] == str(linearized).lower()
+        assert request.headers[Header.Tags] == tags
+        assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
+        assert request.headers[Header.Traceparent] == traceparent
+        assert request.headers[Header.MaxContentionRetries] == f"{max_contention_retries}"
 
         return httpx.Response(
             status_code=200, json={"url": str(request.url)},
         )
 
-    httpx_mock.add_callback(custom_response)
+    httpx_mock.add_callback(validate_headers)
 
 
     with httpx.Client() as mockClient:
-        c = Client(
-            secret="secret",
-            http_client = HTTPXClient(mockClient),
-        )
+        c = Client(http_client = HTTPXClient(mockClient))
 
         res = c.query(
-            "Math.abs(-5.123e3)",
+            "not used, just sending to a mock client",
             QueryOptions(
-                tags="hello=world",
-                linearized=True,
-                query_timeout_ms=5000,
+                tags=tags,
+                linearized=linearized,
+                query_timeout_ms=query_timeout_ms,
+                traceparent=traceparent,
+                max_contention_retries=max_contention_retries,
             ))
 
         assert res.status_code() == 200
