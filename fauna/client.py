@@ -76,7 +76,7 @@ class QueryOptions:
         if traceparent is not None:
             self._headers[_Header.Traceparent] = traceparent
 
-    def headers(self) -> dict[str, str]:
+    def headers(self) -> Dict[str, str]:
         return self._headers
 
 
