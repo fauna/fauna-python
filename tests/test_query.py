@@ -8,6 +8,7 @@ from fauna import Client, Header, HTTPXClient
 from fauna.client import QueryOptions
 from fauna.client import QueryOptions
 
+
 def test_query():
     c = Client(secret="secret")
     q = """let foo = 'bar'
@@ -24,10 +25,10 @@ def test_query():
 
     httpx_mock: HTTPXMock,
     query_timeout_ms: int,
-    traceparent: str,
-    tags: Mapping[str, str],
+        secret="secret",
+        endpoint="http://localhost:8443",
     max_contention_retries: int,
-):
+    )
 
     def validate_headers(request: httpx.Request):
         assert request.headers[Header.Linearized] == str(linearized).lower()
@@ -39,15 +40,16 @@ def test_query():
         return httpx.Response(
             status_code=200,
             json={"url": str(request.url)},
-    res = c.query("Math.abs(-5.123e3)", QueryOptions(
-
+        "Math.abs(-5.123e3)",
+        QueryOptions(
+        tags="hello=world",
     with httpx.Client() as mockClient:
         c = Client(http_client=HTTPXClient(mockClient))
 
-        res = c.query(
+        lineraized=True,
             "not used, just sending to a mock client",
-            QueryOptions(
-                tags=tags,
+        query_timeout_ms=5000,
+    ))
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
     assert "error" not in as_json
