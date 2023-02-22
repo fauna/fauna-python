@@ -28,7 +28,7 @@ class _Header:
     TimeoutMs = "X-Timeout"
     Format = "X-Format"
     MaxContentionRetries = "X-Max-Contention-Retries"
-    Tags = "X-Tags"
+    Tags = "X-Query-Tags"
     Traceparent = "Traceparent"
     TxnTime = "X-Txn-Time"
 
