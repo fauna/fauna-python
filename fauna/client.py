@@ -28,20 +28,20 @@ class QueryOptions:
         self._headers: dict[str, str] = {}
 
         if linearized is not None:
-            self._headers[_Header.Linearized] = str(linearized).lower()
+            self._headers[Header.Linearized] = str(linearized).lower()
 
         if max_contention_retries is not None and max_contention_retries > 0:
             self._headers[
-                _Header.MaxContentionRetries] = f"{max_contention_retries}"
+                Header.MaxContentionRetries] = f"{max_contention_retries}"
 
         if query_timeout_ms is not None and query_timeout_ms > 0:
-            self._headers[_Header.TimeoutMs] = f"{query_timeout_ms}"
+            self._headers[Header.TimeoutMs] = f"{query_timeout_ms}"
 
         if tags is not None:
-            self._headers[_Header.Tags] = tags
+            self._headers[Header.Tags] = tags
 
         if traceparent is not None:
-            self._headers[_Header.Traceparent] = traceparent
+            self._headers[Header.Traceparent] = traceparent
 
     def headers(self) -> Dict[str, str]:
         return self._headers

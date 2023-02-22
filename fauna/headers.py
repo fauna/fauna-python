@@ -14,8 +14,8 @@ class Header:
     MaxContentionRetries = "X-Max-Contention-Retries"
     TimeoutMs = "X-Timeout-Ms"
     TypeChecking = "X-Type-Checking"
-    Tags = "X-Tags"
-
+    Tags = "X-Query-Tags"
+    Traceparent = "Traceparent"
 
 class _Header:
     AcceptEncoding = "Accept-Encoding"
@@ -23,13 +23,7 @@ class _Header:
     ContentType = "Content-Type"
     Driver = "X-Driver"
     DriverEnv = "X-Driver-Env"
-    Linearized = "X-Linearized"
-    TimeoutMs = "X-Timeout"
     Format = "X-Format"
-    MaxContentionRetries = "X-Max-Contention-Retries"
-    Tags = "X-Query-Tags"
-    Traceparent = "Traceparent"
-    TxnTime = "X-Txn-Time"
 
 
 class _Auth:
