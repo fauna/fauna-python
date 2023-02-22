@@ -26,11 +26,11 @@ def test_query():
     httpx_mock: HTTPXMock,
 def test_query_with_opts(httpx_mock: HTTPXMock):
     httpx_mock: HTTPXMock,
-    linearized:bool,
-    query_timeout_ms:int,
-    traceparent:str,
-    tags:str,
-    max_contention_retries:int,
+    linearized: bool,
+    query_timeout_ms: int,
+    traceparent: str,
+    tags: str,
+    max_contention_retries: int,
 ):
 
     def validate_headers(request: httpx.Request):

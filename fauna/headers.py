@@ -18,6 +18,7 @@ class Header:
     Traceparent = "Traceparent"
     Traceparent = "Traceparent"
 
+
 class _Header:
     AcceptEncoding = "Accept-Encoding"
     Authorization = "Authorization"
