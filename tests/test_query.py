@@ -20,11 +20,13 @@ def test_query(subtests):
         assert res.stat(Stat.ComputeOps) > 0
         assert res.traceparent != ""
         assert res.summary == ""
+
     with subtests.test(msg="with debug"):
         res = c.query('dbg("Hello, World")')
 
         assert res.status_code == 200
         assert res.summary != ""
+
     with subtests.test(msg="with error"):
         with pytest.raises(FaunaException) as e:
             c.query("I'm a little teapot")
@@ -32,13 +34,16 @@ def test_query(subtests):
         assert e.value.error_code == "invalid_query"
         assert e.value.error_message != ""
         assert e.value.summary != ""
+
     with subtests.test(msg="stats"):
         res = c.query("Math.abs(-5.123e3)")
         with subtests.test(msg="valid stat"):
             assert res.stat(Stat.ComputeOps) > 0
+
         with subtests.test(msg="invalid stat"):
             with pytest.raises(Exception) as e:
                 assert res.stat("silly") == 0
+
         with subtests.test(msg="manual stat"):
             # not an actual stat, but shows that we can pull something manually
             assert res.stat("content-length") > 0
