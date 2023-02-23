@@ -59,5 +59,5 @@ class Response:
         else:
             raise Exception("Unexpected response")
 
-    def stat(self, key: Stat) -> int:
+    def stat(self, key: str) -> int:
         return int(self._headers[key])
