@@ -16,7 +16,7 @@ def test_query(subtests):
 
         assert res.data == float(5123.0)
         assert res.status_code == 200
-        assert res.stats["compute_ops"] > 0
+        assert res.stats.compute_ops > 0
         assert res.traceparent != ""
         assert res.summary == ""
     with subtests.test(msg="with debug"):
