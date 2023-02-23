@@ -167,8 +167,8 @@ class Client(object):
         )
 
         if self.track_last_transaction_time:
-            if "X-Txn-Time" in response.headers():
-                x_txn_time = response.headers()["X-Txn-Time"]
+            if Header.TxnTime in response.headers():
+                x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
 
         return response
