@@ -1,8 +1,17 @@
 import abc
 from typing import Optional, Iterator, Mapping, Any
+from dataclasses import dataclass
 
 import httpx
 import json
+
+
+@dataclass(frozen=True)
+class FaunaError:
+    status_code: int
+    error_code: str
+    error_message: str
+    summary: str
 
 
 class HTTPResponse(abc.ABC):
@@ -16,7 +25,7 @@ class HTTPResponse(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def error(self) -> Optional[tuple[int, str, str, str]]:
+    def error(self) -> Optional[FaunaError]:
         pass
 
     @abc.abstractmethod
@@ -65,7 +74,7 @@ class HTTPXResponse(HTTPResponse):
     def __init__(self, response: httpx.Response):
         self._r = response
 
-    def error(self) -> Optional[tuple[int, str, str, str]]:
+    def error(self) -> Optional[FaunaError]:
         if self.status_code() > 399:
             response_json = self.json()
 
@@ -74,8 +83,12 @@ class HTTPXResponse(HTTPResponse):
             if "summary" in response_json:
                 summary = response_json["summary"]
 
-            return self.status_code(), response_json["error"][
-                "code"], response_json["error"]["message"], summary
+            return FaunaError(
+                self.status_code(),
+                response_json["error"]["code"],
+                response_json["error"]["message"],
+                summary,
+            )
 
         return None
 

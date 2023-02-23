@@ -4,7 +4,7 @@ from typing import Any, Dict, Mapping, Optional
 import fauna
 from fauna.response import Response
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
-from fauna.http_client import HTTPClient, HTTPXClient
+from fauna.http_client import HTTPClient, HTTPXClient, FaunaError
 from fauna.utils import _Environment, _LastTxnTime
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
@@ -34,21 +34,16 @@ class FaunaException(Exception):
     def summary(self) -> str:
         return self._summary
 
-    def __init__(
-        self,
-        status_code: int,
-        error_code: str,
-        message: str,
-        summary: str,
-    ):
+    def __init__(self, err: FaunaError):
 
-        self._error_code = error_code
-        self._error_message = message
-        self._status_code = status_code
-        self._summary = summary
+        self._error_code = err.error_code
+        self._error_message = err.error_message
+        self._status_code = err.status_code
+        self._summary = err.summary
 
         super().__init__(
-            f"{status_code} - {error_code} - {message} - {summary}")
+            f"{self.status_code} - {self.error_code} - {self.error_message} - {self.summary}"
+        )
 
 
 class QueryOptions:
@@ -255,6 +250,6 @@ class Client(object):
 
         err = response.error()
         if err is not None:
-            raise FaunaException(*err)
+            raise FaunaException(err)
 
         return Response(response)
