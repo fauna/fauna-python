@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Optional, Mapping
+from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
@@ -13,6 +13,39 @@ DefaultHttpPoolTimeout = timedelta(seconds=5)
 DefaultIdleConnectionTimeout = timedelta(seconds=5)
 DefaultMaxConnections = 20
 DefaultMaxIdleConnections = 20
+
+
+class QueryOptions:
+
+    def __init__(
+        self,
+        linearized: Optional[bool] = None,
+        max_contention_retries: Optional[int] = None,
+        query_timeout_ms: Optional[int] = None,
+        tags: Optional[Mapping[str, str]] = None,
+        traceparent: Optional[str] = None,
+    ):
+        self._headers: dict[str, str] = {}
+
+        if linearized is not None:
+            self._headers[Header.Linearized] = str(linearized).lower()
+
+        if max_contention_retries is not None and max_contention_retries > 0:
+            self._headers[
+                Header.MaxContentionRetries] = f"{max_contention_retries}"
+
+        if query_timeout_ms is not None and query_timeout_ms > 0:
+            self._headers[Header.TimeoutMs] = f"{query_timeout_ms}"
+
+        if tags is not None:
+            self._headers[Header.Tags] = '&'.join(
+                [f"{k}={tags[k]}" for k in tags])
+
+        if traceparent is not None:
+            self._headers[Header.Traceparent] = traceparent
+
+    def headers(self) -> Dict[str, str]:
+        return self._headers
 
 
 class Client(object):
@@ -124,27 +157,32 @@ class Client(object):
             return None
 
     def query(
-            self,
-            fql: str,  # TODO(lucas) use a home-baked fql expression type
+        self,
+        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        opts: Optional[QueryOptions] = None,
     ):
         """
         Use the Fauna query API.
 
         :param fql: A string, but will eventually be a query expression.
+        :param opts: (Optional) Query Options
         :return: Response. TODO(lucas): refine contract
         """
         return self._execute(
             "/query/1",
             fql=fql,
+            opts=opts,
         )
 
     def _execute(
-            self,
-            path,
-            fql: str,  # TODO(lucas) use a home-baked fql expression type
+        self,
+        path,
+        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        opts: Optional[QueryOptions] = None,
     ):
 
         headers = self._headers.copy()
+        headers["X-Format"] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
 
         if self._query_timeout_ms is not None:
@@ -153,10 +191,13 @@ class Client(object):
         if self.track_last_transaction_time:
             headers.update(self._last_txn_time.request_header)
 
+        if opts is not None:
+            for k, v in opts.headers().items():
+                headers[k] = v
+
         data: dict[str, Any] = {
-            "typecheck": False,
             "query": fql,
-            "arguments": {}
+            "arguments": {},
         }
 
         response = self.session.request(

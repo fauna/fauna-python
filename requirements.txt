@@ -7,3 +7,4 @@ httpx[http2]
 pytest
 pytest-env
 pytest-cov
+pytest-httpx
