@@ -1,26 +1,36 @@
 from typing import Mapping
-import json
-
 import httpx
+import pytest
 from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
 from fauna import Client
-from fauna.client import QueryOptions
+from fauna.client import QueryOptions, FaunaException
 
 
-def test_query():
-    c = Client(secret="secret")
-    q = """let foo = 'bar'
-    foo"""
+def test_query(subtests):
+    c = Client()
 
-    res = c.query(q)
+    with subtests.test(msg="valid query"):
+        res = c.query("Math.abs(-5.123e3)")
 
-    as_json = json.loads(res.read().decode("utf-8"))
-    if "data" not in as_json:
-        print(json.dumps(as_json, indent=2))
+        assert res.data == float(5123.0)
+        assert res.status_code == 200
+        assert res.stats["compute_ops"] > 0
+        assert res.traceparent != ""
+        assert res.summary == ""
+    with subtests.test(msg="with debug"):
+        res = c.query('dbg("Hello, World")')
 
-    assert as_json["data"] == 'bar'
+        assert res.status_code == 200
+        assert res.summary != ""
+    with subtests.test(msg="with error"):
+        with pytest.raises(FaunaException) as e:
+            c.query("I'm a little teapot")
+        assert e.value.status_code == 400
+        assert e.value.error_code == "invalid_query"
+        assert e.value.error_message != ""
+        assert e.value.summary != ""
 
 
     httpx_mock: HTTPXMock,
@@ -43,7 +53,7 @@ def test_query_with_opts(httpx_mock: HTTPXMock):
 
         return httpx.Response(
             status_code=200,
-            json={"url": str(request.url)},
+            json={"data": "mocked"},
         )
 
     httpx_mock.add_callback(validate_headers)
@@ -77,4 +87,4 @@ def test_query_with_opts(httpx_mock: HTTPXMock):
                 max_contention_retries=max_contention_retries,
         ))
                 traceparent=traceparent,
-    as_json = json.loads(res.read().decode("utf-8"))
+        assert res.status_code() == 200

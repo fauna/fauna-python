@@ -2,6 +2,7 @@ import abc
 from typing import Optional, Iterator, Mapping, Any
 
 import httpx
+import json
 
 
 class HTTPResponse(abc.ABC):
@@ -12,6 +13,14 @@ class HTTPResponse(abc.ABC):
 
     @abc.abstractmethod
     def status_code(self) -> int:
+        pass
+
+    @abc.abstractmethod
+    def error(self) -> Optional[tuple[int, str, str, str]]:
+        pass
+
+    @abc.abstractmethod
+    def json(self) -> Any:
         pass
 
     @abc.abstractmethod
@@ -56,11 +65,28 @@ class HTTPXResponse(HTTPResponse):
     def __init__(self, response: httpx.Response):
         self._r = response
 
+    def error(self) -> Optional[tuple[int, str, str, str]]:
+        if self.status_code() > 399:
+            response_json = self.json()
+
+            # summary not returned in 401 responses
+            summary = ""
+            if "summary" in response_json:
+                summary = response_json["summary"]
+
+            return self.status_code(), response_json["error"][
+                "code"], response_json["error"]["message"], summary
+
+        return None
+
     def headers(self) -> Mapping[str, str]:
         h = {}
         for (k, v) in self._r.headers.items():
             h[k] = v
         return h
+
+    def json(self) -> Any:
+        return json.loads(self._r.read().decode("utf-8"))
 
     def status_code(self) -> int:
         return self._r.status_code

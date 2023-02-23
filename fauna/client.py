@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Any, Dict, Mapping, Optional
 
 import fauna
+from fauna.response import Response
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.utils import _Environment, _LastTxnTime
@@ -13,6 +14,41 @@ DefaultHttpPoolTimeout = timedelta(seconds=5)
 DefaultIdleConnectionTimeout = timedelta(seconds=5)
 DefaultMaxConnections = 20
 DefaultMaxIdleConnections = 20
+
+
+class FaunaException(Exception):
+
+    @property
+    def error_code(self) -> str:
+        return self._error_code
+
+    @property
+    def error_message(self) -> str:
+        return self._error_message
+
+    @property
+    def status_code(self) -> int:
+        return self._status_code
+
+    @property
+    def summary(self) -> str:
+        return self._summary
+
+    def __init__(
+        self,
+        status_code: int,
+        error_code: str,
+        message: str,
+        summary: str,
+    ):
+
+        self._error_code = error_code
+        self._error_message = message
+        self._status_code = status_code
+        self._summary = summary
+
+        super().__init__(
+            f"{status_code} - {error_code} - {message} - {summary}")
 
 
 class QueryOptions:
@@ -192,7 +228,7 @@ class Client(object):
         self,
         fql: str,  # TODO(lucas) use a home-baked fql expression type
         opts: Optional[QueryOptions] = None,
-    ):
+    ) -> Response:
         """
         Use the Fauna query API.
 
@@ -211,11 +247,18 @@ class Client(object):
         path,
         fql: str,  # TODO(lucas) use a home-baked fql expression type
         opts: Optional[QueryOptions] = None,
-    ):
+    ) -> Response:
+        """
+        :raises:
+        FaunaException: Fauna returned an error
+        """
 
         headers = self._headers.copy()
         headers["X-Format"] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
+
+        # TODO: should be removed in favor of default (tagged)
+        headers["X-Format"] = "simple"
 
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
@@ -248,4 +291,8 @@ class Client(object):
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
 
-        return response
+        err = response.error()
+        if err is not None:
+            raise FaunaException(*err)
+
+        return Response(response)
