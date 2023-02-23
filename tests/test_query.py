@@ -1,3 +1,4 @@
+from typing import Mapping
 import json
 
 import httpx
@@ -26,13 +27,14 @@ def test_query_with_opts(
     linearized: bool,
     query_timeout_ms: int,
     traceparent: str,
-    tags: str,
+    tags: Mapping[str, str],
     max_contention_retries: int,
 ):
 
     def validate_headers(request: httpx.Request):
         assert request.headers[Header.Linearized] == str(linearized).lower()
-        assert request.headers[Header.Tags] == tags
+        # being explicit to not figure out encoding a Mapping in the test
+        assert request.headers[Header.Tags] == "hello=world&testing=foobar"
         assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
         assert request.headers[Header.Traceparent] == traceparent
         assert request.headers[

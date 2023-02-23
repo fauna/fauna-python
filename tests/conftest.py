@@ -1,3 +1,5 @@
+from typing import Mapping
+
 import pytest
 
 
@@ -7,8 +9,11 @@ def linearized() -> bool:
 
 
 @pytest.fixture
-def tags() -> str:
-    return "hello=world"
+def tags() -> Mapping[str, str]:
+    return {
+        "hello": "world",
+        "testing": "foobar",
+    }
 
 
 @pytest.fixture

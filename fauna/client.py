@@ -22,7 +22,7 @@ class QueryOptions:
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout_ms: Optional[int] = None,
-        tags: Optional[str] = None,
+        tags: Optional[Mapping[str, str]] = None,
         traceparent: Optional[str] = None,
     ):
         self._headers: dict[str, str] = {}
@@ -38,7 +38,8 @@ class QueryOptions:
             self._headers[Header.TimeoutMs] = f"{query_timeout_ms}"
 
         if tags is not None:
-            self._headers[Header.Tags] = tags
+            self._headers[Header.Tags] = '&'.join(
+                [f"{k}={tags[k]}" for k in tags])
 
         if traceparent is not None:
             self._headers[Header.Traceparent] = traceparent
@@ -181,6 +182,7 @@ class Client(object):
     ):
 
         headers = self._headers.copy()
+        headers["X-Format"] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
 
         if self._query_timeout_ms is not None:
@@ -194,9 +196,8 @@ class Client(object):
                 headers[k] = v
 
         data: dict[str, Any] = {
-            "typecheck": False,
             "query": fql,
-            "arguments": {}
+            "arguments": {},
         }
 
         response = self.session.request(
