@@ -6,6 +6,7 @@ from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
 from fauna.client import QueryOptions, FaunaException
+from fauna.response import Stat
 
 
 def test_query(subtests):
@@ -16,7 +17,7 @@ def test_query(subtests):
 
         assert res.data == float(5123.0)
         assert res.status_code == 200
-        assert res.stats.compute_ops > 0
+        assert res.stat(Stat.ComputeOps) > 0
         assert res.traceparent != ""
         assert res.summary == ""
     with subtests.test(msg="with debug"):
