@@ -16,7 +16,6 @@ class Header:
     TypeChecking = "X-Type-Checking"
     Tags = "X-Query-Tags"
     Traceparent = "Traceparent"
-    Traceparent = "Traceparent"
 
 
 class _Header:
