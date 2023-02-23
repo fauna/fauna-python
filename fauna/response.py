@@ -32,6 +32,9 @@ class Response:
         return self._status_code
 
     def __init__(self, http_response: HTTPResponse):
+        # initialize an empty mapping
+        self._stats = {}
+
         response_json = http_response.json()
 
         self._headers = http_response.headers()
