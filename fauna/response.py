@@ -1,9 +1,38 @@
-from __future__ import annotations
-
-from typing import Any, Mapping
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Mapping
 
-from .http_client import HTTPResponse
+from .http_client import HTTPResponse, ErrorResponse
+
+
+class FaunaException(Exception):
+
+    @property
+    def error_code(self) -> str:
+        return self._error_code
+
+    @property
+    def error_message(self) -> str:
+        return self._error_message
+
+    @property
+    def status_code(self) -> int:
+        return self._status_code
+
+    @property
+    def summary(self) -> str:
+        return self._summary
+
+    def __init__(self, err: ErrorResponse):
+
+        self._error_code = err.error_code
+        self._error_message = err.error_message
+        self._status_code = err.status_code
+        self._summary = err.summary
+
+        super().__init__(
+            f"{self.status_code} - {self.error_code} - {self.error_message} - {self.summary}"
+        )
 
 
 class Stat(str, Enum):

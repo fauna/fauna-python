@@ -7,7 +7,7 @@ import json
 
 
 @dataclass(frozen=True)
-class FaunaError:
+class ErrorResponse:
     status_code: int
     error_code: str
     error_message: str
@@ -25,7 +25,7 @@ class HTTPResponse(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def error(self) -> Optional[FaunaError]:
+    def error(self) -> Optional[ErrorResponse]:
         pass
 
     @abc.abstractmethod
@@ -74,7 +74,7 @@ class HTTPXResponse(HTTPResponse):
     def __init__(self, response: httpx.Response):
         self._r = response
 
-    def error(self) -> Optional[FaunaError]:
+    def error(self) -> Optional[ErrorResponse]:
         if self.status_code() > 399:
             response_json = self.json()
 
@@ -83,7 +83,7 @@ class HTTPXResponse(HTTPResponse):
             if "summary" in response_json:
                 summary = response_json["summary"]
 
-            return FaunaError(
+            return ErrorResponse(
                 self.status_code(),
                 response_json["error"]["code"],
                 response_json["error"]["message"],

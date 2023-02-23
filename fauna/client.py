@@ -2,9 +2,9 @@ from datetime import timedelta
 from typing import Any, Dict, Mapping, Optional
 
 import fauna
-from fauna.response import Response
+from fauna.response import Response, FaunaException
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
-from fauna.http_client import HTTPClient, HTTPXClient, FaunaError
+from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.utils import _Environment, _LastTxnTime
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
@@ -14,36 +14,6 @@ DefaultHttpPoolTimeout = timedelta(seconds=5)
 DefaultIdleConnectionTimeout = timedelta(seconds=5)
 DefaultMaxConnections = 20
 DefaultMaxIdleConnections = 20
-
-
-class FaunaException(Exception):
-
-    @property
-    def error_code(self) -> str:
-        return self._error_code
-
-    @property
-    def error_message(self) -> str:
-        return self._error_message
-
-    @property
-    def status_code(self) -> int:
-        return self._status_code
-
-    @property
-    def summary(self) -> str:
-        return self._summary
-
-    def __init__(self, err: FaunaError):
-
-        self._error_code = err.error_code
-        self._error_message = err.error_message
-        self._status_code = err.status_code
-        self._summary = err.summary
-
-        super().__init__(
-            f"{self.status_code} - {self.error_code} - {self.error_message} - {self.summary}"
-        )
 
 
 class QueryOptions:
