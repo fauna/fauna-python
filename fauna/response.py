@@ -7,7 +7,16 @@ from .http_client import HTTPResponse
 
 
 class Stat(str, Enum):
+    ByteReadOps = "x-byte-read-ops"
+    ByteWRiteOps = "x-byte-write-ops"
     ComputeOps = "x-compute-ops"
+    QueryBytesIn = "x-query-bytes-in"
+    QueryBytesOut = "x-query-bytes-out"
+    ReadOps = "x-read-ops"
+    StorageBytesRead = "x-storage-bytes-read"
+    StorageBytesWrite = "x-storage-bytes-write"
+    TxnRetries = "x-txn-retries"
+    WriteOps = "x-write-ops"
 
 
 class Response:
@@ -51,7 +60,4 @@ class Response:
             raise Exception("Unexpected response")
 
     def stat(self, key: Stat) -> int:
-        if key in self._headers:
-            return int(self._headers[key])
-
-        return 0
+        return int(self._headers[key])
