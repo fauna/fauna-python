@@ -89,4 +89,11 @@ class Response:
             raise Exception("Unexpected response")
 
     def stat(self, key: str) -> int:
+        """
+        Return the value of the Stat by key. You can use the :type:`Stat` :type:`Enum`
+        or pass a known string for any stat that have not been added to the Enum.
+
+        :param key: key for the stat Header
+        :raises KeyError: Unknown stat key
+        """
         return int(self._headers[key])

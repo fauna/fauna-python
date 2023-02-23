@@ -182,8 +182,7 @@ class Client(object):
         opts: Optional[QueryOptions] = None,
     ) -> Response:
         """
-        :raises:
-        FaunaException: Fauna returned an error
+        :raises FaunaException: Fauna returned an error
         """
 
         headers = self._headers.copy()

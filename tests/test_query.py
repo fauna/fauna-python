@@ -41,8 +41,9 @@ def test_query(subtests):
             assert res.stat(Stat.ComputeOps) > 0
 
         with subtests.test(msg="invalid stat"):
-            with pytest.raises(Exception):
+            with pytest.raises(Exception) as e:
                 assert res.stat("silly") == 0
+            assert e.type == KeyError
 
         with subtests.test(msg="manual stat"):
             # not an actual stat, but shows that we can pull something manually
