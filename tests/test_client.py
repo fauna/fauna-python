@@ -8,6 +8,7 @@ from fauna import Client, HTTPXClient
 
 def test_client_defaults(monkeypatch):
     monkeypatch.delenv("FAUNA_ENDPOINT")
+    monkeypatch.delenv("FAUNA_SECRET")
     client = Client()
 
     assert client.max_contention_retries is None

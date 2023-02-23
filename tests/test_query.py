@@ -1,10 +1,10 @@
 from typing import Mapping
+
 import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
-from fauna import Client
 from fauna.client import QueryOptions, FaunaException
 
 
@@ -33,19 +33,19 @@ def test_query(subtests):
         assert e.value.summary != ""
 
 
-    httpx_mock: HTTPXMock,
-def test_query_with_opts(httpx_mock: HTTPXMock):
+def test_query_with_opts(
     httpx_mock: HTTPXMock,
     linearized: bool,
     query_timeout_ms: int,
     traceparent: str,
-    tags: str,
+    tags: Mapping[str, str],
     max_contention_retries: int,
 ):
 
     def validate_headers(request: httpx.Request):
         assert request.headers[Header.Linearized] == str(linearized).lower()
-        assert request.headers[Header.Tags] == tags
+        # being explicit to not figure out encoding a Mapping in the test
+        assert request.headers[Header.Tags] == "hello=world&testing=foobar"
         assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
         assert request.headers[Header.Traceparent] == traceparent
         assert request.headers[
@@ -59,32 +59,16 @@ def test_query_with_opts(httpx_mock: HTTPXMock):
     httpx_mock.add_callback(validate_headers)
 
     with httpx.Client() as mockClient:
-            secret="secret",
-            http_client = HTTPXClient(mockClient),
-
-    res = c.query(
-
-    def validate_headers(request: httpx.Request):
-        assert request.headers[Header.Linearized] == str(linearized).lower()
-        # being explicit to not figure out encoding a Mapping in the test
-        assert request.headers[Header.Tags] == "hello=world&testing=foobar"
-        assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
-        assert request.headers[Header.Traceparent] == traceparent
-
-        return httpx.Response(
-            status_code=200,
-            json={"url": str(request.url)},
-            "not used, just sending to a mock client",
-            QueryOptions(
-                tags="hello=world",
-    with httpx.Client() as mockClient:
         c = Client(http_client=HTTPXClient(mockClient))
 
-                linearized=True,
+        res = c.query(
             "not used, just sending to a mock client",
-                query_timeout_ms=5000,
+            QueryOptions(
+                tags=tags,
+                linearized=linearized,
+                query_timeout_ms=query_timeout_ms,
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
-        ))
-                traceparent=traceparent,
-        assert res.status_code() == 200
+            ))
+
+        assert res.status_code == 200

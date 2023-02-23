@@ -84,38 +84,6 @@ class QueryOptions:
         return self._headers
 
 
-class QueryOptions:
-
-    def __init__(
-        self,
-        linearized: Optional[bool] = None,
-        max_contention_retries: Optional[int] = None,
-        query_timeout_ms: Optional[int] = None,
-        tags: Optional[str] = None,
-        traceparent: Optional[str] = None,
-    ):
-        self._headers: dict[str, str] = {}
-
-        if linearized is not None:
-            self._headers[Header.Linearized] = str(linearized).lower()
-
-        if max_contention_retries is not None and max_contention_retries > 0:
-            self._headers[
-                Header.MaxContentionRetries] = f"{max_contention_retries}"
-
-        if query_timeout_ms is not None and query_timeout_ms > 0:
-            self._headers[Header.TimeoutMs] = f"{query_timeout_ms}"
-
-        if tags is not None:
-            self._headers[Header.Tags] = tags
-
-        if traceparent is not None:
-            self._headers[Header.Traceparent] = traceparent
-
-    def headers(self) -> Dict[str, str]:
-        return self._headers
-
-
 class Client(object):
 
     def __init__(
@@ -254,7 +222,6 @@ class Client(object):
         """
 
         headers = self._headers.copy()
-        headers["X-Format"] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
 
         # TODO: should be removed in favor of default (tagged)
@@ -265,10 +232,6 @@ class Client(object):
 
         if self.track_last_transaction_time:
             headers.update(self._last_txn_time.request_header)
-
-        if opts is not None:
-            for k, v in opts.headers().items():
-                headers[k] = v
 
         if opts is not None:
             for k, v in opts.headers().items():
