@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Any, Dict, Mapping, Optional
 
 import fauna
+from fauna.response import Response
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.utils import _Environment, _LastTxnTime
@@ -160,7 +161,7 @@ class Client(object):
         self,
         fql: str,  # TODO(lucas) use a home-baked fql expression type
         opts: Optional[QueryOptions] = None,
-    ):
+    ) -> Response:
         """
         Use the Fauna query API.
 
@@ -179,9 +180,13 @@ class Client(object):
         path,
         fql: str,  # TODO(lucas) use a home-baked fql expression type
         opts: Optional[QueryOptions] = None,
-    ):
+    ) -> Response:
+        """
+        :raises FaunaException: Fauna returned an error
+        """
 
         headers = self._headers.copy()
+        # TODO: should be removed in favor of default (tagged)
         headers["X-Format"] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
 
@@ -212,4 +217,4 @@ class Client(object):
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
 
-        return response
+        return Response(response)

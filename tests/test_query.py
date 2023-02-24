@@ -1,25 +1,45 @@
 from typing import Mapping
-import json
 
 import httpx
+import pytest
 from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
 from fauna.client import QueryOptions
+from fauna.response import Stat
 
 
-def test_query():
-    c = Client(secret="secret")
-    q = """let foo = 'bar'
-    foo"""
+def test_query(subtests):
+    c = Client()
 
-    res = c.query(q)
+    with subtests.test(msg="valid query"):
+        res = c.query("Math.abs(-5.123e3)")
 
-    as_json = json.loads(res.read().decode("utf-8"))
-    if "data" not in as_json:
-        print(json.dumps(as_json, indent=2))
+        assert res.data == float(5123.0)
+        assert res.status_code == 200
+        assert res.stat(Stat.ComputeOps) > 0
+        assert res.traceparent != ""
+        assert res.summary == ""
 
-    assert as_json["data"] == 'bar'
+    with subtests.test(msg="with debug"):
+        res = c.query('dbg("Hello, World")')
+
+        assert res.status_code == 200
+        assert res.summary != ""
+
+    with subtests.test(msg="stats"):
+        res = c.query("Math.abs(-5.123e3)")
+        with subtests.test(msg="valid stat"):
+            assert res.stat(Stat.ComputeOps) > 0
+
+        with subtests.test(msg="invalid stat"):
+            with pytest.raises(Exception) as e:
+                assert res.stat("silly") == 0
+            assert e.type == KeyError
+
+        with subtests.test(msg="manual stat"):
+            # not an actual stat, but shows that we can pull something manually
+            assert res.stat("content-length") > 0
 
 
 def test_query_with_opts(
@@ -42,7 +62,7 @@ def test_query_with_opts(
 
         return httpx.Response(
             status_code=200,
-            json={"url": str(request.url)},
+            json={"data": "mocked"},
         )
 
     httpx_mock.add_callback(validate_headers)
@@ -60,4 +80,4 @@ def test_query_with_opts(
                 max_contention_retries=max_contention_retries,
             ))
 
-        assert res.status_code() == 200
+        assert res.status_code == 200

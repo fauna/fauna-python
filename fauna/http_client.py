@@ -1,7 +1,17 @@
 import abc
 from typing import Optional, Iterator, Mapping, Any
+from dataclasses import dataclass
 
 import httpx
+import json
+
+
+@dataclass(frozen=True)
+class ErrorResponse:
+    status_code: int
+    error_code: str
+    error_message: str
+    summary: str
 
 
 class HTTPResponse(abc.ABC):
@@ -12,6 +22,10 @@ class HTTPResponse(abc.ABC):
 
     @abc.abstractmethod
     def status_code(self) -> int:
+        pass
+
+    @abc.abstractmethod
+    def json(self) -> Any:
         pass
 
     @abc.abstractmethod
@@ -61,6 +75,9 @@ class HTTPXResponse(HTTPResponse):
         for (k, v) in self._r.headers.items():
             h[k] = v
         return h
+
+    def json(self) -> Any:
+        return json.loads(self._r.read().decode("utf-8"))
 
     def status_code(self) -> int:
         return self._r.status_code
