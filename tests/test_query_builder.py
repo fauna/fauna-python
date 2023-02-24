@@ -20,7 +20,21 @@ def test_query_builder_values(subtests):
         user = {"name": "Dino", "age": 0, "birthdate": date.today()}
         q = fql("""let x = {my_var}""", my_var=user)
         r = q.to_query()
-        assert r == {"fql": ["let x = ", {'value': {'name': 'Dino', 'age': {'@int': '0'}, 'birthdate': {'@date': '2023-02-24'}}}]}
+        assert r == {
+            "fql": [
+                "let x = ", {
+                    'value': {
+                        'name': 'Dino',
+                        'age': {
+                            '@int': '0'
+                        },
+                        'birthdate': {
+                            '@date': '2023-02-24'
+                        }
+                    }
+                }
+            ]
+        }
 
 
 def test_query_builder_sub_queries(subtests):
@@ -32,4 +46,20 @@ x {{ .name }}""", inner=inner)
 
         r = outer.to_query()
 
-        assert r == {"fql": [{"fql": ["let x = ", {'value': {'name': 'Dino', 'age': {'@int': '0'}, 'birthdate': {'@date': '2023-02-24'}}}]}, "\nx {", " .name }"]}
+        assert r == {
+            "fql": [{
+                "fql": [
+                    "let x = ", {
+                        'value': {
+                            'name': 'Dino',
+                            'age': {
+                                '@int': '0'
+                            },
+                            'birthdate': {
+                                '@date': '2023-02-24'
+                            }
+                        }
+                    }
+                ]
+            }, "\nx {", " .name }"]
+        }

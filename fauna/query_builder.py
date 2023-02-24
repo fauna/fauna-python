@@ -51,7 +51,7 @@ class QueryFragment(Fragment):
 class FQLTemplateQueryBuilder(QueryBuilder):
     _fragments: List[Fragment]
 
-    def __init__(self, fragments: Optional[Sequence[Fragment]] = None):
+    def __init__(self, fragments: Optional[List[Fragment]] = None):
         if fragments is None:
             fragments = []
         self._fragments = fragments
@@ -70,7 +70,7 @@ class FQLTemplateQueryBuilder(QueryBuilder):
         return {"fql": rendered}
 
     @staticmethod
-    def from_fragments(fragments) -> QueryBuilder:
+    def from_fragments(fragments: List[Fragment]) -> QueryBuilder:
         qb = FQLTemplateQueryBuilder(fragments)
         return qb
 
