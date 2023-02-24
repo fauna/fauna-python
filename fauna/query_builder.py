@@ -10,14 +10,14 @@ from fauna.encode import encode_to_typed
 class QueryBuilder(abc.ABC):
 
     @abc.abstractmethod
-    def to_query(self) -> Mapping[str, Sequence[any]]:
+    def to_query(self) -> Mapping[str, Sequence[Any]]:
         pass
 
 
 class Fragment(abc.ABC):
 
     @abc.abstractmethod
-    def render(self) -> any:
+    def render(self) -> Any:
         pass
 
 
@@ -59,7 +59,7 @@ class FQLTemplateQueryBuilder(QueryBuilder):
     def append(self, fragment: Fragment):
         self._fragments.append(fragment)
 
-    def to_query(self) -> Mapping[str, Sequence[any]]:
+    def to_query(self) -> Mapping[str, Sequence[Any]]:
         rendered = []
         for f in self._fragments:
             if isinstance(f, ValueFragment):
