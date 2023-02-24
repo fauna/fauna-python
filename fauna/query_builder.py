@@ -64,7 +64,7 @@ class FQLTemplateQueryBuilder(QueryBuilder):
         for f in self._fragments:
             if isinstance(f, ValueFragment):
                 encoded = encode_to_typed(f.render())
-                rendered.append(encoded)
+                rendered.append({"value": encoded})
             else:
                 rendered.append(f.render())
         return {"fql": rendered}
