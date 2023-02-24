@@ -5,7 +5,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient
-from fauna.client import QueryOptions, FaunaException
+from fauna.client import QueryOptions
 from fauna.response import Stat
 
 
@@ -26,14 +26,6 @@ def test_query(subtests):
 
         assert res.status_code == 200
         assert res.summary != ""
-
-    with subtests.test(msg="with error"):
-        with pytest.raises(FaunaException) as e:
-            c.query("I'm a little teapot")
-        assert e.value.status_code == 400
-        assert e.value.error_code == "invalid_query"
-        assert e.value.error_message != ""
-        assert e.value.summary != ""
 
     with subtests.test(msg="stats"):
         res = c.query("Math.abs(-5.123e3)")

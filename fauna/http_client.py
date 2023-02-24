@@ -25,10 +25,6 @@ class HTTPResponse(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def error(self) -> Optional[ErrorResponse]:
-        pass
-
-    @abc.abstractmethod
     def json(self) -> Any:
         pass
 
@@ -73,24 +69,6 @@ class HTTPXResponse(HTTPResponse):
 
     def __init__(self, response: httpx.Response):
         self._r = response
-
-    def error(self) -> Optional[ErrorResponse]:
-        if self.status_code() > 399:
-            response_json = self.json()
-
-            # summary not returned in 401 responses
-            summary = ""
-            if "summary" in response_json:
-                summary = response_json["summary"]
-
-            return ErrorResponse(
-                self.status_code(),
-                response_json["error"]["code"],
-                response_json["error"]["message"],
-                summary,
-            )
-
-        return None
 
     def headers(self) -> Mapping[str, str]:
         h = {}

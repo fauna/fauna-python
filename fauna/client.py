@@ -2,7 +2,7 @@ from datetime import timedelta
 from typing import Any, Dict, Mapping, Optional
 
 import fauna
-from fauna.response import Response, FaunaException
+from fauna.response import Response
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.utils import _Environment, _LastTxnTime
@@ -216,9 +216,5 @@ class Client(object):
             if Header.TxnTime in response.headers():
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
-
-        err = response.error()
-        if err is not None:
-            raise FaunaException(err)
 
         return Response(response)
