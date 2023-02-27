@@ -187,7 +187,7 @@ class Client(object):
 
         headers = self._headers.copy()
         # TODO: should be removed in favor of default (tagged)
-        headers["X-Format"] = "simple"
+        headers[_Header.Format] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
 
         if self._query_timeout_ms is not None:
