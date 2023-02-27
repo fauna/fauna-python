@@ -67,19 +67,6 @@ class FQLTemplateQueryBuilder(QueryBuilder):
 
 
 def fql(q: str, **kwargs: Any) -> QueryBuilder:
-    """
-    let y = {{ why: {why}, what: {what} }}
-    y {{ .why }}
-
-    becomes...
-
-    literal_text:let y = {, field_name:None, format_spec:None, conversion:None
-    literal_text: why: , field_name:why, format_spec:, conversion:None
-    literal_text:, what: , field_name:what, format_spec:, conversion:None
-    literal_text: }, field_name:None, format_spec:None, conversion:None
-    literal_text:\ny {, field_name:None, format_spec:None, conversion:None
-    literal_text: .why }, field_name:None, format_spec:None, conversion:None
-    """
 
     fragments = []
     template = FaunaTemplate(q)
