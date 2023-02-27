@@ -17,3 +17,5 @@ results/
 .pytest_cache
 __pycache__
 .vscode
+/.venv
+/pyrightconfig.json
