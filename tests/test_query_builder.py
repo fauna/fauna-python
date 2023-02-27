@@ -9,16 +9,16 @@ def test_query_builder_strings(subtests):
         r = q.to_query()
         assert r == {"fql": ["let x = 11"]}
 
-    with subtests.test(msg="pure string query with escaped braces"):
-        q = fql("""let x = {{ y: 11 }}""")
+    with subtests.test(msg="pure string query with braces"):
+        q = fql("""let x = { y: 11 }""")
         r = q.to_query()
-        assert r == {"fql": ["let x = {", " y: 11 }"]}
+        assert r == {"fql": ["let x = { y: 11 }"]}
 
 
 def test_query_builder_values(subtests):
     with subtests.test(msg="simple value"):
         user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}
-        q = fql("""let x = {my_var}""", my_var=user)
+        q = fql("""let x = $my_var""", my_var=user)
         r = q.to_query()
         assert r == {
             "fql": [
@@ -40,9 +40,9 @@ def test_query_builder_values(subtests):
 def test_query_builder_sub_queries(subtests):
     with subtests.test(msg="single subquery with object"):
         user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}
-        inner = fql("""let x = {my_var}""", my_var=user)
-        outer = fql("""{inner}
-x {{ .name }}""", inner=inner)
+        inner = fql("""let x = $my_var""", my_var=user)
+        outer = fql("""$inner
+x { .name }""", inner=inner)
 
         r = outer.to_query()
 
@@ -61,5 +61,5 @@ x {{ .name }}""", inner=inner)
                         }
                     }
                 ]
-            }, "\nx {", " .name }"]
+            }, "\nx { .name }"]
         }

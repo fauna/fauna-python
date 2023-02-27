@@ -5,6 +5,7 @@ import string
 from typing import Any, Sequence, Mapping, Optional, List
 
 from fauna.encode import encode_to_typed
+from fauna.template import FaunaTemplate
 
 
 class QueryBuilder(abc.ABC):
@@ -79,9 +80,10 @@ def fql(q: str, **kwargs: Any) -> QueryBuilder:
     literal_text:\ny {, field_name:None, format_spec:None, conversion:None
     literal_text: .why }, field_name:None, format_spec:None, conversion:None
     """
-    fragments = []
 
-    for text, field_name, _, _ in string.Formatter().parse(q):
+    fragments = []
+    template = FaunaTemplate(q)
+    for text, field_name in template.expand():
         if text is not None and len(text) > 0:
             fragments.append(LiteralFragment(text))
 
