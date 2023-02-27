@@ -49,7 +49,7 @@ class QueryOptions:
         return self._headers
 
 
-class Client(object):
+class Client:
 
     def __init__(
         self,
