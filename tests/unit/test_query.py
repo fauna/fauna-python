@@ -4,7 +4,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from fauna import Client, Header, HTTPXClient
+from fauna import Client, Header, HTTPXClient, fql
 from fauna.client import QueryOptions
 from fauna.response import Stat
 
@@ -13,22 +13,22 @@ def test_query(subtests):
     c = Client()
 
     with subtests.test(msg="valid query"):
-        res = c.query("Math.abs(-5.123e3)")
+        res = c.query(fql("Math.abs(-5.123e3)"))
 
-        assert res.data == float(5123.0)
         assert res.status_code == 200
+        assert res.data == float(5123.0)
         assert res.stat(Stat.ComputeOps) > 0
         assert res.traceparent != ""
         assert res.summary == ""
 
     with subtests.test(msg="with debug"):
-        res = c.query('dbg("Hello, World")')
+        res = c.query(fql('dbg("Hello, World")'))
 
         assert res.status_code == 200
         assert res.summary != ""
 
     with subtests.test(msg="stats"):
-        res = c.query("Math.abs(-5.123e3)")
+        res = c.query(fql("Math.abs(-5.123e3)"))
         with subtests.test(msg="valid stat"):
             assert res.stat(Stat.ComputeOps) > 0
 
@@ -71,13 +71,14 @@ def test_query_with_opts(
         c = Client(http_client=HTTPXClient(mockClient))
 
         res = c.query(
-            "not used, just sending to a mock client",
-            QueryOptions(
+            fql("not used, just sending to a mock client"),
+            opts=QueryOptions(
                 tags=tags,
                 linearized=linearized,
                 query_timeout_ms=query_timeout_ms,
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
-            ))
+            ),
+        )
 
         assert res.status_code == 200
