@@ -17,7 +17,7 @@ def test_query_builder_strings(subtests):
 
 def test_query_builder_values(subtests):
     with subtests.test(msg="simple value"):
-        user = {"name": "Dino", "age": 0, "birthdate": date.today()}
+        user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}
         q = fql("""let x = {my_var}""", my_var=user)
         r = q.to_query()
         assert r == {
@@ -39,7 +39,7 @@ def test_query_builder_values(subtests):
 
 def test_query_builder_sub_queries(subtests):
     with subtests.test(msg="single subquery with object"):
-        user = {"name": "Dino", "age": 0, "birthdate": date.today()}
+        user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}
         inner = fql("""let x = {my_var}""", my_var=user)
         outer = fql("""{inner}
 x {{ .name }}""", inner=inner)
