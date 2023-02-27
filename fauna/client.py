@@ -133,9 +133,9 @@ class Client(object):
         Set the last timestamp seen by this client.
         This has no effect if earlier than stored timestamp.
 
-        WARNING: This should be used only when coordinating timestamps across
-                multiple clients. Moving the timestamp arbitrarily forward into
-                the future will cause transactions to stall.
+        .. WARNING:: This should be used only when coordinating timestamps across
+        multiple clients. Moving the timestamp arbitrarily forward into
+        the future will cause transactions to stall.
 
         :param new_transaction_time: the new transaction time.
         """
