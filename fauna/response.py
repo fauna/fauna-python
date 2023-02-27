@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Mapping
 
-from .http_client import HTTPResponse
+from .http_client import HTTPResponse, ProtocolError, ServiceError
 from .wire_protocol import FaunaDecoder
 
 
@@ -58,8 +58,21 @@ class Response:
 
         if "data" in response_json:
             self._data = FaunaDecoder.decode(response_json["data"])
+        elif "error" in response_json:
+            raise ServiceError(
+                self._status_code,
+                response_json["error"]["code"],
+                response_json["error"]["message"],
+                response_json["summary"],
+            )
+        elif self._status_code > 299:
+            raise ProtocolError(
+                self._status_code,
+                "Unexpected response",
+                response_json,
+            )
         else:
-            raise Exception("Unexpected response")
+            raise Exception("Unknown response")
 
     def stat(self, key: str) -> int:
         """

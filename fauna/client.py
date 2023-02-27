@@ -173,6 +173,10 @@ class Client:
         :param fql: A string, but will eventually be a query expression.
         :param opts: (Optional) Query Options
         :return: Response. TODO(lucas): refine contract
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ClientError: Internal client error, failed to send request TODO: figure out where this should go
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
         """
         return self._execute(
             "/query/1",
@@ -187,9 +191,6 @@ class Client:
         arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
     ) -> Response:
-        """
-        :raises FaunaException: Fauna returned an error
-        """
 
         headers = self._headers.copy()
         # TODO: should be removed in favor of default (tagged)
