@@ -7,8 +7,8 @@ class FaunaTemplate:
     Pattern adapted from https://github.com/python/cpython/blob/main/Lib/string.py#L57
     """
     _delimiter = '$'
-    _idpattern = r'[_a-z][_a-z0-9]*'
-    _flags = _re.IGNORECASE | _re.VERBOSE | _re.ASCII
+    _idpattern = r'[_a-zA-Z][_a-zA-Z0-9]*'
+    _flags = _re.VERBOSE
 
     def __init__(self, template: str):
         delim = _re.escape(self._delimiter)
