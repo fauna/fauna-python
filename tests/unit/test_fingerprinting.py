@@ -37,6 +37,7 @@ def test_fingerprinting(monkeypatch, subtests):
         with subtests.test(t):
             # placeholder to reset PATH in case set within test (Heroku)
             current = None
+
             # set env vars for test
             for e in tests[t]:
                 if e == "PATH":
