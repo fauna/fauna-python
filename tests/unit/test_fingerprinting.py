@@ -53,13 +53,11 @@ def test_fingerprinting(monkeypatch, subtests):
         monkeypatch.delenv("WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES")
 
     with subtests.test("Azure Compute"):
-        monkeypatch.setenv("ORYX_ENV_TYPE", "sup")
-        monkeypatch.setenv("WEBSITE_INSTANCE_ID", "sup")
         monkeypatch.setenv("ORYX_ENV_TYPE", "AppService")
+        monkeypatch.setenv("WEBSITE_INSTANCE_ID", "sup")
 
         assert fauna.headers._DriverEnvironment().env \
             == "Azure Compute"
 
         monkeypatch.delenv("ORYX_ENV_TYPE")
         monkeypatch.delenv("WEBSITE_INSTANCE_ID")
-        monkeypatch.delenv("ORYX_ENV_TYPE", False)
