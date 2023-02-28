@@ -53,8 +53,9 @@ class FaunaTemplate:
             literal_part: Optional[str] = None
 
             if cur_pos != span_start_pos:
-                literal_part = self._template[
-                    cur_pos:span_start_pos] + escaped_part
+                literal_part = \
+                    self._template[cur_pos:span_start_pos] \
+                        + escaped_part
 
             cur_pos = span_end_pos
 

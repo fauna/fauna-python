@@ -70,8 +70,8 @@ class _DriverEnvironment:
             ),
             EnvChecker(
                 name="Heroku",
-                check=lambda: "PATH" in os.environ and ".heroku" in os.environ[
-                    "PATH"],
+                check=lambda: "PATH" in \
+                    os.environ and ".heroku" in os.environ["PATH"],
             ),
             EnvChecker(
                 name="AWS Lambda",
@@ -87,8 +87,8 @@ class _DriverEnvironment:
             ),
             EnvChecker(
                 name="Azure Cloud Functions",
-                check=lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in os
-                .environ,
+                check=lambda: "WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES" in \
+                    os.environ,
             ),
             EnvChecker(
                 name="Azure Compute",
