@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Mapping
 
-from .http_client import HTTPResponse, ProtocolError, ServiceError
+from .http_client import HTTPResponse
 from .wire_protocol import FaunaDecoder
 
 
@@ -49,6 +49,10 @@ class Response:
         self._traceparent = http_response.headers().get("traceparent", "")
 
         http_response.close()
+
+        if "data" not in response_json:
+            raise Exception(
+                f"Key 'data' not found in response body: \n{response_json}")
 
         if "summary" in response_json:
             self._summary = response_json["summary"]

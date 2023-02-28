@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import httpx
 
+from .error import ClientError, NetworkError
+
 
 @dataclass(frozen=True)
 class ErrorResponse:
@@ -106,17 +108,23 @@ class HTTPXClient(HTTPClient):
         data: Mapping[str, Any],
     ) -> HTTPResponse:
 
-        request = self._c.build_request(
-            method,
-            url,
-            json=data,
-            headers=headers,
-        )
+        try:
+            request = self._c.build_request(
+                method,
+                url,
+                json=data,
+                headers=headers,
+            )
+        except httpx.InvalidURL as e:
+            raise ClientError("Invalid URL Format") from e
 
-        response = self._c.send(
-            request,
-            stream=False,
-        )
+        try:
+            response = self._c.send(
+                request,
+                stream=False,
+            )
+        except (httpx.HTTPError, httpx.InvalidURL) as e:
+            raise NetworkError("Exception re-raised from HTTP request") from e
 
         return HTTPXResponse(response)
 
@@ -127,51 +135,3 @@ class HTTPXClient(HTTPClient):
         data: Mapping[str, Any],
     ) -> Iterator[HTTPResponse]:
         raise NotImplementedError()
-
-
-class FaunaError(Exception):
-
-    @property
-    def status_code(self) -> int:
-        return self._status_code
-
-    @property
-    def code(self) -> str:
-        return self._code
-
-    @property
-    def message(self) -> str:
-        return self._message
-
-    def __init__(self, status_code: int, code: str, message: str):
-        self._status_code = status_code
-        self._code = code
-        self._message = message
-
-    def __str__(self):
-        return f"{self.status_code}: {self.code}\n{self.message}"
-
-
-class ProtocolError(FaunaError):
-    pass
-
-
-class ServiceError(FaunaError):
-
-    @property
-    def summary(self) -> str:
-        return self._summary
-
-    def __init__(
-        self,
-        status_code: int,
-        code: str,
-        message: str,
-        summary: str,
-    ):
-        super().__init__(status_code, code, message)
-
-        self._summary = summary
-
-    def __str__(self):
-        return f"{self._status_code}: {self._code}\n{self._message}\n---\n{self._summary}"
