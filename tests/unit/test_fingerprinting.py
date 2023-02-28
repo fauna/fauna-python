@@ -1,59 +1,65 @@
+import os
+
 import fauna
 
-# IMPORTANT: Not using subtests to avoid env var issues
 
+def test_fingerprinting(monkeypatch, subtests):
+    with subtests.test("netlify"):
+        monkeypatch.setenv("NETLIFY_IMAGES_CDN_DOMAIN", "sup")
 
-def test_netlify(monkeypatch):
-    monkeypatch.setenv("NETLIFY_IMAGES_CDN_DOMAIN", "sup")
+        assert fauna.headers._DriverEnvironment().env \
+            == "Netlify"
+        monkeypatch.delenv("NETLIFY_IMAGES_CDN_DOMAIN")
 
-    assert fauna.headers._DriverEnvironment().env \
-        == "Netlify"
+    with subtests.test("vercel"):
+        monkeypatch.setenv("VERCEL", "sup")
 
+        assert fauna.headers._DriverEnvironment().env \
+            == "Vercel"
+        monkeypatch.delenv("VERCEL")
 
-def test_vercel(monkeypatch):
-    monkeypatch.setenv("VERCEL", "sup")
+    with subtests.test("heroku"):
+        path = os.environ["PATH"]
+        monkeypatch.setenv("PATH", ".heroku")
 
-    assert fauna.headers._DriverEnvironment().env \
-        == "Vercel"
+        assert fauna.headers._DriverEnvironment().env \
+            == "Heroku"
+        monkeypatch.setenv("PATH", path)
 
+    with subtests.test("AWS Lambda"):
+        monkeypatch.setenv("AWS_LAMBDA_FUNCTION_VERSION", "sup")
 
-def test_heroku(monkeypatch):
-    monkeypatch.setenv("PATH", ".heroku")
+        assert fauna.headers._DriverEnvironment().env \
+            == "AWS Lambda"
+        monkeypatch.delenv("AWS_LAMBDA_FUNCTION_VERSION")
 
-    assert fauna.headers._DriverEnvironment().env \
-        == "Heroku"
+    with subtests.test("GCP Cloud Functions"):
+        monkeypatch.setenv("_", "google")
 
+        assert fauna.headers._DriverEnvironment().env \
+            == "GCP Cloud Functions"
+        monkeypatch.delenv("_")
 
-def test_lambda(monkeypatch):
-    monkeypatch.setenv("AWS_LAMBDA_FUNCTION_VERSION", "sup")
+    with subtests.test("Google Compute Instances"):
+        monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "sup")
+        assert fauna.headers._DriverEnvironment().env \
+            == "GCP Compute Instances"
+        monkeypatch.delenv("GOOGLE_CLOUD_PROJECT")
 
-    assert fauna.headers._DriverEnvironment().env \
-        == "AWS Lambda"
+    with subtests.test("Azure Cloud Functions"):
+        monkeypatch.setenv("WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES", "sup")
+        assert fauna.headers._DriverEnvironment().env \
+            == "Azure Cloud Functions"
+        monkeypatch.delenv("WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES")
 
+    with subtests.test("Azure Compute"):
+        monkeypatch.setenv("ORYX_ENV_TYPE", "sup")
+        monkeypatch.setenv("WEBSITE_INSTANCE_ID", "sup")
+        monkeypatch.setenv("ORYX_ENV_TYPE", "AppService")
 
-def test_gcp_cloud_functions(monkeypatch):
-    monkeypatch.setenv("_", "google")
+        assert fauna.headers._DriverEnvironment().env \
+            == "Azure Compute"
 
-    assert fauna.headers._DriverEnvironment().env \
-        == "GCP Cloud Functions"
-
-
-def test_gcp_compute_instances(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "sup")
-    assert fauna.headers._DriverEnvironment().env \
-        == "GCP Compute Instances"
-
-
-def test_azure_cloud_functions(monkeypatch):
-    monkeypatch.setenv("WEBSITE_FUNCTIONS_AZUREMONITOR_CATEGORIES", "sup")
-    assert fauna.headers._DriverEnvironment().env \
-        == "Azure Cloud Functions"
-
-
-def test_azure_compute(monkeypatch):
-    monkeypatch.setenv("ORYX_ENV_TYPE", "sup")
-    monkeypatch.setenv("WEBSITE_INSTANCE_ID", "sup")
-    monkeypatch.setenv("ORYX_ENV_TYPE", "AppService")
-
-    assert fauna.headers._DriverEnvironment().env \
-        == "Azure Compute"
+        monkeypatch.delenv("ORYX_ENV_TYPE")
+        monkeypatch.delenv("WEBSITE_INSTANCE_ID")
+        monkeypatch.delenv("ORYX_ENV_TYPE", False)
