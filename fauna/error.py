@@ -24,7 +24,12 @@ class FaunaError(FaunaException):
     def message(self) -> str:
         return self._message
 
-    def __init__(self, status_code: int, code: str, message: str):
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str,
+    ):
         self._status_code = status_code
         self._code = code
         self._message = message
