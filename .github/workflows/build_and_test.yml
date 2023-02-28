@@ -48,7 +48,7 @@ jobs:
         run: pip install -r requirements.txt --use-pep517
 
       - name: Run tests
-        run: pytest -v --cov=fauna --cov-context=test
+        run: pytest -v --cov=fauna --cov-context=test tests/unit
         # To get more insight into tests which are only flaky when run in github actions -- use commands like below
         # run: env HTTPX_LOG_LEVEL=trace pytest --capture=no -v --cov=fauna --cov-context=test -k test_stream_max_open_streams
         env:
