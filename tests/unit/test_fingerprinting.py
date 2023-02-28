@@ -1,6 +1,4 @@
 from typing import Mapping
-import os
-
 import fauna
 
 
@@ -34,20 +32,9 @@ def test_fingerprinting(monkeypatch, subtests):
     }
 
     for t in tests:
-        with subtests.test(t):
-            # placeholder to reset PATH in case set within test (Heroku)
-            current = None
+        with monkeypatch.context() as m:
+            with subtests.test(t):
+                for e in tests[t]:
+                    m.setenv(e, tests[t][e])
 
-            # set env vars for test
-            for e in tests[t]:
-                if e == "PATH":
-                    current = os.environ[e]
-                monkeypatch.setenv(e, tests[t][e])
-
-            assert fauna.headers._DriverEnvironment().env == t
-
-            # clean up
-            for e in tests[t]:
-                if e == "PATH" and current is not None:
-                    os.environ[e] = current
-                monkeypatch.delenv(e)
+                assert fauna.headers._DriverEnvironment().env == t
