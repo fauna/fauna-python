@@ -1,4 +1,5 @@
-from typing import Any, Dict, Optional, Mapping
+import urllib.parse
+from typing import Dict, Optional, Mapping
 from .headers import Header
 
 
@@ -36,8 +37,7 @@ class QueryOptions:
             self._headers[Header.TimeoutMs] = f"{query_timeout_ms}"
 
         if tags is not None:
-            self._headers[Header.Tags] = \
-                '&'.join([f"{k}={tags[k]}" for k in tags])
+            self._headers[Header.Tags] = urllib.parse.urlencode(tags)
 
         if traceparent is not None:
             self._headers[Header.Traceparent] = traceparent
