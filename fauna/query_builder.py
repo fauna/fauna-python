@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-import string
 from typing import Any, Sequence, Mapping, Optional, List
 
 from fauna.encode import encode_to_typed
@@ -70,7 +69,7 @@ def fql(q: str, **kwargs: Any) -> QueryBuilder:
 
     fragments = []
     template = FaunaTemplate(q)
-    for text, field_name in template.expand():
+    for text, field_name in template.iter():
         if text is not None and len(text) > 0:
             fragments.append(LiteralFragment(text))
 
