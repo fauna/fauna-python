@@ -60,7 +60,10 @@ class _SettingFromEnviron(Generic[T]):
 
     def __call__(self) -> T:
         return self.__adapt_from_str(
-            os.environ.get(self.__var_name, default=self.__default_value))
+            os.environ.get(
+                self.__var_name,
+                default=self.__default_value,
+            ))
 
 
 class _Environment:

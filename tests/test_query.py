@@ -57,8 +57,8 @@ def test_query_with_opts(
         assert request.headers[Header.Tags] == "hello=world&testing=foobar"
         assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
         assert request.headers[Header.Traceparent] == traceparent
-        assert request.headers[
-            Header.MaxContentionRetries] == f"{max_contention_retries}"
+        assert request.headers[Header.MaxContentionRetries] \
+            == f"{max_contention_retries}"
 
         return httpx.Response(
             status_code=200,

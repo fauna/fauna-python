@@ -1,8 +1,7 @@
-from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Mapping
 
-from .http_client import HTTPResponse, ErrorResponse
+from .http_client import HTTPResponse
 
 
 class Stat(str, Enum):
