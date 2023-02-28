@@ -75,7 +75,8 @@ class _DriverEnvironment:
             ),
             EnvChecker(
                 name="AWS Lambda",
-                check=lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ),
+                check=lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ,
+            ),
             EnvChecker(
                 name="GCP Cloud Functions",
                 check=lambda: "_" in \
@@ -92,9 +93,9 @@ class _DriverEnvironment:
             ),
             EnvChecker(
                 name="Azure Compute",
-                check=lambda: "ORYX_ENV_TYPE" in os.environ and
-                "WEBSITE_INSTANCE_ID" in os.environ and os.environ[
-                    "ORYX_ENV_TYPE"] == "AppService",
+                check=lambda: "ORYX_ENV_TYPE" in os.environ and \
+                    "WEBSITE_INSTANCE_ID" in os.environ and \
+                    os.environ["ORYX_ENV_TYPE"] == "AppService",
             ),
         ]
 
