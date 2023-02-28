@@ -47,6 +47,7 @@ class ValueFragment(Fragment):
         e.g. ``{ "value": <encoded_value> }``
 
         :returns: The value fragment encoded to the wire protocol.
+        :raises ValueError: If encoding to tagged format fails.
         """
         encoded = encode_to_typed(self._val)
         return {"value": encoded}
@@ -119,28 +120,30 @@ class FQLTemplateQueryBuilder(QueryBuilder):
 
 
 def fql(query: str, **kwargs: Any) -> QueryBuilder:
-    """The primary method for declaring an FQL query and performing FQL query composition. It can accept a simple string
-    query, or a $-sigil string template with ``**kwargs`` as substitutions.
+    """Creates a QueryBuilder - capable of performing query composition and simple querying. It can accept a simple
+    string query, or can perform composition using $-sigil string template with ``**kwargs`` as substitutions.
+
+    The ``**kwargs`` can be Fauna data types - such as strings, document references, or modules - and embedded
+    QueryBuilders - allowing you to compose arbitrarily complex queries.
 
     When providing ``**kwargs``, following types are accepted:
         - :class:`str`, :class:`int`, :class:`float`, :class:`bool`, :class:`datetime.datetime`, :class:`datetime.date`,
-          :class:`dict`, :class:`list`
-        - :class:`QueryBuilder`, :class:`DocumentReference`, :class:`Module`
+          :class:`dict`, :class:`list`, :class:`QueryBuilder`, :class:`DocumentReference`, :class:`Module`
 
-    :raises ValueError: If there is an invalid template placeholder.
-    :returns: a :class:`QueryBuilder` that can be passed to the client for evaluation against Fauna.
+    :raises ValueError: If there is an invalid template placeholder or a value that cannot be encoded.
+    :returns: A :class:`QueryBuilder` that can be passed to the client for evaluation against Fauna.
 
     Examples:
 
     .. code-block:: python
         :name: Simple-FQL-Example
-        :caption: An example showing a simple query declaration using this function.
+        :caption: Simple query declaration using this function.
 
         fql('Dogs.byName("Fido")')
 
     .. code-block:: python
         :name: Composition-FQL-Example
-        :caption: An example showing a simple composition using this function.
+        :caption: Query composition using this function.
 
         def get_dog(id):
             return fql('Dogs.byId($id)', id=id)
