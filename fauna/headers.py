@@ -78,8 +78,8 @@ class _DriverEnvironment:
                 check=lambda: "AWS_LAMBDA_FUNCTION_VERSION" in os.environ),
             EnvChecker(
                 name="GCP Cloud Functions",
-                check=lambda: "_" in os.environ and "google" in os.environ["_"
-                                                                           ],
+                check=lambda: "_" in \
+                    os.environ and "google" in os.environ["_"],
             ),
             EnvChecker(
                 name="GCP Compute Instances",
