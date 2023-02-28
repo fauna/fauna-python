@@ -5,16 +5,16 @@ from .http_client import HTTPResponse
 
 
 class Stat(str, Enum):
-    ByteReadOps = "x-byte-read-ops"
-    ByteWRiteOps = "x-byte-write-ops"
-    ComputeOps = "x-compute-ops"
-    QueryBytesIn = "x-query-bytes-in"
-    QueryBytesOut = "x-query-bytes-out"
-    ReadOps = "x-read-ops"
-    StorageBytesRead = "x-storage-bytes-read"
-    StorageBytesWrite = "x-storage-bytes-write"
-    TxnRetries = "x-txn-retries"
-    WriteOps = "x-write-ops"
+    ByteReadOps = "byte_read_ops"
+    ByteWRiteOps = "byte_write_ops"
+    ComputeOps = "compute_ops"
+    QueryBytesIn = "query_bytes_in"
+    QueryBytesOut = "query_bytes_out"
+    ReadOps = "read_ops"
+    StorageBytesRead = "storage_bytes_read"
+    StorageBytesWrite = "storage_bytes_write"
+    TxnRetries = "txn_retries"
+    WriteOps = "write_ops"
 
 
 class Response:
@@ -52,6 +52,9 @@ class Response:
         if "summary" in response_json:
             self._summary = response_json["summary"]
 
+        if "stats" in response_json:
+            self._stats = response_json["stats"]
+
         if "data" in response_json:
             self._data = response_json["data"]
         else:
@@ -65,4 +68,4 @@ class Response:
         :param key: key for the stat Header
         :raises KeyError: Unknown stat key
         """
-        return int(self._headers[key])
+        return int(self._stats[key])
