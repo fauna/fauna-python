@@ -1,11 +1,10 @@
-from typing import Optional, Tuple, Iterator
+from typing import Optional, Tuple, Iterator, Match
 import re as _re
 
 
 class FaunaTemplate:
-    """A template class that supports variables marked with a $-sigil. This template's primary
-    purpose is to expose an iterator through the template parts to support composition of
-    FQL queries.
+    """A template class that supports variables marked with a $-sigil. Its primary purpose
+    is to expose an iterator for the template parts that support composition of FQL queries.
 
     Implementation adapted from https://github.com/python/cpython/blob/main/Lib/string.py
 
@@ -64,7 +63,7 @@ class FaunaTemplate:
         if cur_pos != len(self._template):
             yield self._template[cur_pos:], None
 
-    def _handle_invalid(self, mo):
+    def _handle_invalid(self, mo: Match) -> None:
         i = mo.start("invalid")
         lines = self._template[:i].splitlines(keepends=True)
 
@@ -75,5 +74,5 @@ class FaunaTemplate:
             colno = i - len(''.join(lines[:-1]))
             lineno = len(lines)
 
-        error_message = "Invalid placeholder in template: line %d, col %d"
-        raise ValueError(error_message % (lineno, colno))
+        raise ValueError(
+            f"Invalid placeholder in template: line {lineno}, col {colno}")
