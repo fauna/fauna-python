@@ -5,6 +5,7 @@ import fauna
 from fauna.response import Response
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
+from fauna.query_builder import QueryBuilder
 from fauna.utils import _Environment, _LastTxnTime
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
@@ -159,7 +160,7 @@ class Client:
 
     def query(
         self,
-        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        fql: QueryBuilder,
         opts: Optional[QueryOptions] = None,
     ) -> Response:
         """
@@ -171,14 +172,15 @@ class Client:
         """
         return self._execute(
             "/query/1",
-            fql=fql,
+            fql=fql.to_query(),
             opts=opts,
         )
 
     def _execute(
         self,
         path,
-        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        fql: Mapping[str, Any],
+        arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
     ) -> Response:
         """
@@ -202,7 +204,7 @@ class Client:
 
         data: dict[str, Any] = {
             "query": fql,
-            "arguments": {},
+            "arguments": arguments or {},
         }
 
         response = self.session.request(
