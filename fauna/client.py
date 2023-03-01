@@ -27,8 +27,8 @@ class QueryOptions:
     * linearized - If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
     * max_contention_retries - The max number of times to retry the query if contention is encountered.
     * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
-    * query_tags - Tags provided back via logging and telemetry.
-    * traceparent - A traceparent provided back via logging and telemetry. Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
+    * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
     """
 
     linearized: Optional[bool] = None
