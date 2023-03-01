@@ -117,20 +117,29 @@ def test_query_tags(
         )
 
         with subtests.test("should not be set"):
+            expected = None
+
+            c.tags.clear()
             c.query(fql("not used, just sending to a mock client"))
         with subtests.test("should be set on client"):
-            c.tags.update({"project": "teapot"})
             expected = "project=teapot"
+
+            c.tags.clear()
+            c.tags.update({"project": "teapot"})
             c.query(fql("not used, just sending to a mock client"))
         with subtests.test("should be set on query"):
+            expected = "silly=pants"
+
             c.tags.clear()
             c.query(
                 fql("not used, just sending to a mock client"),
-                QueryOptions(query_tags={"project": "teapot"}),
+                QueryOptions(query_tags={"silly": "pants"}),
             )
         with subtests.test("should avoid conflicts"):
-            c.tags.update({"project": "teapot"})
             expected = "project=kettle"
+
+            c.tags.clear()
+            c.tags.update({"project": "teapot"})
             c.query(
                 fql("not used, just sending to a mock client"),
                 QueryOptions(query_tags={"project": "kettle"}),
