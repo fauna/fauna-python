@@ -14,7 +14,7 @@ class QueryOptions:
         traceparent: Optional[str] = None,
     ):
         """
-        Set options on a query
+        A class representing options available for a query.
 
         :param linearized: If true, unconditionally run the query as strictly serialized.
             This affects read-only transactions. Transactions which write will always be strictly serialized.
