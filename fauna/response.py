@@ -40,7 +40,7 @@ class Response:
     def status_code(self) -> int:
         return self._status_code
 
-    def __init__(self, http_response: HTTPResponse, decoder: FaunaDecoder):
+    def __init__(self, http_response: HTTPResponse):
         response_json = http_response.json()
 
         self._headers = http_response.headers()
@@ -57,7 +57,7 @@ class Response:
             self._stats = response_json["stats"]
 
         if "data" in response_json:
-            self._data = decoder.decode(response_json["data"])
+            self._data = FaunaDecoder.decode(response_json["data"])
         else:
             raise Exception("Unexpected response")
 

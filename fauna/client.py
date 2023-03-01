@@ -53,9 +53,6 @@ class Client:
         query_timeout: Optional[timedelta] = None,
     ):
 
-        self._encoder = FaunaEncoder()
-        self._decoder = FaunaDecoder()
-
         if endpoint is None:
             self.endpoint = _Environment.EnvFaunaEndpoint()
         else:
@@ -165,7 +162,7 @@ class Client:
         """
         return self._execute(
             "/query/1",
-            fql=fql.to_query(self._encoder),
+            fql=fql.to_query(),
             opts=opts,
         )
 
@@ -228,4 +225,4 @@ class Client:
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
 
-        return Response(response, self._decoder)
+        return Response(response)

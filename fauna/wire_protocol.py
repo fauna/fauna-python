@@ -44,7 +44,8 @@ class FaunaEncoder:
     +-------------------+---------------+
     """
 
-    def encode(self, obj: Any):
+    @staticmethod
+    def encode(obj: Any):
         """Encodes supported objects into the tagged format.
 
         Examples:
@@ -59,7 +60,7 @@ class FaunaEncoder:
         :raises ValueError: If value cannot be encoded, cannot be encoded safely, or there's a circular reference.
         :param obj: the object to decode
         """
-        return self._encode(obj)
+        return FaunaEncoder._encode(obj)
 
     @staticmethod
     def from_int(obj: int):
@@ -107,7 +108,8 @@ class FaunaEncoder:
     def from_none():
         return None
 
-    def _encode(self, o: Any, _markers: Optional[Set] = None):
+    @staticmethod
+    def _encode(o: Any, _markers: Optional[Set] = None):
         if _markers is None:
             _markers = set()
 
@@ -132,21 +134,23 @@ class FaunaEncoder:
         elif isinstance(o, date):
             return FaunaEncoder.from_date(o)
         elif isinstance(o, (list, tuple)):
-            return self._encode_list(o, _markers)
+            return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
-            return self._encode_dict(o, _markers)
+            return FaunaEncoder._encode_dict(o, _markers)
         else:
             raise ValueError(f"Object {o} of type {type(o)} cannot be encoded")
 
-    def _encode_list(self, lst, markers):
+    @staticmethod
+    def _encode_list(lst, markers):
         _id = id(lst)
         if _id in markers:
             raise ValueError("Circular reference detected")
 
         markers.add(id(lst))
-        return [self._encode(elem, markers) for elem in lst]
+        return [FaunaEncoder._encode(elem, markers) for elem in lst]
 
-    def _encode_dict(self, dct, markers):
+    @staticmethod
+    def _encode_dict(dct, markers):
         _id = id(dct)
         if _id in markers:
             raise ValueError("Circular reference detected")
@@ -155,11 +159,14 @@ class FaunaEncoder:
         if any(i in _RESERVED_TAGS for i in dct.keys()):
             return {
                 "@object":
-                {k: self._encode(v, markers)
+                {k: FaunaEncoder._encode(v, markers)
                  for k, v in dct.items()}
             }
         else:
-            return {k: self._encode(v, markers) for k, v in dct.items()}
+            return {
+                k: FaunaEncoder._encode(v, markers)
+                for k, v in dct.items()
+            }
 
 
 class FaunaDecoder:
@@ -196,7 +203,8 @@ class FaunaDecoder:
      +-------------------+---------------+
      """
 
-    def decode(self, obj: Any):
+    @staticmethod
+    def decode(obj: Any):
         """Decodes supported objects from the tagged typed into untagged.
 
         Examples:
@@ -210,25 +218,28 @@ class FaunaDecoder:
 
         :param obj: the object to decode
         """
-        return self._decode(obj)
+        return FaunaDecoder._decode(obj)
 
-    def _decode(self, o: Any, object_tagged: bool = False):
+    @staticmethod
+    def _decode(o: Any, object_tagged: bool = False):
         if isinstance(o, (str, bool, int, float)):
             return o
         elif isinstance(o, list):
-            return self._decode_list(o)
+            return FaunaDecoder._decode_list(o)
         elif isinstance(o, dict):
-            return self._decode_dict(o, object_tagged)
+            return FaunaDecoder._decode_dict(o, object_tagged)
 
-    def _decode_list(self, lst: List):
-        return [self._decode(i) for i in lst]
+    @staticmethod
+    def _decode_list(lst: List):
+        return [FaunaDecoder._decode(i) for i in lst]
 
-    def _decode_dict(self, dct: dict, object_tagged: bool):
+    @staticmethod
+    def _decode_dict(dct: dict, object_tagged: bool):
         keys = dct.keys()
 
         # If we're inside an object tag, everything is user-specified
         if object_tagged:
-            return {k: self._decode(v) for k, v in dct.items()}
+            return {k: FaunaDecoder._decode(v) for k, v in dct.items()}
 
         if len(keys) == 1:
             if "@int" in keys:
@@ -238,7 +249,7 @@ class FaunaDecoder:
             if "@double" in dct:
                 return float(dct["@double"])
             if "@object" in dct:
-                return self._decode(dct["@object"], True)
+                return FaunaDecoder._decode(dct["@object"], True)
             if "@mod" in dct:
                 return Module(dct["@mod"])
             if "@time" in dct:
@@ -248,4 +259,4 @@ class FaunaDecoder:
             if "@doc" in dct:
                 return DocumentReference.from_string(dct["@doc"])
 
-        return {k: self._decode(v) for k, v in dct.items()}
+        return {k: FaunaDecoder._decode(v) for k, v in dct.items()}

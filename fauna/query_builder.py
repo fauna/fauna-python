@@ -10,7 +10,7 @@ class QueryBuilder(abc.ABC):
     """
 
     @abc.abstractmethod
-    def to_query(self, encoder: FaunaEncoder) -> Mapping[str, Sequence[Any]]:
+    def to_query(self) -> Mapping[str, Sequence[Any]]:
         """An abstract method for converting a builder to query template wire protocol.
         e.g. ``{ "fql": [ ... ] }``
 
@@ -24,7 +24,7 @@ class Fragment(abc.ABC):
     """
 
     @abc.abstractmethod
-    def render(self, encoder: FaunaEncoder) -> Any:
+    def render(self) -> Any:
         """An abstract method for rendering the :class:`Fragment` into a query part.
         """
         pass
@@ -41,7 +41,7 @@ class ValueFragment(Fragment):
     def __init__(self, val: Any):
         self._val = val
 
-    def render(self, encoder) -> Mapping[str, Any]:
+    def render(self) -> Mapping[str, Any]:
         """Renders the :class:`ValueFragment` into the wire protocol for a value of the query template API.
 
         e.g. ``{ "value": <encoded_value> }``
@@ -49,7 +49,7 @@ class ValueFragment(Fragment):
         :returns: The value fragment encoded to the wire protocol.
         :raises ValueError: If encoding to tagged format fails.
         """
-        encoded = encoder.encode(self._val)
+        encoded = FaunaEncoder.encode(self._val)
         return {"value": encoded}
 
 
@@ -63,7 +63,7 @@ class LiteralFragment(Fragment):
     def __init__(self, val: str):
         self._val = val
 
-    def render(self, _) -> str:
+    def render(self) -> str:
         """Renders the :class:`LiteralFragment` into the wire protocol for a literal of the query template API.
 
         e.g. ``let x = ``
@@ -84,14 +84,14 @@ class QueryFragment(Fragment):
     def __init__(self, builder: QueryBuilder):
         self._builder = builder
 
-    def render(self, encoder: FaunaEncoder) -> Mapping[str, Sequence[Any]]:
+    def render(self) -> Mapping[str, Sequence[Any]]:
         """Renders the :class:`QueryFragment` into the wire protocol for a query within the query template API.
 
         e.g. ``{ "fql": [ ... ] }``
 
         :returns: The query rendered into the wire protocol.
         """
-        return self._builder.to_query(encoder)
+        return self._builder.to_query()
 
 
 class FQLTemplateQueryBuilder(QueryBuilder):
@@ -107,7 +107,7 @@ class FQLTemplateQueryBuilder(QueryBuilder):
         """Appends a :class:`Fragment` to the end of the builder."""
         self._fragments.append(fragment)
 
-    def to_query(self, encoder: FaunaEncoder) -> Mapping[str, Sequence[Any]]:
+    def to_query(self) -> Mapping[str, Sequence[Any]]:
         """Converts the builder and all fragments into the query template wire protocol.
         e.g. ``{ "fql": [ ... ] }``
 
@@ -115,7 +115,7 @@ class FQLTemplateQueryBuilder(QueryBuilder):
         """
         rendered = []
         for f in self._fragments:
-            rendered.append(f.render(encoder))
+            rendered.append(f.render())
         return {"fql": rendered}
 
 

@@ -1,84 +1,81 @@
 from datetime import date, datetime, timezone, timedelta
-from typing import Mapping, Any
+from typing import Any
 
 import pytest
 
 from fauna import DocumentReference, Module
 from fauna.wire_protocol import FaunaEncoder, FaunaDecoder
 
-encoder = FaunaEncoder()
-decoder = FaunaDecoder()
-
 
 def test_encode_decode_primitives(subtests):
     with subtests.test(msg="encode string"):
         test = "hello"
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert test == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode true"):
         test = True
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert test == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode false"):
         test = False
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert test == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode int into @int"):
         test = 10
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@int": "10"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode max 32-bit signed int into @int"):
         test = 2147483647
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@int": "2147483647"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode min 32-bit signed int into @int"):
         test = -2147483648
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@int": "-2147483648"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode max 32-bit signed int + 1 into @long"):
         test = 2147483648
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@long": "2147483648"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode min 32-bit signed int - 1 into @long"):
         test = -2147483649
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@long": "-2147483649"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode max 64-bit signed int into @long"):
         test = 9223372036854775807
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@long": "9223372036854775807"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode min 64-bit signed int into @long"):
         test = -9223372036854775808
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@long": "-9223372036854775808"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode max 64-bit signed int + 1 throws error"):
@@ -86,43 +83,43 @@ def test_encode_decode_primitives(subtests):
         with pytest.raises(
                 ValueError,
                 match="Precision loss when converting int to Fauna type"):
-            encoder.encode(test)
+            FaunaEncoder.encode(test)
 
     with subtests.test(msg="encode min 64-bit signed int -1 throws error"):
         test = -9223372036854775809
         with pytest.raises(
                 ValueError,
                 match="Precision loss when converting int to Fauna type"):
-            encoder.encode(test)
+            FaunaEncoder.encode(test)
 
     with subtests.test(msg="encode negative float into @double"):
         test = -100.0
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@double": "-100.0"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode positive float into @double"):
         test = 9.999999999999
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@double": "9.999999999999"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode None into None"):
         test = {"foo": None}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert test == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
 def test_encode_dates_times(subtests):
     with subtests.test(msg="encode date into @date"):
         test = date(2023, 2, 28)
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@date": "2023-02-28"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode datetime into @time"):
@@ -134,25 +131,25 @@ def test_encode_dates_times(subtests):
                         10,
                         10,
                         tzinfo=timezone(timedelta(0), '+00:00'))
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@time": "2023-02-28T10:10:10.000010+00:00"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
 def test_encode_fauna_types(subtests):
     with subtests.test(msg="encode doc ref into @doc"):
         test = DocumentReference.from_string("Col:123")
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@doc": "Col:123"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode module into @mod"):
         test = Module("Math")
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert {"@mod": "Math"} == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -208,25 +205,25 @@ def test_encode_collections(subtests):
     }
 
     with subtests.test(msg="encode dict into dict"):
-        encoded = encoder.encode(test_dict)
+        encoded = FaunaEncoder.encode(test_dict)
         assert encoded_dict == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test_dict == decoded
 
     with subtests.test(msg="encode list into list"):
         test = list(test_dict.values())
         expected = list(encoded_dict.values())
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert expected == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="encode tuple into list"):
         test = tuple(test_dict.values())
         expected = list(encoded_dict.values())
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert expected == encoded
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert list(test_dict.values()) == decoded
 
 
@@ -237,14 +234,14 @@ def test_encode_with_circular_references(subtests):
         test["self"] = test
 
         with pytest.raises(ValueError, match="Circular reference detected"):
-            encoder.encode(test)
+            FaunaEncoder.encode(test)
 
     with subtests.test(msg="circular reference with list"):
         lst: list[Any] = ["1", "2"]
         lst.append(lst)
 
         with pytest.raises(ValueError, match="Circular reference detected"):
-            encoder.encode(lst)
+            FaunaEncoder.encode(lst)
 
 
 def test_encode_int_conflicts(subtests):
@@ -252,17 +249,17 @@ def test_encode_int_conflicts(subtests):
     with subtests.test(msg="@int conflict with int type"):
         test = {"@int": 10}
         expected = {"@object": {"@int": {"@int": "10"}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@int conflict with other type"):
         test = {"@int": "bar"}
         expected = {"@object": {"@int": "bar"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -271,17 +268,17 @@ def test_encode_long_conflicts(subtests):
     with subtests.test(msg="@long conflict with long type"):
         test = {"@long": 2147483649}
         expected = {"@object": {"@long": {"@long": "2147483649"}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@long conflict with other type"):
         test = {"@long": "bar"}
         expected = {"@object": {"@long": "bar"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -290,17 +287,17 @@ def test_encode_float_conflicts(subtests):
     with subtests.test(msg="@double conflict with float type"):
         test = {"@double": 10.2}
         expected = {"@object": {"@double": {"@double": "10.2"}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@double conflict with other type"):
         test = {"@double": "bar"}
         expected = {"@object": {"@double": "bar"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -309,17 +306,17 @@ def test_encode_date_time_conflicts(subtests):
     with subtests.test(msg="@date conflict with date type"):
         test = {"@date": date(2023, 2, 28)}
         expected = {"@object": {"@date": {"@date": "2023-02-28"}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@date conflict with other type"):
         test = {"@date": "bar"}
         expected = {"@object": {"@date": "bar"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@time conflict with date type"):
@@ -341,17 +338,17 @@ def test_encode_date_time_conflicts(subtests):
                 }
             }
         }
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@time conflict with other type"):
         test = {"@time": "bar"}
         expected = {"@object": {"@time": "bar"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -360,33 +357,33 @@ def test_encode_fauna_type_conflicts(subtests):
     with subtests.test(msg="@doc conflict with doc type"):
         test = {"@doc": DocumentReference.from_string("Col:123")}
         expected = {"@object": {"@doc": {"@doc": "Col:123"}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@doc conflict with other type"):
         test = {"@doc": "bar"}
         expected = {"@object": {"@doc": "bar"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@mod conflict with mod type"):
         test = {"@mod": Module("Math")}
         expected = {"@object": {"@mod": {"@mod": "Math"}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@mod conflict with other type"):
         test = {"@mod": "bar"}
         expected = {"@object": {"@mod": "bar"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -395,25 +392,25 @@ def test_encode_object_conflicts(subtests):
     with subtests.test(msg="@object conflicts with type"):
         test = {"@object": 10}
         expected = {"@object": {"@object": {"@int": "10"}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@object conflicts with @int"):
         test = {"@object": {"@int": "bar"}}
         expected = {"@object": {"@object": {"@object": {"@int": "bar"}}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="@object conflicts with @object"):
         test = {"@object": {"@object": "bar"}}
         expected = {"@object": {"@object": {"@object": {"@object": "bar"}}}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -422,17 +419,17 @@ def test_encode_multiple_keys_in_conflict(subtests):
     with subtests.test(msg="conflict with other non-conflicting keys"):
         test = {"@int": "foo", "tree": "birch"}
         expected = {"@object": {"@int": "foo", "tree": "birch"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="conflict with other conflicting keys"):
         test = {"@int": "foo", "@double": "birch"}
         expected = {"@object": {"@int": "foo", "@double": "birch"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -459,9 +456,9 @@ def test_encode_nested_conflict(subtests):
                 }
             }
         }
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -470,9 +467,9 @@ def test_encode_non_conflicting_at_prefix(subtests):
     with subtests.test(msg="non-conflicting @ prefix"):
         test = {"@foo": 10}
         expected = {"@foo": {"@int": "10"}}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
 
@@ -480,25 +477,25 @@ def test_encode_complex_objects(subtests, complex_untyped_object,
                                 complex_typed_object):
 
     with subtests.test(msg="reasonable complex object"):
-        encoded = encoder.encode(complex_untyped_object)
+        encoded = FaunaEncoder.encode(complex_untyped_object)
         assert encoded == complex_typed_object
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert complex_untyped_object == decoded
 
     with subtests.test(msg="large list"):
         test: Any = [10] * 10000
         expected = [{"@int": "10"}] * 10000
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     with subtests.test(msg="large dict"):
         test = {f"k{str(k)}": k for k in range(1, 10000)}
         expected = {f"k{str(k)}": {"@int": str(k)} for k in range(1, 10000)}
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == expected
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
     # TODO(lucas): Fix max recursion bug to support deeper nesting
@@ -510,7 +507,7 @@ def test_encode_complex_objects(subtests, complex_untyped_object,
             cur_node[f"k{i}"] = node
             cur_node = node
 
-        encoded = encoder.encode(test)
+        encoded = FaunaEncoder.encode(test)
         assert encoded == test
-        decoded = decoder.decode(encoded)
+        decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
