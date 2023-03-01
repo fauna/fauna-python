@@ -9,7 +9,6 @@ from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
 from fauna.utils import _Environment, _LastTxnTime
-from fauna.wire_protocol import FaunaEncoder, FaunaDecoder
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
