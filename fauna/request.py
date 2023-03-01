@@ -20,8 +20,8 @@ class QueryOptions:
             This affects read-only transactions. Transactions which write will always be strictly serialized.
         :param max_contention_retries: The max number of times to retry the query if contention is encountered.
         :param query_timeout_ms: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
-        :param tags: Tags provided back via logging and telemetry.
-        :param traceparent:  A traceparent provided back via logging and telemetry.
+        :param query_tags: Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
+        :param traceparent:  A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
             Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
         """
 
