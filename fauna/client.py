@@ -40,6 +40,14 @@ class QueryOptions:
 
 class Client:
 
+    @property
+    def headers(self) -> dict[str, str]:
+        return self._headers
+
+    @headers.setter
+    def headers(self, value: dict[str, str]) -> None:
+        self._headers = value
+
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -75,7 +83,7 @@ class Client:
         else:
             self._query_timeout_ms = None
 
-        self._headers = {
+        self._headers: dict[str, str] = {
             _Header.AcceptEncoding: "gzip",
             _Header.ContentType: "application/json;charset=utf-8",
             _Header.Driver: "python",
