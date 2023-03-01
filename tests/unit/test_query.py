@@ -117,7 +117,6 @@ def test_query_tags(
         )
 
         with subtests.test("should be empty"):
-            expected = None
             c.query(fql("not used, just sending to a mock client"))
         with subtests.test("should be set on client"):
             c.tags.update({"project": "teapot"})
