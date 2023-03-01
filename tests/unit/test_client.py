@@ -1,9 +1,13 @@
 from datetime import timedelta
+from typing import Mapping
 
 import httpx
+import pytest_subtests
+from pytest_httpx import HTTPXMock
 
 import fauna
-from fauna import Client, HTTPXClient
+from fauna import Client, HTTPXClient, Header, fql
+from fauna.client import QueryOptions
 
 
 def test_client_defaults(monkeypatch):
@@ -86,3 +90,61 @@ def test_get_query_timeout():
 
     c = Client(query_timeout=timedelta(minutes=1))
     assert c.get_query_timeout() == timedelta(minutes=1)
+
+
+def test_client_headers(
+    subtests: pytest_subtests.SubTests,
+    httpx_mock: HTTPXMock,
+):
+    expected: Mapping[str, str] = {}
+
+    def validate_headers(request: httpx.Request):
+        for header in expected:
+            assert request.headers[header] == expected[header]
+
+        return httpx.Response(
+            status_code=200,
+            json={"data": "mocked"},
+        )
+
+    httpx_mock.add_callback(validate_headers)
+
+    with httpx.Client() as mockClient:
+        c = Client(http_client=HTTPXClient(mockClient))
+
+        with subtests.test("should allow custom header"):
+            expected = {"yellow": "submarine"}
+            c.headers.update(expected)
+            c.query(fql("just a mock"))
+
+        with subtests.test("Linearized should be set on Client"):
+            c.linearized = True
+            expected = {Header.Linearized: "true"}
+            c.query(fql("just a mock"))
+
+        with subtests.test("Linearized should be set on Query"):
+            expected = {Header.Linearized: "true"}
+            c.query(
+                fql("just a mock"),
+                QueryOptions(linearized=True),
+            )
+
+        with subtests.test("Max Contention Retries on Client"):
+            c.max_contention_retries = 5
+            expected = {Header.MaxContentionRetries: "5"}
+            c.query(fql("just a mock"))
+
+        with subtests.test("Max Contention Retries on Query"):
+            expected = {Header.MaxContentionRetries: "5"}
+            c.query(
+                fql("just a mock"),
+                QueryOptions(max_contention_retries=5),
+            )
+
+        # doesn't make sense to be set on the Client
+        with subtests.test("Should have a Traceparent"):
+            expected = {Header.Traceparent: "moshi-moshi"}
+            c.query(
+                fql("just a mock"),
+                QueryOptions(traceparent="moshi-moshi"),
+            )
