@@ -2,6 +2,7 @@ from typing import Mapping
 
 import httpx
 import pytest
+import pytest_subtests
 from pytest_httpx import HTTPXMock
 
 from fauna import Client, Header, HTTPXClient, fql
@@ -87,3 +88,51 @@ def test_query_options_set(
         )
 
         assert res.status_code == 200
+
+
+def test_query_tags(
+    subtests: pytest_subtests.SubTests,
+    httpx_mock: HTTPXMock,
+):
+    expected = None
+
+    def validate_tags(request: httpx.Request):
+        if expected is not None:
+            assert request.headers[Header.Tags] == expected
+        else:
+            with pytest.raises(KeyError):
+                assert request.headers[Header.Tags] == ""
+
+        return httpx.Response(
+            status_code=200,
+            json={"data": "mocked"},
+        )
+
+    httpx_mock.add_callback(validate_tags)
+
+    with httpx.Client() as mockClient:
+        c = Client(
+            http_client=HTTPXClient(mockClient),
+            tags=None,
+        )
+
+        with subtests.test("should be empty"):
+            expected = None
+            c.query(fql("not used, just sending to a mock client"))
+        with subtests.test("should be set on client"):
+            c.tags.update({"project": "teapot"})
+            expected = "project=teapot"
+            c.query(fql("not used, just sending to a mock client"))
+        with subtests.test("should be set on query"):
+            c.tags.clear()
+            c.query(
+                fql("not used, just sending to a mock client"),
+                QueryOptions(query_tags={"project": "teapot"}),
+            )
+        with subtests.test("should avoid conflicts"):
+            c.tags.update({"project": "teapot"})
+            expected = "project=kettle"
+            c.query(
+                fql("not used, just sending to a mock client"),
+                QueryOptions(query_tags={"project": "kettle"}),
+            )

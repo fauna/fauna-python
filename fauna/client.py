@@ -179,7 +179,6 @@ class Client:
         # TODO: should be removed in favor of default (tagged)
         headers[_Header.Format] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
-        headers[Header.Tags] = urllib.parse.urlencode(self.tags)
 
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
