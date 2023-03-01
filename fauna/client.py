@@ -192,6 +192,10 @@ class Client:
         if self.linearized:
             headers[Header.Linearized] = "true"
 
+        if self.max_contention_retries is not None:
+            headers[Header.MaxContentionRetries] = \
+                f"{self.max_contention_retries}"
+
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
 
