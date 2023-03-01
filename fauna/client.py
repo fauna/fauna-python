@@ -1,8 +1,9 @@
+import urllib.parse
 from datetime import timedelta
+from dataclasses import dataclass
 from typing import Any, Mapping, Optional
 
 import fauna
-from fauna.request import QueryOptions
 from fauna.response import Response
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
@@ -16,6 +17,25 @@ DefaultHttpPoolTimeout = timedelta(seconds=5)
 DefaultIdleConnectionTimeout = timedelta(seconds=5)
 DefaultMaxConnections = 20
 DefaultMaxIdleConnections = 20
+
+
+@dataclass
+class QueryOptions:
+    """
+    A dataclass representing options available for a query.
+
+    * linearized - If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+    * max_contention_retries - The max number of times to retry the query if contention is encountered.
+    * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+    * query_tags - Tags provided back via logging and telemetry.
+    * traceparent - A traceparent provided back via logging and telemetry. Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    """
+
+    linearized: Optional[bool] = None
+    max_contention_retries: Optional[int] = None
+    query_timeout_ms: Optional[int] = None
+    query_tags: Optional[Mapping[str, str]] = None
+    traceparent: Optional[str] = None
 
 
 class Client:
@@ -58,7 +78,7 @@ class Client:
             _Header.AcceptEncoding: "gzip",
             _Header.ContentType: "application/json;charset=utf-8",
             _Header.Driver: "python",
-            _Header.DriverEnv: str(_DriverEnvironment())
+            _Header.DriverEnv: str(_DriverEnvironment()),
         }
 
         self.session: HTTPClient
@@ -159,6 +179,7 @@ class Client:
         # TODO: should be removed in favor of default (tagged)
         headers[_Header.Format] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
+        headers[Header.Tags] = urllib.parse.urlencode(self.tags)
 
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
@@ -167,8 +188,22 @@ class Client:
             headers.update(self._last_txn_time.request_header)
 
         if opts is not None:
-            for k, v in opts.options.items():
-                headers[k] = v
+            if opts.linearized is not None:
+                headers[Header.Linearized] = str(opts.linearized).lower()
+            if opts.max_contention_retries is not None:
+                headers[Header.MaxContentionRetries] = \
+                    f"{opts.max_contention_retries}"
+            if opts.traceparent is not None:
+                headers[Header.Traceparent] = opts.traceparent
+            if opts.query_timeout_ms is not None:
+                headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
+            if opts.query_tags is not None:
+                query_tags = urllib.parse.urlencode(opts.query_tags)
+                if self.tags is not None:
+                    headers[Header.Tags] = \
+                        f"{urllib.parse.urlencode(self.tags)}&{query_tags}"
+                else:
+                    headers[Header.Tags] = query_tags
 
         data: dict[str, Any] = {
             "query": fql,
