@@ -189,6 +189,9 @@ class Client:
         headers[_Header.Format] = "simple"
         headers[_Header.Authorization] = self._auth.bearer()
 
+        if self.linearized:
+            headers[Header.Linearized] = "true"
+
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
 
