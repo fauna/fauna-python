@@ -187,6 +187,10 @@ class Client:
         if self.track_last_transaction_time:
             headers.update(self._last_txn_time.request_header)
 
+        query_tags = {}
+        if self.tags is not None:
+            query_tags.update(self.tags)
+
         if opts is not None:
             if opts.linearized is not None:
                 headers[Header.Linearized] = str(opts.linearized).lower()
@@ -198,12 +202,10 @@ class Client:
             if opts.query_timeout_ms is not None:
                 headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
             if opts.query_tags is not None:
-                query_tags = urllib.parse.urlencode(opts.query_tags)
-                if self.tags is not None:
-                    headers[Header.Tags] = \
-                        f"{urllib.parse.urlencode(self.tags)}&{query_tags}"
-                else:
-                    headers[Header.Tags] = query_tags
+                query_tags.update(opts.query_tags)
+
+        if len(query_tags) > 0:
+            headers[Header.Tags] = urllib.parse.urlencode(query_tags)
 
         data: dict[str, Any] = {
             "query": fql,
