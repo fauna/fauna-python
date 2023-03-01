@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import httpx
 
-from .error import ClientError, NetworkError
+from .errors import ClientError, NetworkError
 
 
 @dataclass(frozen=True)

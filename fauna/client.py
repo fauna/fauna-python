@@ -5,7 +5,7 @@ from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.response import QueryResponse
-from fauna.error import *
+from fauna.errors import *
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
@@ -59,6 +59,7 @@ class Client:
         :raises ClientError: Client runtime error, failed to send request TODO: figure out where this should go
         :raises ValueError: for bad config
         """
+        
         if endpoint is None:
             self._endpoint = _Environment.EnvFaunaEndpoint()
         else:
@@ -286,14 +287,14 @@ class Client:
                     err.summary,
                 )
             elif status_code == 429:
-                raise ThrottlingError(
+                raise ThrottlingException(
                     err.status_code,
                     err.code,
                     err.message,
                     err.summary,
                 )
             elif status_code == 440:
-                raise QueryTimeoutError(
+                raise QueryTimeoutException(
                     err.status_code,
                     err.code,
                     err.message,
