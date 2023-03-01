@@ -1,10 +1,13 @@
+import urllib.parse
 from datetime import timedelta
-from typing import Any, Dict, Mapping, Optional
+from dataclasses import dataclass
+from typing import Any, Mapping, Optional
 
 import fauna
 from fauna.response import Response
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
+from fauna.query_builder import QueryBuilder
 from fauna.utils import _Environment, _LastTxnTime
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
@@ -16,37 +19,23 @@ DefaultMaxConnections = 20
 DefaultMaxIdleConnections = 20
 
 
+@dataclass
 class QueryOptions:
+    """
+    A dataclass representing options available for a query.
 
-    def __init__(
-        self,
-        linearized: Optional[bool] = None,
-        max_contention_retries: Optional[int] = None,
-        query_timeout_ms: Optional[int] = None,
-        tags: Optional[Mapping[str, str]] = None,
-        traceparent: Optional[str] = None,
-    ):
-        self._headers: dict[str, str] = {}
+    * linearized - If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+    * max_contention_retries - The max number of times to retry the query if contention is encountered.
+    * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+    * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
+    * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    """
 
-        if linearized is not None:
-            self._headers[Header.Linearized] = str(linearized).lower()
-
-        if max_contention_retries is not None and max_contention_retries > 0:
-            self._headers[
-                Header.MaxContentionRetries] = f"{max_contention_retries}"
-
-        if query_timeout_ms is not None and query_timeout_ms > 0:
-            self._headers[Header.TimeoutMs] = f"{query_timeout_ms}"
-
-        if tags is not None:
-            self._headers[Header.Tags] = '&'.join(
-                [f"{k}={tags[k]}" for k in tags])
-
-        if traceparent is not None:
-            self._headers[Header.Traceparent] = traceparent
-
-    def headers(self) -> Dict[str, str]:
-        return self._headers
+    linearized: Optional[bool] = None
+    max_contention_retries: Optional[int] = None
+    query_timeout_ms: Optional[int] = None
+    query_tags: Optional[Mapping[str, str]] = None
+    traceparent: Optional[str] = None
 
 
 class Client:
@@ -89,7 +78,7 @@ class Client:
             _Header.AcceptEncoding: "gzip",
             _Header.ContentType: "application/json;charset=utf-8",
             _Header.Driver: "python",
-            _Header.DriverEnv: str(_DriverEnvironment())
+            _Header.DriverEnv: str(_DriverEnvironment()),
         }
 
         self.session: HTTPClient
@@ -159,7 +148,7 @@ class Client:
 
     def query(
         self,
-        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        fql: QueryBuilder,
         opts: Optional[QueryOptions] = None,
     ) -> Response:
         """
@@ -171,14 +160,15 @@ class Client:
         """
         return self._execute(
             "/query/1",
-            fql=fql,
+            fql=fql.to_query(),
             opts=opts,
         )
 
     def _execute(
         self,
         path,
-        fql: str,  # TODO(lucas) use a home-baked fql expression type
+        fql: Mapping[str, Any],
+        arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
     ) -> Response:
         """
@@ -196,13 +186,29 @@ class Client:
         if self.track_last_transaction_time:
             headers.update(self._last_txn_time.request_header)
 
+        query_tags = {}
+        if self.tags is not None:
+            query_tags.update(self.tags)
+
         if opts is not None:
-            for k, v in opts.headers().items():
-                headers[k] = v
+            if opts.linearized is not None:
+                headers[Header.Linearized] = str(opts.linearized).lower()
+            if opts.max_contention_retries is not None:
+                headers[Header.MaxContentionRetries] = \
+                    f"{opts.max_contention_retries}"
+            if opts.traceparent is not None:
+                headers[Header.Traceparent] = opts.traceparent
+            if opts.query_timeout_ms is not None:
+                headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
+            if opts.query_tags is not None:
+                query_tags.update(opts.query_tags)
+
+        if len(query_tags) > 0:
+            headers[Header.Tags] = urllib.parse.urlencode(query_tags)
 
         data: dict[str, Any] = {
             "query": fql,
-            "arguments": {},
+            "arguments": arguments or {},
         }
 
         response = self.session.request(
