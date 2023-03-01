@@ -1,7 +1,7 @@
 import urllib.parse
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.response import Response
@@ -41,11 +41,11 @@ class QueryOptions:
 class Client:
 
     @property
-    def headers(self) -> dict[str, str]:
+    def headers(self) -> Dict[str, str]:
         return self._headers
 
     @headers.setter
-    def headers(self, value: dict[str, str]) -> None:
+    def headers(self, value: Dict[str, str]) -> None:
         self._headers = value
 
     def __init__(
@@ -83,7 +83,7 @@ class Client:
         else:
             self._query_timeout_ms = None
 
-        self._headers: dict[str, str] = {
+        self._headers: Dict[str, str] = {
             _Header.AcceptEncoding: "gzip",
             _Header.ContentType: "application/json;charset=utf-8",
             _Header.Driver: "python",
