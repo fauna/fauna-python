@@ -51,6 +51,7 @@ class Client:
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
     ):
+
         if endpoint is None:
             self.endpoint = _Environment.EnvFaunaEndpoint()
         else:

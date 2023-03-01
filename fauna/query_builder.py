@@ -1,8 +1,8 @@
 import abc
 from typing import Any, Sequence, Mapping, Optional, List
 
-from fauna.encode import encode_to_typed
 from fauna.template import FaunaTemplate
+from fauna.wire_protocol import FaunaEncoder
 
 
 class QueryBuilder(abc.ABC):
@@ -49,7 +49,7 @@ class ValueFragment(Fragment):
         :returns: The value fragment encoded to the wire protocol.
         :raises ValueError: If encoding to tagged format fails.
         """
-        encoded = encode_to_typed(self._val)
+        encoded = FaunaEncoder.encode(self._val)
         return {"value": encoded}
 
 

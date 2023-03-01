@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Any, Mapping
 
 from .http_client import HTTPResponse
+from .wire_protocol import FaunaDecoder
 
 
 class Stat(str, Enum):
@@ -56,7 +57,7 @@ class Response:
             self._stats = response_json["stats"]
 
         if "data" in response_json:
-            self._data = response_json["data"]
+            self._data = FaunaDecoder.decode(response_json["data"])
         else:
             raise Exception("Unexpected response")
 
