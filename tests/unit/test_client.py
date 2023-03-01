@@ -130,21 +130,24 @@ def test_client_headers(
             )
 
         with subtests.test("Max Contention Retries on Client"):
-            c.max_contention_retries = 5
-            expected = {Header.MaxContentionRetries: "5"}
+            count = 5
+            c.max_contention_retries = count
+            expected = {Header.MaxContentionRetries: f"{count}"}
             c.query(fql("just a mock"))
 
         with subtests.test("Max Contention Retries on Query"):
-            expected = {Header.MaxContentionRetries: "5"}
+            count = 5
+            expected = {Header.MaxContentionRetries: f"{count}"}
             c.query(
                 fql("just a mock"),
-                QueryOptions(max_contention_retries=5),
+                QueryOptions(max_contention_retries=count),
             )
 
         # doesn't make sense to be set on the Client
         with subtests.test("Should have a Traceparent"):
-            expected = {Header.Traceparent: "moshi-moshi"}
+            traceparent = "moshi-moshi"
+            expected = {Header.Traceparent: traceparent}
             c.query(
                 fql("just a mock"),
-                QueryOptions(traceparent="moshi-moshi"),
+                QueryOptions(traceparent=traceparent),
             )
