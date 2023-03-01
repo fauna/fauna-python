@@ -61,3 +61,35 @@ class ServiceError(FaunaError):
 
     def __str__(self):
         return f"{self._status_code}: {self._code}\n{self._message}\n---\n{self._summary}"
+
+
+class QueryCheckError(ServiceError):
+    pass
+
+
+class QueryRuntimeError(ServiceError):
+    pass
+
+
+class AuthenticationError(ServiceError):
+    pass
+
+
+class AuthorizationError(ServiceError):
+    pass
+
+
+class ThrottlingError(ServiceError):
+    pass
+
+
+class QueryTimeoutError(ServiceError):
+    pass
+
+
+class ServiceInternalError(ServiceError):
+    pass
+
+
+class ServiceTimeoutError(ServiceError):
+    pass

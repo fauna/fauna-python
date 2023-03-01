@@ -5,7 +5,7 @@ from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.response import QueryResponse
-from fauna.error import ProtocolError, ServiceError
+from fauna.error import *
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
@@ -240,7 +240,7 @@ class Client:
             data=data,
         )
 
-        if status_code := response.status_code() > 399:
+        if (status_code := response.status_code()) > 399:
             response_json = response.json()
 
             if "error" not in response_json:
@@ -250,12 +250,71 @@ class Client:
                     response_json,
                 )
 
-            raise ServiceError(
+            err = ServiceError(
                 status_code,
                 response_json["error"]["code"],
                 response_json["error"]["message"],
-                response_json["summary"],
+                response_json["summary"] if "summary" in response_json else "",
             )
+            if status_code == 400:
+                if err.code is not None:
+                    raise QueryCheckError(
+                        err.status_code,
+                        err.code,
+                        err.message,
+                        err.summary,
+                    )
+
+                raise QueryRuntimeError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 401:
+                raise AuthenticationError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 403:
+                raise AuthorizationError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 429:
+                raise ThrottlingError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 440:
+                raise QueryTimeoutError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 500:
+                raise ServiceInternalError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 503:
+                raise ServiceTimeoutError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            else:
+                raise err
 
         if self._track_last_transaction_time:
             if Header.TxnTime in response.headers():
