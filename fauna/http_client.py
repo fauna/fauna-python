@@ -1,9 +1,9 @@
 import abc
+import json
 from typing import Optional, Iterator, Mapping, Any
 from dataclasses import dataclass
 
 import httpx
-from .encode import decode_from_json
 
 
 @dataclass(frozen=True)
@@ -77,7 +77,7 @@ class HTTPXResponse(HTTPResponse):
         return h
 
     def json(self) -> Any:
-        return decode_from_json(self._r.read().decode("utf-8"))
+        return json.loads(self._r.read().decode("utf-8"))
 
     def status_code(self) -> int:
         return self._r.status_code

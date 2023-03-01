@@ -9,6 +9,7 @@ from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
 from fauna.utils import _Environment, _LastTxnTime
+from fauna.wire_protocol import FaunaEncoder, FaunaDecoder
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -51,6 +52,10 @@ class Client:
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
     ):
+
+        self._encoder = FaunaEncoder()
+        self._decoder = FaunaDecoder()
+
         if endpoint is None:
             self.endpoint = _Environment.EnvFaunaEndpoint()
         else:
@@ -160,7 +165,7 @@ class Client:
         """
         return self._execute(
             "/query/1",
-            fql=fql.to_query(),
+            fql=fql.to_query(self._encoder),
             opts=opts,
         )
 
@@ -223,4 +228,4 @@ class Client:
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
 
-        return Response(response)
+        return Response(response, self._decoder)
