@@ -167,7 +167,7 @@ class Client:
             headers.update(self._last_txn_time.request_header)
 
         if opts is not None:
-            for k, v in opts.headers().items():
+            for k, v in opts.options.items():
                 headers[k] = v
 
         data: dict[str, Any] = {

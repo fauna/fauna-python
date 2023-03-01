@@ -71,7 +71,7 @@ def test_query_with_opts(
         res = c.query(
             fql("not used, just sending to a mock client"),
             opts=QueryOptions(
-                tags=tags,
+                query_tags=tags,
                 linearized=linearized,
                 query_timeout_ms=query_timeout_ms,
                 traceparent=traceparent,
