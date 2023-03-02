@@ -5,7 +5,7 @@ from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.response import QueryResponse
-from fauna.errors import *
+from fauna.errors import AuthenticationError, ProtocolError, ServiceError, AuthorizationError, ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, QueryCheckError
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
