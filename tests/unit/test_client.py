@@ -16,11 +16,11 @@ def test_client_defaults(monkeypatch):
     monkeypatch.delenv("FAUNA_SECRET")
     client = Client()
 
-    assert client.max_contention_retries is None
-    assert client.linearized is None
+    assert client._max_contention_retries is None
+    assert client._linearized is None
     assert client.endpoint == "https://db.fauna.com"
     assert client._auth.secret == ""
-    assert client.track_last_transaction_time is True
+    assert client._track_last_transaction_time is True
     assert client._query_timeout_ms is None
     assert client.session == fauna.global_http_client
 
@@ -70,10 +70,10 @@ def test_client_with_args():
     assert client._auth.secret == secret
     assert client.endpoint == endpoint
     assert client._query_timeout_ms == 900000
-    assert client.linearized == linearized
-    assert client.max_contention_retries == max_retries
-    assert client.track_last_transaction_time == track
-    assert client.tags == tags
+    assert client._linearized == linearized
+    assert client._max_contention_retries == max_retries
+    assert client._track_last_transaction_time == track
+    assert client._tags == tags
     assert client.session == http_client
 
 
@@ -163,26 +163,29 @@ def test_query_tags(
     httpx_mock.add_callback(validate_tags)
 
     with httpx.Client() as mockClient:
-        c = Client(
-            http_client=HTTPXClient(mockClient),
-            tags=None,
-        )
-
         with subtests.test("should not be set"):
             expected = None
 
-            c.tags.clear()
+            c = Client(
+                http_client=HTTPXClient(mockClient),
+                tags=None,
+            )
             c.query(fql("not used, just sending to a mock client"))
         with subtests.test("should be set on client"):
             expected = "project=teapot"
 
-            c.tags.clear()
-            c.tags.update({"project": "teapot"})
+            c = Client(
+                http_client=HTTPXClient(mockClient),
+                tags={"project": "teapot"},
+            )
             c.query(fql("not used, just sending to a mock client"))
         with subtests.test("should be set on query"):
             expected = "silly=pants"
 
-            c.tags.clear()
+            c = Client(
+                http_client=HTTPXClient(mockClient),
+                tags=None,
+            )
             c.query(
                 fql("not used, just sending to a mock client"),
                 QueryOptions(query_tags={"silly": "pants"}),
@@ -190,8 +193,10 @@ def test_query_tags(
         with subtests.test("should avoid conflicts"):
             expected = "project=kettle"
 
-            c.tags.clear()
-            c.tags.update({"project": "teapot"})
+            c = Client(
+                http_client=HTTPXClient(mockClient),
+                tags={"project": "teapot"},
+            )
             c.query(
                 fql("not used, just sending to a mock client"),
                 QueryOptions(query_tags={"project": "kettle"}),
@@ -219,12 +224,16 @@ def test_client_headers(
         c = Client(http_client=HTTPXClient(mockClient))
 
         with subtests.test("should allow custom header"):
-            expected = {"yellow": "submarine"}
-            c.headers.update(expected)
-            c.query(fql("just a mock"))
+            c.query(
+                fql("just a mock"),
+                QueryOptions(headers={"yellow": "submarine"}),
+            )
 
         with subtests.test("Linearized should be set on Client"):
-            c.linearized = True
+            c = Client(
+                http_client=HTTPXClient(mockClient),
+                linearized=True,
+            )
             expected = {Header.Linearized: "true"}
             c.query(fql("just a mock"))
 
@@ -237,7 +246,12 @@ def test_client_headers(
 
         with subtests.test("Max Contention Retries on Client"):
             count = 5
-            c.max_contention_retries = count
+
+            c = Client(
+                http_client=HTTPXClient(mockClient),
+                max_contention_retries=count,
+            )
+
             expected = {Header.MaxContentionRetries: f"{count}"}
             c.query(fql("just a mock"))
 

@@ -36,17 +36,10 @@ class QueryOptions:
     query_timeout_ms: Optional[int] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
+    headers: Optional[Dict[str, str]] = None
 
 
 class Client:
-
-    @property
-    def headers(self) -> Dict[str, str]:
-        return self._headers
-
-    @headers.setter
-    def headers(self, value: Dict[str, str]) -> None:
-        self._headers = value
 
     def __init__(
         self,
@@ -58,6 +51,7 @@ class Client:
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
+        headers: Optional[Dict[str, str]] = None,
     ):
 
         if endpoint is None:
@@ -71,12 +65,12 @@ class Client:
             self._auth = _Auth(secret)
 
         self._last_txn_time = _LastTxnTime()
-        self.track_last_transaction_time = track_last_transaction_time
-        self.linearized = linearized
-        self.max_contention_retries = max_contention_retries
-        self.tags = {}
+        self._track_last_transaction_time = track_last_transaction_time
+        self._linearized = linearized
+        self._max_contention_retries = max_contention_retries
+        self._tags = {}
         if tags is not None:
-            self.tags.update(tags)
+            self._tags.update(tags)
 
         if query_timeout is not None:
             self._query_timeout_ms = query_timeout.total_seconds() * 1000
@@ -89,6 +83,12 @@ class Client:
             _Header.Driver: "python",
             _Header.DriverEnv: str(_DriverEnvironment()),
         }
+
+        if headers is not None:
+            self._headers = {
+                **self._headers,
+                **headers,
+            }
 
         self.session: HTTPClient
 
@@ -189,22 +189,22 @@ class Client:
         headers[_Header.Format] = "tagged"
         headers[_Header.Authorization] = self._auth.bearer()
 
-        if self.linearized:
+        if self._linearized:
             headers[Header.Linearized] = "true"
 
-        if self.max_contention_retries is not None:
+        if self._max_contention_retries is not None:
             headers[Header.MaxContentionRetries] = \
-                f"{self.max_contention_retries}"
+                f"{self._max_contention_retries}"
 
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
 
-        if self.track_last_transaction_time:
+        if self._track_last_transaction_time:
             headers.update(self._last_txn_time.request_header)
 
         query_tags = {}
-        if self.tags is not None:
-            query_tags.update(self.tags)
+        if self._tags is not None:
+            query_tags.update(self._tags)
 
         if opts is not None:
             if opts.linearized is not None:
@@ -218,6 +218,8 @@ class Client:
                 headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
+            if opts.headers is not None:
+                headers.update(opts.headers)
 
         if len(query_tags) > 0:
             headers[Header.Tags] = urllib.parse.urlencode(query_tags)
@@ -234,7 +236,7 @@ class Client:
             data=data,
         )
 
-        if self.track_last_transaction_time:
+        if self._track_last_transaction_time:
             if Header.TxnTime in response.headers():
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
