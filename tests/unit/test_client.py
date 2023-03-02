@@ -196,3 +196,64 @@ def test_query_tags(
                 fql("not used, just sending to a mock client"),
                 QueryOptions(query_tags={"project": "kettle"}),
             )
+
+
+def test_client_headers(
+    subtests: pytest_subtests.SubTests,
+    httpx_mock: HTTPXMock,
+):
+    expected: Mapping[str, str] = {}
+
+    def validate_headers(request: httpx.Request):
+        for header in expected:
+            assert request.headers[header] == expected[header]
+
+        return httpx.Response(
+            status_code=200,
+            json={"data": "mocked"},
+        )
+
+    httpx_mock.add_callback(validate_headers)
+
+    with httpx.Client() as mockClient:
+        c = Client(http_client=HTTPXClient(mockClient))
+
+        with subtests.test("should allow custom header"):
+            expected = {"yellow": "submarine"}
+            c.headers.update(expected)
+            c.query(fql("just a mock"))
+
+        with subtests.test("Linearized should be set on Client"):
+            c.linearized = True
+            expected = {Header.Linearized: "true"}
+            c.query(fql("just a mock"))
+
+        with subtests.test("Linearized should be set on Query"):
+            expected = {Header.Linearized: "true"}
+            c.query(
+                fql("just a mock"),
+                QueryOptions(linearized=True),
+            )
+
+        with subtests.test("Max Contention Retries on Client"):
+            count = 5
+            c.max_contention_retries = count
+            expected = {Header.MaxContentionRetries: f"{count}"}
+            c.query(fql("just a mock"))
+
+        with subtests.test("Max Contention Retries on Query"):
+            count = 5
+            expected = {Header.MaxContentionRetries: f"{count}"}
+            c.query(
+                fql("just a mock"),
+                QueryOptions(max_contention_retries=count),
+            )
+
+        # doesn't make sense to be set on the Client
+        with subtests.test("Should have a Traceparent"):
+            traceparent = "moshi-moshi"
+            expected = {Header.Traceparent: traceparent}
+            c.query(
+                fql("just a mock"),
+                QueryOptions(traceparent=traceparent),
+            )
