@@ -90,10 +90,10 @@ class Client:
                 **headers,
             }
 
-        self.session: HTTPClient
+        self._session: HTTPClient
 
         if http_client is not None:
-            self.session = http_client
+            self._session = http_client
         else:
             if fauna.global_http_client is None:
                 read_timeout: Optional[timedelta] = DefaultHttpReadTimeout
@@ -124,7 +124,7 @@ class Client:
                     ))
                 fauna.global_http_client = c
 
-            self.session = fauna.global_http_client
+            self._session = fauna.global_http_client
 
     def set_last_transaction_time(self, new_transaction_time: int):
         """
@@ -229,7 +229,7 @@ class Client:
             "arguments": arguments or {},
         }
 
-        response = self.session.request(
+        response = self._session.request(
             method="POST",
             url=self._endpoint + path,
             headers=headers,

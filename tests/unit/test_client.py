@@ -22,7 +22,7 @@ def test_client_defaults(monkeypatch):
     assert client._auth.secret == ""
     assert client._track_last_transaction_time is True
     assert client._query_timeout_ms is None
-    assert client.session == fauna.global_http_client
+    assert client._session == fauna.global_http_client
 
 
 def test_client_env_overrides(monkeypatch):
@@ -68,13 +68,13 @@ def test_client_with_args():
     )
 
     assert client._auth.secret == secret
-    assert client.endpoint == endpoint
+    assert client._endpoint == endpoint
     assert client._query_timeout_ms == 900000
     assert client._linearized == linearized
     assert client._max_contention_retries == max_retries
     assert client._track_last_transaction_time == track
     assert client._tags == tags
-    assert client.session == http_client
+    assert client._session == http_client
 
 
 def test_get_set_transaction_time():
