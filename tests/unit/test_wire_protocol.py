@@ -136,6 +136,12 @@ def test_encode_dates_times(subtests):
         decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 
+    with subtests.test(msg="datetimes without tzinfo raise ValueError"):
+        test = datetime(2023, 2, 2)
+        with pytest.raises(ValueError,
+                           match="datetimes must be timezone-aware"):
+            FaunaEncoder.encode(test)
+
 
 def test_encode_fauna_types(subtests):
     with subtests.test(msg="encode doc ref into @doc"):
