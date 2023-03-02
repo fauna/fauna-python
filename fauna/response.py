@@ -3,6 +3,7 @@ from typing import Any, Mapping
 
 from .http_client import HTTPResponse
 from .wire_protocol import FaunaDecoder
+from .errors import ProtocolError, ServiceError
 
 
 class Stat(str, Enum):
@@ -51,7 +52,7 @@ class QueryResponse:
         http_response.close()
 
         if "data" not in response_json:
-            raise Exception(
+            raise ValueError(
                 f"Key 'data' not found in response body: \n{response_json}")
 
         if "summary" in response_json:

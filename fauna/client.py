@@ -5,7 +5,7 @@ from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.response import QueryResponse
-from fauna.errors import AuthenticationError, ProtocolError, ServiceError, AuthorizationError, ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, QueryCheckError
+from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, QueryCheckError
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
@@ -182,13 +182,19 @@ class Client:
         :raises ProtocolException: HTTP error not from Fauna
         :raises ServiceException: Fauna returned an error
         """
-        return self._execute(
+
+        try:
+            query = fql.to_query()
+        except Exception as e:
+            raise ClientError("Failed to evaluate Query") from e
+
+        return self._query(
             "/query/1",
-            fql=fql.to_query(),
+            fql=query,
             opts=opts,
         )
 
-    def _execute(
+    def _query(
         self,
         path,
         fql: Mapping[str, Any],
