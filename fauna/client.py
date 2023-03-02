@@ -177,7 +177,6 @@ class Client:
 
         :param fql: A string, but will eventually be a query expression.
         :param opts: (Optional) Query Options
-        :raises NetworkException: HTTP Request failed in transit TODO:
         :return: a :class:`QueryResponse`
         :raises NetworkException: HTTP Request failed in transit
         :raises ProtocolException: HTTP error not from Fauna
