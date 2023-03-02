@@ -15,6 +15,22 @@ def test_query_builder_strings(subtests):
         assert r == {"fql": ["let x = { y: 11 }"]}
 
 
+def test_query_builder_supports_fauna_interpolated_strings():
+    q = fql("""let age = $n1\n\"Alice is #{age} years old.\"""", n1=5)
+    r = q.to_query()
+    assert r == {
+        "fql": [
+            "let age = ",
+            {
+                "value": {
+                    "@int": "5"
+                }
+            },
+            "\n\"Alice is #{age} years old.\"",
+        ]
+    }
+
+
 def test_query_builder_values(subtests):
     with subtests.test(msg="simple value"):
         user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}

@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Mapping
 
 import httpx
+import pytest
 import pytest_subtests
 from pytest_httpx import HTTPXMock
 
@@ -92,15 +93,27 @@ def test_get_query_timeout():
     assert c.get_query_timeout() == timedelta(minutes=1)
 
 
-def test_client_headers(
-    subtests: pytest_subtests.SubTests,
+def test_query_options_set(
     httpx_mock: HTTPXMock,
+    linearized: bool,
+    query_timeout_ms: int,
+    traceparent: str,
+    tags: Mapping[str, str],
+    max_contention_retries: int,
 ):
-    expected: Mapping[str, str] = {}
 
     def validate_headers(request: httpx.Request):
-        for header in expected:
-            assert request.headers[header] == expected[header]
+        """
+        Validate each of the associated Headers are set on the request
+        """
+        assert request.headers[Header.Linearized] == str(linearized).lower()
+        # being explicit to not figure out encoding a Mapping in the test
+        assert request.headers[Header.Tags] == \
+            "project=teapot&hello=world&testing=foobar"
+        assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
+        assert request.headers[Header.Traceparent] == traceparent
+        assert request.headers[Header.MaxContentionRetries] \
+            == f"{max_contention_retries}"
 
         return httpx.Response(
             status_code=200,
@@ -110,44 +123,76 @@ def test_client_headers(
     httpx_mock.add_callback(validate_headers)
 
     with httpx.Client() as mockClient:
-        c = Client(http_client=HTTPXClient(mockClient))
+        c = Client(
+            http_client=HTTPXClient(mockClient),
+            tags={"project": "teapot"},
+        )
 
-        with subtests.test("should allow custom header"):
-            expected = {"yellow": "submarine"}
-            c.headers.update(expected)
-            c.query(fql("just a mock"))
+        res = c.query(
+            fql("not used, just sending to a mock client"),
+            opts=QueryOptions(
+                query_tags=tags,
+                linearized=linearized,
+                query_timeout_ms=query_timeout_ms,
+                traceparent=traceparent,
+                max_contention_retries=max_contention_retries,
+            ),
+        )
 
-        with subtests.test("Linearized should be set on Client"):
-            c.linearized = True
-            expected = {Header.Linearized: "true"}
-            c.query(fql("just a mock"))
+        assert res.status_code == 200
 
-        with subtests.test("Linearized should be set on Query"):
-            expected = {Header.Linearized: "true"}
+
+def test_query_tags(
+    subtests: pytest_subtests.SubTests,
+    httpx_mock: HTTPXMock,
+):
+    expected = None
+
+    def validate_tags(request: httpx.Request):
+        if expected is not None:
+            assert request.headers[Header.Tags] == expected
+        else:
+            with pytest.raises(KeyError):
+                assert request.headers[Header.Tags] == ""
+
+        return httpx.Response(
+            status_code=200,
+            json={"data": "mocked"},
+        )
+
+    httpx_mock.add_callback(validate_tags)
+
+    with httpx.Client() as mockClient:
+        c = Client(
+            http_client=HTTPXClient(mockClient),
+            tags=None,
+        )
+
+        with subtests.test("should not be set"):
+            expected = None
+
+            c.tags.clear()
+            c.query(fql("not used, just sending to a mock client"))
+        with subtests.test("should be set on client"):
+            expected = "project=teapot"
+
+            c.tags.clear()
+            c.tags.update({"project": "teapot"})
+            c.query(fql("not used, just sending to a mock client"))
+        with subtests.test("should be set on query"):
+            expected = "silly=pants"
+
+            c.tags.clear()
             c.query(
-                fql("just a mock"),
-                QueryOptions(linearized=True),
+                fql("not used, just sending to a mock client"),
+                QueryOptions(query_tags={"silly": "pants"}),
             )
+        with subtests.test("should avoid conflicts"):
+            expected = "project=kettle"
 
-        with subtests.test("Max Contention Retries on Client"):
-            count = 5
-            c.max_contention_retries = count
-            expected = {Header.MaxContentionRetries: f"{count}"}
-            c.query(fql("just a mock"))
-
-        with subtests.test("Max Contention Retries on Query"):
-            count = 5
-            expected = {Header.MaxContentionRetries: f"{count}"}
+            c.tags.clear()
+            c.tags.update({"project": "teapot"})
             c.query(
-                fql("just a mock"),
-                QueryOptions(max_contention_retries=count),
-            )
-
-        # doesn't make sense to be set on the Client
-        with subtests.test("Should have a Traceparent"):
-            traceparent = "moshi-moshi"
-            expected = {Header.Traceparent: traceparent}
-            c.query(
-                fql("just a mock"),
-                QueryOptions(traceparent=traceparent),
+                fql("not used, just sending to a mock client"),
+                QueryOptions(query_tags={"project": "kettle"}),
             )

@@ -186,7 +186,7 @@ class Client:
 
         headers = self._headers.copy()
         # TODO: should be removed in favor of default (tagged)
-        headers[_Header.Format] = "simple"
+        headers[_Header.Format] = "tagged"
         headers[_Header.Authorization] = self._auth.bearer()
 
         if self.linearized:

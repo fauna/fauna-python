@@ -86,6 +86,9 @@ class FaunaEncoder:
 
     @staticmethod
     def from_datetime(obj: datetime):
+        if obj.utcoffset() is None:
+            raise ValueError("datetimes must be timezone-aware")
+
         return {"@time": obj.isoformat(sep="T")}
 
     @staticmethod
