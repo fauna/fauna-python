@@ -58,3 +58,10 @@ def test_datetime_non_utc_roundtrip(client):
     test = fql("$datetime", datetime=dt)
     result = client.query(test).data
     assert result == dt
+
+
+def test_none_roundtrip(client):
+    none = None
+    test = fql("$none", none=none)
+    result = client.query(test).data
+    assert result == none
