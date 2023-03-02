@@ -59,7 +59,7 @@ class Client:
         :raises ClientError: Client runtime error, failed to send request TODO: figure out where this should go
         :raises ValueError: for bad config
         """
-        
+
         if endpoint is None:
             self._endpoint = _Environment.EnvFaunaEndpoint()
         else:

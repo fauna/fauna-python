@@ -18,7 +18,7 @@ class Stat(str, Enum):
     WriteOps = "write_ops"
 
 
-class Response:
+class QueryResponse:
 
     @property
     def data(self) -> Any:
