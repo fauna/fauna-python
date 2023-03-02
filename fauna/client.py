@@ -55,9 +55,9 @@ class Client:
     ):
 
         if endpoint is None:
-            self.endpoint = _Environment.EnvFaunaEndpoint()
+            self._endpoint = _Environment.EnvFaunaEndpoint()
         else:
-            self.endpoint = endpoint
+            self._endpoint = endpoint
 
         if secret is None:
             self._auth = _Auth(_Environment.EnvFaunaSecret())
@@ -231,7 +231,7 @@ class Client:
 
         response = self.session.request(
             method="POST",
-            url=self.endpoint + path,
+            url=self._endpoint + path,
             headers=headers,
             data=data,
         )
