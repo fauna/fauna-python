@@ -173,12 +173,13 @@ class Client:
         opts: Optional[QueryOptions] = None,
     ) -> QueryResponse:
         """
-        Use the Fauna query API.
+        Run a query on Fauna.
 
         :param fql: A string, but will eventually be a query expression.
         :param opts: (Optional) Query Options
-        :return: Response. TODO(lucas): refine contract
         :raises NetworkException: HTTP Request failed in transit TODO:
+        :return: a :class:`QueryResponse`
+        :raises NetworkException: HTTP Request failed in transit
         :raises ProtocolException: HTTP error not from Fauna
         :raises ServiceException: Fauna returned an error
         """
