@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional
 
 import fauna
-from fauna.response import Response
+from fauna.response import QueryResponse
+from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, QueryCheckError
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
@@ -54,7 +55,6 @@ class Client:
         query_timeout: Optional[timedelta] = None,
         additional_headers: Optional[Dict[str, str]] = None,
     ):
-
         if endpoint is None:
             self._endpoint = _Environment.EnvFaunaEndpoint()
         else:
@@ -166,30 +166,36 @@ class Client:
         self,
         fql: QueryBuilder,
         opts: Optional[QueryOptions] = None,
-    ) -> Response:
+    ) -> QueryResponse:
         """
-        Use the Fauna query API.
+        Run a query on Fauna.
 
         :param fql: A string, but will eventually be a query expression.
         :param opts: (Optional) Query Options
-        :return: Response. TODO(lucas): refine contract
+        :return: a :class:`QueryResponse`
+        :raises NetworkException: HTTP Request failed in transit
+        :raises ProtocolException: HTTP error not from Fauna
+        :raises ServiceException: Fauna returned an error
         """
-        return self._execute(
+
+        try:
+            query = fql.to_query()
+        except Exception as e:
+            raise ClientError("Failed to evaluate Query") from e
+
+        return self._query(
             "/query/1",
-            fql=fql.to_query(),
+            fql=query,
             opts=opts,
         )
 
-    def _execute(
+    def _query(
         self,
         path,
         fql: Mapping[str, Any],
         arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
-    ) -> Response:
-        """
-        :raises FaunaException: Fauna returned an error
-        """
+    ) -> QueryResponse:
 
         headers = self._headers.copy()
         # TODO: should be removed in favor of default (tagged)
@@ -236,9 +242,85 @@ class Client:
             data=data,
         )
 
+        if (status_code := response.status_code()) > 399:
+            response_json = response.json()
+
+            if "error" not in response_json:
+                raise ProtocolError(
+                    status_code,
+                    "Unexpected response",
+                    response_json,
+                )
+
+            err = ServiceError(
+                status_code,
+                response_json["error"]["code"],
+                response_json["error"]["message"],
+                response_json["summary"] if "summary" in response_json else "",
+            )
+            if status_code == 400:
+                if err.code is not None:
+                    raise QueryCheckError(
+                        err.status_code,
+                        err.code,
+                        err.message,
+                        err.summary,
+                    )
+
+                raise QueryRuntimeError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 401:
+                raise AuthenticationError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 403:
+                raise AuthorizationError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 429:
+                raise ThrottlingException(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 440:
+                raise QueryTimeoutException(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 500:
+                raise ServiceInternalError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            elif status_code == 503:
+                raise ServiceTimeoutError(
+                    err.status_code,
+                    err.code,
+                    err.message,
+                    err.summary,
+                )
+            else:
+                raise err
+
         if self._track_last_transaction_time:
             if Header.TxnTime in response.headers():
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
 
-        return Response(response)
+        return QueryResponse(response)

@@ -3,6 +3,7 @@ from typing import Any, Mapping
 
 from .http_client import HTTPResponse
 from .wire_protocol import FaunaDecoder
+from .errors import ProtocolError, ServiceError
 
 
 class Stat(str, Enum):
@@ -18,7 +19,7 @@ class Stat(str, Enum):
     WriteOps = "write_ops"
 
 
-class Response:
+class QueryResponse:
 
     @property
     def data(self) -> Any:
@@ -50,6 +51,13 @@ class Response:
 
         http_response.close()
 
+        if "data" not in response_json:
+            raise ProtocolError(
+                self._status_code,
+                "Unexpected response",
+                f"Key 'data' not found in response body: \n{response_json}",
+            )
+
         if "summary" in response_json:
             self._summary = response_json["summary"]
 
@@ -58,8 +66,21 @@ class Response:
 
         if "data" in response_json:
             self._data = FaunaDecoder.decode(response_json["data"])
+        elif "error" in response_json:
+            raise ServiceError(
+                self._status_code,
+                response_json["error"]["code"],
+                response_json["error"]["message"],
+                response_json["summary"],
+            )
+        elif self._status_code > 299:
+            raise ProtocolError(
+                self._status_code,
+                "Unexpected response",
+                response_json,
+            )
         else:
-            raise Exception("Unexpected response")
+            raise Exception("Unknown response")
 
     def stat(self, key: str) -> int:
         """

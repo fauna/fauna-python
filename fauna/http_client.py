@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import httpx
 
+from .errors import ClientError, NetworkError
+
 
 @dataclass(frozen=True)
 class ErrorResponse:
@@ -106,17 +108,23 @@ class HTTPXClient(HTTPClient):
         data: Mapping[str, Any],
     ) -> HTTPResponse:
 
-        request = self._c.build_request(
-            method,
-            url,
-            json=data,
-            headers=headers,
-        )
+        try:
+            request = self._c.build_request(
+                method,
+                url,
+                json=data,
+                headers=headers,
+            )
+        except httpx.InvalidURL as e:
+            raise ClientError("Invalid URL Format") from e
 
-        response = self._c.send(
-            request,
-            stream=False,
-        )
+        try:
+            response = self._c.send(
+                request,
+                stream=False,
+            )
+        except (httpx.HTTPError, httpx.InvalidURL) as e:
+            raise NetworkError("Exception re-raised from HTTP request") from e
 
         return HTTPXResponse(response)
 
