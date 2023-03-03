@@ -232,7 +232,7 @@ def test_client_headers(
             expected = {"yellow": "submarine"}
             c.query(
                 fql("just a mock"),
-                QueryOptions(headers=expected),
+                QueryOptions(additional_headers=expected),
             )
 
         with subtests.test("Linearized should be set on Client"):

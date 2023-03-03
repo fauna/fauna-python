@@ -29,6 +29,7 @@ class QueryOptions:
     * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
     """
 
     linearized: Optional[bool] = None
@@ -36,7 +37,7 @@ class QueryOptions:
     query_timeout_ms: Optional[int] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
-    headers: Optional[Dict[str, str]] = None
+    additional_headers: Optional[Dict[str, str]] = None
 
 
 class Client:
@@ -217,8 +218,8 @@ class Client:
                 headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
-            if opts.headers is not None:
-                headers.update(opts.headers)
+            if opts.additional_headers is not None:
+                headers.update(opts.additional_headers)
 
         if len(query_tags) > 0:
             headers[Header.Tags] = urllib.parse.urlencode(query_tags)
