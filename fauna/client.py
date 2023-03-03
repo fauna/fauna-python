@@ -1,7 +1,7 @@
 import urllib.parse
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.response import Response
@@ -29,6 +29,7 @@ class QueryOptions:
     * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
     """
 
     linearized: Optional[bool] = None
@@ -36,6 +37,7 @@ class QueryOptions:
     query_timeout_ms: Optional[int] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
+    additional_headers: Optional[Dict[str, str]] = None
 
 
 class Client:
@@ -50,12 +52,13 @@ class Client:
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
+        additional_headers: Optional[Dict[str, str]] = None,
     ):
 
         if endpoint is None:
-            self.endpoint = _Environment.EnvFaunaEndpoint()
+            self._endpoint = _Environment.EnvFaunaEndpoint()
         else:
-            self.endpoint = endpoint
+            self._endpoint = endpoint
 
         if secret is None:
             self._auth = _Auth(_Environment.EnvFaunaSecret())
@@ -63,29 +66,41 @@ class Client:
             self._auth = _Auth(secret)
 
         self._last_txn_time = _LastTxnTime()
-        self.track_last_transaction_time = track_last_transaction_time
-        self.linearized = linearized
-        self.max_contention_retries = max_contention_retries
-        self.tags = {}
+        self._track_last_transaction_time = track_last_transaction_time
+
+        self._tags = {}
         if tags is not None:
-            self.tags.update(tags)
+            self._tags.update(tags)
 
         if query_timeout is not None:
             self._query_timeout_ms = query_timeout.total_seconds() * 1000
         else:
             self._query_timeout_ms = None
 
-        self._headers = {
+        self._headers: Dict[str, str] = {
             _Header.AcceptEncoding: "gzip",
             _Header.ContentType: "application/json;charset=utf-8",
             _Header.Driver: "python",
             _Header.DriverEnv: str(_DriverEnvironment()),
         }
 
-        self.session: HTTPClient
+        if linearized:
+            self._headers[Header.Linearized] = "true"
+
+        if max_contention_retries is not None and max_contention_retries > 0:
+            self._headers[Header.MaxContentionRetries] = \
+                f"{max_contention_retries}"
+
+        if additional_headers is not None:
+            self._headers = {
+                **self._headers,
+                **additional_headers,
+            }
+
+        self._session: HTTPClient
 
         if http_client is not None:
-            self.session = http_client
+            self._session = http_client
         else:
             if fauna.global_http_client is None:
                 read_timeout: Optional[timedelta] = DefaultHttpReadTimeout
@@ -116,7 +131,7 @@ class Client:
                     ))
                 fauna.global_http_client = c
 
-            self.session = fauna.global_http_client
+            self._session = fauna.global_http_client
 
     def set_last_transaction_time(self, new_transaction_time: int):
         """
@@ -184,12 +199,12 @@ class Client:
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
 
-        if self.track_last_transaction_time:
+        if self._track_last_transaction_time:
             headers.update(self._last_txn_time.request_header)
 
         query_tags = {}
-        if self.tags is not None:
-            query_tags.update(self.tags)
+        if self._tags is not None:
+            query_tags.update(self._tags)
 
         if opts is not None:
             if opts.linearized is not None:
@@ -203,6 +218,8 @@ class Client:
                 headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
+            if opts.additional_headers is not None:
+                headers.update(opts.additional_headers)
 
         if len(query_tags) > 0:
             headers[Header.Tags] = urllib.parse.urlencode(query_tags)
@@ -212,14 +229,14 @@ class Client:
             "arguments": arguments or {},
         }
 
-        response = self.session.request(
+        response = self._session.request(
             method="POST",
-            url=self.endpoint + path,
+            url=self._endpoint + path,
             headers=headers,
             data=data,
         )
 
-        if self.track_last_transaction_time:
+        if self._track_last_transaction_time:
             if Header.TxnTime in response.headers():
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
