@@ -66,8 +66,7 @@ class Client:
 
         self._last_txn_time = _LastTxnTime()
         self._track_last_transaction_time = track_last_transaction_time
-        self._linearized = linearized
-        self._max_contention_retries = max_contention_retries
+
         self._tags = {}
         if tags is not None:
             self._tags.update(tags)
@@ -83,6 +82,13 @@ class Client:
             _Header.Driver: "python",
             _Header.DriverEnv: str(_DriverEnvironment()),
         }
+
+        if linearized:
+            self._headers[Header.Linearized] = "true"
+
+        if max_contention_retries is not None and max_contention_retries > 0:
+            self._headers[Header.MaxContentionRetries] = \
+                f"{max_contention_retries}"
 
         if headers is not None:
             self._headers = {
@@ -188,13 +194,6 @@ class Client:
         # TODO: should be removed in favor of default (tagged)
         headers[_Header.Format] = "tagged"
         headers[_Header.Authorization] = self._auth.bearer()
-
-        if self._linearized:
-            headers[Header.Linearized] = "true"
-
-        if self._max_contention_retries is not None:
-            headers[Header.MaxContentionRetries] = \
-                f"{self._max_contention_retries}"
 
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)

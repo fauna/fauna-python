@@ -16,8 +16,6 @@ def test_client_defaults(monkeypatch):
     monkeypatch.delenv("FAUNA_SECRET")
     client = Client()
 
-    assert client._max_contention_retries is None
-    assert client._linearized is None
     assert client._endpoint == "https://db.fauna.com"
     assert client._auth.secret == ""
     assert client._track_last_transaction_time is True
@@ -70,8 +68,6 @@ def test_client_with_args():
     assert client._auth.secret == secret
     assert client._endpoint == endpoint
     assert client._query_timeout_ms == 900000
-    assert client._linearized == linearized
-    assert client._max_contention_retries == max_retries
     assert client._track_last_transaction_time == track
     assert client._tags == tags
     assert client._session == http_client
