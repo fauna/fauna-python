@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Mapping
 
+from .query_builder import fql
 from .http_client import HTTPResponse
 from .wire_protocol import FaunaDecoder
 
@@ -40,7 +41,8 @@ class Response:
     def status_code(self) -> int:
         return self._status_code
 
-    def __init__(self, http_response: HTTPResponse):
+    def __init__(self, client, http_response: HTTPResponse):
+
         response_json = http_response.json()
 
         self._headers = http_response.headers()
@@ -61,6 +63,11 @@ class Response:
         else:
             raise Exception("Unexpected response")
 
+        self._client = client
+
+    def pages(self):
+        return ResponseIterator(self._client, self)
+
     def stat(self, key: str) -> int:
         """
         Return the value of the Stat by key. You can use the :type:`Stat` :type:`Enum`
@@ -70,3 +77,26 @@ class Response:
         :raises KeyError: Unknown stat key
         """
         return int(self._stats[key])
+
+
+class ResponseIterator:
+
+    def __init__(self, client, res: Response):
+        self._first = True
+        self._res = res
+        self._client = client
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Response:
+        if self._first:
+            self._first = False
+            return self._res
+
+        if 'after' not in self._res.data:
+            raise StopIteration
+
+        q = fql('Set.paginate($token)', token=self._res.data['after'])
+        self._res = self._client.query(q)
+        return self._res

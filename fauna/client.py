@@ -241,4 +241,4 @@ class Client:
                 x_txn_time = response.headers()[Header.TxnTime]
                 self.set_last_transaction_time(int(x_txn_time))
 
-        return Response(response)
+        return Response(self, response)
