@@ -52,7 +52,7 @@ class Client:
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
-        headers: Optional[Dict[str, str]] = None,
+        additional_headers: Optional[Dict[str, str]] = None,
     ):
 
         if endpoint is None:
@@ -91,10 +91,10 @@ class Client:
             self._headers[Header.MaxContentionRetries] = \
                 f"{max_contention_retries}"
 
-        if headers is not None:
+        if additional_headers is not None:
             self._headers = {
                 **self._headers,
-                **headers,
+                **additional_headers,
             }
 
         self._session: HTTPClient

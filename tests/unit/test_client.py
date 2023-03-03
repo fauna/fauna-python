@@ -223,7 +223,7 @@ def test_client_headers(
             expected = {"happy": "fox"}
             c = Client(
                 http_client=http_client,
-                headers=expected,
+                additional_headers=expected,
             )
             c.query(fql("just a mock"))
 
