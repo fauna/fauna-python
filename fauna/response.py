@@ -52,8 +52,11 @@ class QueryResponse:
         http_response.close()
 
         if "data" not in response_json:
-            raise ValueError(
-                f"Key 'data' not found in response body: \n{response_json}")
+            raise ProtocolError(
+                self._status_code,
+                "Unexpected response",
+                f"Key 'data' not found in response body: \n{response_json}",
+            )
 
         if "summary" in response_json:
             self._summary = response_json["summary"]
