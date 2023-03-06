@@ -1,0 +1,67 @@
+from datetime import datetime, timezone, timedelta
+
+from fauna import fql
+
+
+def test_float_roundtrip(client):
+    f = 0.1 + 0.1 + 0.1
+    assert f != 0.3
+    test = fql("${float}", float=f)
+    result = client.query(test).data
+    assert result == f
+
+
+def test_32_bit_int_roundtrip(client):
+    i = 2147483648
+    test = fql("${int}", int=i)
+    result = client.query(test).data
+    assert result == i
+
+
+def test_64_bit_int_roundtrip(client):
+    lng = 9223372036854775807
+    test = fql("${long}", long=lng)
+    result = client.query(test).data
+    assert result == lng
+
+
+def test_string_roundtrip(client):
+    s = "there and back again"
+    test = fql("${str}", str=s)
+    result = client.query(test).data
+    assert result == s
+
+
+def test_true_roundtrip(client):
+    b = True
+    test = fql("${bool}", bool=b)
+    result = client.query(test).data
+    assert result == b
+
+
+def test_false_roundtrip(client):
+    b = False
+    test = fql("${bool}", bool=b)
+    result = client.query(test).data
+    assert result == b
+
+
+def test_datetime_utc_roundtrip(client):
+    dt = datetime(2023, 2, 10, tzinfo=timezone.utc)
+    test = fql("${datetime}", datetime=dt)
+    result = client.query(test).data
+    assert result == dt
+
+
+def test_datetime_non_utc_roundtrip(client):
+    dt = datetime(2023, 2, 10, tzinfo=timezone(timedelta(hours=2, minutes=0)))
+    test = fql("${datetime}", datetime=dt)
+    result = client.query(test).data
+    assert result == dt
+
+
+def test_none_roundtrip(client):
+    none = None
+    test = fql("${none}", none=none)
+    result = client.query(test).data
+    assert result == none

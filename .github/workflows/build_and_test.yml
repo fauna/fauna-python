@@ -1,0 +1,73 @@
+name: Python Driver Tests
+on:
+  pull_request:
+    paths:
+      - "**"
+
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  build_and_test:
+    strategy:
+      matrix:
+        # Run in all these versions of Python
+        # current and last three python versions
+        python-version:
+          - "3.11"
+          - "3.10"
+          - "3.9"
+          - "3.8"
+        fauna-docker-service:
+          - name: "fauna/faunadb:latest"
+            host: "core"
+            port: "8443"
+          # if we had a nightly image, we could run the testsuite against it by uncommented this
+          # - name: "fauna/faunadb:nightly"
+          #   host: "localhost"
+          #   port: "8443"
+
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+
+    container:
+      image: python:${{ matrix.python-version}}
+
+    services:
+      core:
+        image: ${{ matrix.fauna-docker-service.name }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Show file descriptor limit
+        run: ulimit -a
+
+      - name: "Install ci dependencies"
+        run: pip install -r requirements.txt --use-pep517
+
+      - name: Run unit tests
+        run: pytest -v --cov=fauna --cov-context=test tests/unit
+
+      - name: Run integration tests
+        run: pytest -v --cov=fauna --cov-context=test tests/integration
+        # To get more insight into tests which are only flaky when run in github actions -- use commands like below
+        # run: env HTTPX_LOG_LEVEL=trace pytest --capture=no -v --cov=fauna --cov-context=test -k test_stream_max_open_streams
+        env:
+          FAUNA_ENDPOINT: "http://${{ matrix.fauna-docker-service.host }}:${{ matrix.fauna-docker-service.port }}"
+          FAUNA_ROOT_KEY: secret
+          USE_GITHUB_ACTION_OVERRIDES: 1
+
+      - name: Generate coverage html report with dynamic contexts
+        run: coverage html --show-contexts
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: html-code-coverage-database
+          path: ./.coverage
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: html-code-coverage-report
+          path: ./htmlcov
