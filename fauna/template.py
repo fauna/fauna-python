@@ -22,7 +22,7 @@ class FaunaTemplate:
         pattern = fr"""
         {delim}(?:
           (?P<escaped>{delim})  |   # Escape sequence of two delimiters
-          (?P<named>{self._idpattern})       |   # delimiter and a Python identifier
+          {{(?P<braced>{self._idpattern})}} |   # delimiter and a braced identifier
           (?P<invalid>)             # Other ill-formed delimiter exprs
         ) 
         """
@@ -49,7 +49,7 @@ class FaunaTemplate:
             span_start_pos = mo.span()[0]
             span_end_pos = mo.span()[1]
             escaped_part = mo.group("escaped") or ""
-            variable_part = mo.group("named")
+            variable_part = mo.group("braced")
             literal_part: Optional[str] = None
 
             if cur_pos != span_start_pos:

@@ -1,6 +1,5 @@
 import random
 import string
-from datetime import date, datetime
 
 import pytest
 
@@ -10,7 +9,7 @@ from fauna.models import Module
 
 
 def create_collection(name) -> QueryBuilder:
-    return fql('Collection.create({ name: $name})', name=name)
+    return fql('Collection.create({ name: ${name} })', name=name)
 
 
 @pytest.fixture
