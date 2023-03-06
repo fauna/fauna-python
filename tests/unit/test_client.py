@@ -96,6 +96,7 @@ def test_query_options_set(
     traceparent: str,
     tags: Mapping[str, str],
     max_contention_retries: int,
+    last_txn_ts: int,
 ):
 
     def validate_headers(request: httpx.Request):
@@ -110,7 +111,7 @@ def test_query_options_set(
         assert request.headers[Header.Traceparent] == traceparent
         assert request.headers[Header.MaxContentionRetries] \
             == f"{max_contention_retries}"
-
+        assert request.headers[Header.LastTxnTs] == str(last_txn_ts)
         return httpx.Response(
             status_code=200,
             json={"data": "mocked"},
@@ -132,6 +133,7 @@ def test_query_options_set(
                 query_timeout_ms=query_timeout_ms,
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
+                last_txn_ts=last_txn_ts,
             ),
         )
 

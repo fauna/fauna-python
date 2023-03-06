@@ -228,6 +228,8 @@ class Client:
                 headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
+            if opts.last_txn_ts is not None:
+                headers[Header.LastTxnTs] = str(opts.last_txn_ts)
             if opts.additional_headers is not None:
                 headers.update(opts.additional_headers)
 
