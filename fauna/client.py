@@ -32,7 +32,7 @@ class QueryOptions:
     * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
-    * last_txn_ts - The last transaction timestamp observed.
+    * last_txn_ts - The last transaction timestamp observed  (in micros since epoch).
     * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
     """
 
@@ -53,7 +53,6 @@ class Client:
         secret: Optional[str] = None,
         http_client: Optional[HTTPClient] = None,
         tags: Optional[Mapping[str, str]] = None,
-        track_last_txn_ts: bool = True,
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
@@ -70,7 +69,6 @@ class Client:
             self._auth = _Auth(secret)
 
         self._last_txn_ts = LastTxnTs()
-        self._track_last_txn_ts = track_last_txn_ts
 
         self._tags = {}
         if tags is not None:
@@ -209,8 +207,7 @@ class Client:
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
 
-        if self._track_last_txn_ts:
-            headers.update(self._last_txn_ts.request_header)
+        headers.update(self._last_txn_ts.request_header)
 
         query_tags = {}
         if self._tags is not None:
@@ -254,10 +251,8 @@ class Client:
             if status_code > 399:
                 Client._handle_error(response_json, status_code)
 
-            if self._track_last_txn_ts:
-                if "txn_ts" in response_json:
-                    self.set_last_transaction_time(int(
-                        response_json["txn_ts"]))
+            if "txn_ts" in response_json:
+                self.set_last_transaction_time(int(response_json["txn_ts"]))
 
             return QueryResponse(response_json, headers, status_code)
 
