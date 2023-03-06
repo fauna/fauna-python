@@ -21,8 +21,8 @@ def tags() -> Mapping[str, str]:
 
 
 @pytest.fixture
-def query_timeout_ms() -> int:
-    return 5000
+def query_timeout_ms() -> float:
+    return 5000.0
 
 
 @pytest.fixture

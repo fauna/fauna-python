@@ -1,9 +1,10 @@
 Fauna Python
 ==============
+*This driver is currently under development and not suitable for production workloads.*
 
-.. image:: https://img.shields.io/codecov/c/github/fauna/faunadb-python/master.svg?maxAge=21600
+.. image:: https://img.shields.io/codecov/c/github/fauna/fauna-python/main.svg?maxAge=21600
  :target: https://codecov.io/gh/fauna/fauna-python
-.. image:: https://img.shields.io/pypi/v/faunadb.svg?maxAge=21600
+.. image:: https://img.shields.io/pypi/v/fauna.svg?maxAge=21600
  :target: https://pypi.python.org/pypi/fauna
 .. image:: https://img.shields.io/badge/license-MPL_2.0-blue.svg?maxAge=2592000
  :target: https://raw.githubusercontent.com/fauna/fauna-python/main/LICENSE
@@ -16,7 +17,7 @@ Installation
 
 .. code-block:: bash
 
-    $ pip install fauna
+    $ pip install ?
 
 
 Compatibility
@@ -32,30 +33,44 @@ The following versions of Python are supported:
 Documentation
 -------------
 
-Driver documentation is available at https://fauna.github.io/faunadb-python/4.1.1/api/.
-
-See the `FaunaDB Documentation <https://docs.fauna.com/>`__ for a complete API reference, or look in `tests`_
-for more examples.
+# TODO
 
 
-Basic Usage
+Example Usage
 -----------
 
 .. code-block:: python
 
-    # TODO
+    from fauna import fql, Client
 
-Document Streaming
-------------------
-Fauna supports document streaming, where changes to a streamed document are pushed to all clients subscribing to that document.
+    client = Client()
+    client.query(fql('Collection.create({ name: "Dogs" })'))
+    client.query(fql('Dogs.create({ name: "Scout" })'))
 
-The following section provides an example for managing a document stream.
+Query Composition
+-----------
 
-The streaming API is blocking by default, the choice and mechanism for handling concurrent streams is left to the application developer:
+This driver supports query composition with Python primitives, lists, dicts, and other FQL queries. For FQL templates, denote variables with `${}` and pass variables as kwargs to `fql()`.
 
 .. code-block:: python
 
-    # TODO
+    from fauna import fql, Client
+
+    def user_by_tin(tin: str):
+        return fql('Users.byTin(${tin})', tin=tin)
+
+    def render_user():
+        return fql('{ .name, .address }')
+
+    tin = "123"
+    fql("""let u = ${user}
+    u ${render}
+    """, user=user_by_tin(tin), render=render_user())
+
+Document Streaming
+------------------
+
+Not implemented
 
 Building it yourself
 --------------------

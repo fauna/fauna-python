@@ -29,7 +29,7 @@ class QueryOptions:
 
     * linearized - If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
     * max_contention_retries - The max number of times to retry the query if contention is encountered.
-    * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+    * query_timeout - Controls the maximum amount of time Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
     * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
@@ -37,7 +37,7 @@ class QueryOptions:
 
     linearized: Optional[bool] = None
     max_contention_retries: Optional[int] = None
-    query_timeout_ms: Optional[int] = None
+    query_timeout: Optional[timedelta] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
     additional_headers: Optional[Dict[str, str]] = None
@@ -50,12 +50,24 @@ class Client:
         endpoint: Optional[str] = None,
         secret: Optional[str] = None,
         http_client: Optional[HTTPClient] = None,
-        tags: Optional[Mapping[str, str]] = None,
+        query_tags: Optional[Mapping[str, str]] = None,
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
         additional_headers: Optional[Dict[str, str]] = None,
     ):
+        """Initializes a Client.
+
+        :param endpoint: The Fauna Endpoint to use. Defaults to https://db.fauna.com, or the FAUNA_ENDPOINT env variable.
+        :param secret: The Fauna Secret to use. Defaults to empty, or the FAUNA_SECRET env variable.
+        :param http_client: An :class:`HTTPClient` implementation. Defaults to a global :class:`HTTPXClient`.
+        :param query_tags: Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
+        :param linearized: If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+        :param max_contention_retries: The max number of times to retry the query if contention is encountered.
+        :param query_timeout: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+        :param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.
+        """
+
         if endpoint is None:
             self._endpoint = _Environment.EnvFaunaEndpoint()
         else:
@@ -68,9 +80,9 @@ class Client:
 
         self._last_txn_ts = LastTxnTs()
 
-        self._tags = {}
-        if tags is not None:
-            self._tags.update(tags)
+        self._query_tags = {}
+        if query_tags is not None:
+            self._query_tags.update(query_tags)
 
         if query_timeout is not None:
             self._query_timeout_ms = query_timeout.total_seconds() * 1000
@@ -208,8 +220,8 @@ class Client:
         headers.update(self._last_txn_ts.request_header)
 
         query_tags = {}
-        if self._tags is not None:
-            query_tags.update(self._tags)
+        if self._query_tags is not None:
+            query_tags.update(self._query_tags)
 
         if opts is not None:
             if opts.linearized is not None:
@@ -219,8 +231,10 @@ class Client:
                     f"{opts.max_contention_retries}"
             if opts.traceparent is not None:
                 headers[Header.Traceparent] = opts.traceparent
-            if opts.query_timeout_ms is not None:
-                headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
+            if opts.query_timeout is not None:
+                headers[
+                    Header.
+                    TimeoutMs] = f"{opts.query_timeout.total_seconds() * 1000}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
             if opts.additional_headers is not None:

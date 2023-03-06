@@ -59,14 +59,14 @@ def test_client_with_args():
         query_timeout=timeout,
         linearized=linearized,
         max_contention_retries=max_retries,
-        tags=tags,
+        query_tags=tags,
         http_client=http_client,
     )
 
     assert client._auth.secret == secret
     assert client._endpoint == endpoint
     assert client._query_timeout_ms == 900000
-    assert client._tags == tags
+    assert client._query_tags == tags
     assert client._session == http_client
 
 
@@ -89,7 +89,7 @@ def test_get_query_timeout():
 def test_query_options_set(
     httpx_mock: HTTPXMock,
     linearized: bool,
-    query_timeout_ms: int,
+    query_timeout_ms: float,
     traceparent: str,
     tags: Mapping[str, str],
     max_contention_retries: int,
@@ -117,7 +117,7 @@ def test_query_options_set(
     with httpx.Client() as mockClient:
         c = Client(
             http_client=HTTPXClient(mockClient),
-            tags={"project": "teapot"},
+            query_tags={"project": "teapot"},
         )
 
         res = c.query(
@@ -125,7 +125,7 @@ def test_query_options_set(
             opts=QueryOptions(
                 query_tags=tags,
                 linearized=linearized,
-                query_timeout_ms=query_timeout_ms,
+                query_timeout=timedelta(milliseconds=query_timeout_ms),
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
             ),
@@ -160,7 +160,7 @@ def test_query_tags(
 
             c = Client(
                 http_client=HTTPXClient(mockClient),
-                tags=None,
+                query_tags=None,
             )
             c.query(fql("not used, just sending to a mock client"))
         with subtests.test("should be set on client"):
@@ -168,7 +168,7 @@ def test_query_tags(
 
             c = Client(
                 http_client=HTTPXClient(mockClient),
-                tags={"project": "teapot"},
+                query_tags={"project": "teapot"},
             )
             c.query(fql("not used, just sending to a mock client"))
         with subtests.test("should be set on query"):
@@ -176,7 +176,7 @@ def test_query_tags(
 
             c = Client(
                 http_client=HTTPXClient(mockClient),
-                tags=None,
+                query_tags=None,
             )
             c.query(
                 fql("not used, just sending to a mock client"),
@@ -187,7 +187,7 @@ def test_query_tags(
 
             c = Client(
                 http_client=HTTPXClient(mockClient),
-                tags={"project": "teapot"},
+                query_tags={"project": "teapot"},
             )
             c.query(
                 fql("not used, just sending to a mock client"),
