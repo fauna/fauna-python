@@ -264,7 +264,7 @@ class Client:
             if "txn_ts" in response_json:
                 self.set_last_txn_ts(int(response_json["txn_ts"]))
 
-            return QueryResponse(response_json, headers, status_code)
+            return QueryResponse(self, response_json, headers, status_code)
 
     @staticmethod
     def _handle_error(response_json: Any, status_code: int):
