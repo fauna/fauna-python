@@ -32,7 +32,6 @@ class QueryOptions:
     * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
-    * last_txn_ts - The last transaction timestamp observed  (in micros since epoch).
     * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
     """
 
@@ -41,7 +40,6 @@ class QueryOptions:
     query_timeout_ms: Optional[int] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
-    last_txn_ts: Optional[int] = None
     additional_headers: Optional[Dict[str, str]] = None
 
 
@@ -135,7 +133,7 @@ class Client:
 
             self._session = fauna.global_http_client
 
-    def set_last_transaction_time(self, new_transaction_time: int):
+    def set_last_txn_ts(self, txn_ts: int):
         """
         Set the last timestamp seen by this client.
         This has no effect if earlier than stored timestamp.
@@ -144,11 +142,11 @@ class Client:
         multiple clients. Moving the timestamp arbitrarily forward into
         the future will cause transactions to stall.
 
-        :param new_transaction_time: the new transaction time.
+        :param txn_ts: the new transaction time.
         """
-        self._last_txn_ts.update_txn_time(new_transaction_time)
+        self._last_txn_ts.update_txn_time(txn_ts)
 
-    def get_last_transaction_time(self) -> Optional[int]:
+    def get_last_txn_ts(self) -> Optional[int]:
         """
         Get the last timestamp seen by this client.
         :return:
@@ -225,8 +223,6 @@ class Client:
                 headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
-            if opts.last_txn_ts is not None:
-                headers[Header.LastTxnTs] = str(opts.last_txn_ts)
             if opts.additional_headers is not None:
                 headers.update(opts.additional_headers)
 
@@ -252,7 +248,7 @@ class Client:
                 Client._handle_error(response_json, status_code)
 
             if "txn_ts" in response_json:
-                self.set_last_transaction_time(int(response_json["txn_ts"]))
+                self.set_last_txn_ts(int(response_json["txn_ts"]))
 
             return QueryResponse(response_json, headers, status_code)
 
