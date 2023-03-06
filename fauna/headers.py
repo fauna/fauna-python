@@ -8,8 +8,7 @@ from fauna import __version__
 
 
 class Header:
-    TxnTime = "X-Txn-Time"
-    LastSeenTxn = "X-Last-Seen-Txn"
+    LastTxnTs = "X-Last-Txn-Ts"
     Linearized = "X-Linearized"
     MaxContentionRetries = "X-Max-Contention-Retries"
     TimeoutMs = "X-Timeout-Ms"

@@ -10,15 +10,15 @@ def _fancy_bool_from_str(val: str) -> bool:
     return val.lower() in ["1", "true", "yes", "y"]
 
 
-class _LastTxnTime(object):
+class LastTxnTs(object):
     """Wraps tracking the last transaction time supplied from the database."""
 
     def __init__(
         self,
         time: Optional[int] = None,
     ):
-        self._lock = threading.Lock()
-        self._time = time
+        self._lock: threading.Lock = threading.Lock()
+        self._time: Optional[int] = time
 
     @property
     def time(self):
@@ -30,10 +30,10 @@ class _LastTxnTime(object):
     def request_header(self):
         """Produces a dictionary with a non-zero `X-Last-Seen-Txn` header; or,
         if one has not yet been set, the empty header dictionary."""
-        t = self.time
+        t = self._time
         if t is None:
             return {}
-        return {Header.LastSeenTxn: str(t)}
+        return {Header.LastTxnTs: str(t)}
 
     def update_txn_time(self, new_txn_time: int):
         """Updates the internal transaction time.

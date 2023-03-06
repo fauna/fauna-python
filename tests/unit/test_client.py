@@ -18,7 +18,7 @@ def test_client_defaults(monkeypatch):
 
     assert client._endpoint == "https://db.fauna.com"
     assert client._auth.secret == ""
-    assert client._track_last_transaction_time is True
+    assert client._track_last_txn_ts is True
     assert client._query_timeout_ms is None
     assert client._session == fauna.global_http_client
 
@@ -60,7 +60,7 @@ def test_client_with_args():
         query_timeout=timeout,
         linearized=linearized,
         max_contention_retries=max_retries,
-        track_last_transaction_time=track,
+        track_last_txn_ts=track,
         tags=tags,
         http_client=http_client,
     )
@@ -68,7 +68,7 @@ def test_client_with_args():
     assert client._auth.secret == secret
     assert client._endpoint == endpoint
     assert client._query_timeout_ms == 900000
-    assert client._track_last_transaction_time == track
+    assert client._track_last_txn_ts == track
     assert client._tags == tags
     assert client._session == http_client
 
