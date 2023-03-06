@@ -91,9 +91,9 @@ Setup
 Testing
 ~~~~~~~
 
-To run the tests you must have a FaunaDB database available.
+To run the tests you must have a Fauna database available.
 Then set the environment variable ``FAUNA_ROOT_KEY`` to your database's root key.
-If you use FaunaDB cloud, this is the password you log in with.
+If you use Fauna cloud, this is the password you log in with.
 
 Then run ``make test``.
 To test a single test, use e.g. ``python -m unittest tests.test_client.ClientTest.test_ping``.
@@ -134,4 +134,4 @@ implied. See the License for the specific language governing
 permissions and limitations under the License.
 
 
-.. _`tests`: https://github.com/fauna/faunadb-python/blob/main/tests/
+.. _`tests`: https://github.com/fauna/fauna-python/blob/main/tests/
