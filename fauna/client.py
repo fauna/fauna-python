@@ -5,11 +5,13 @@ from typing import Any, Dict, Mapping, Optional
 
 import fauna
 from fauna.response import QueryResponse
-from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, QueryCheckError
+from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
+    ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, \
+    QueryCheckError
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
-from fauna.utils import _Environment, _LastTxnTime
+from fauna.utils import _Environment, LastTxnTs
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -30,6 +32,7 @@ class QueryOptions:
     * query_timeout_ms - Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * last_txn_ts - The last transaction timestamp observed  (in micros since epoch).
     * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
     """
 
@@ -38,6 +41,7 @@ class QueryOptions:
     query_timeout_ms: Optional[int] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
+    last_txn_ts: Optional[int] = None
     additional_headers: Optional[Dict[str, str]] = None
 
 
@@ -49,7 +53,6 @@ class Client:
         secret: Optional[str] = None,
         http_client: Optional[HTTPClient] = None,
         tags: Optional[Mapping[str, str]] = None,
-        track_last_transaction_time: bool = True,
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
@@ -65,8 +68,7 @@ class Client:
         else:
             self._auth = _Auth(secret)
 
-        self._last_txn_time = _LastTxnTime()
-        self._track_last_transaction_time = track_last_transaction_time
+        self._last_txn_ts = LastTxnTs()
 
         self._tags = {}
         if tags is not None:
@@ -144,14 +146,14 @@ class Client:
 
         :param new_transaction_time: the new transaction time.
         """
-        self._last_txn_time.update_txn_time(new_transaction_time)
+        self._last_txn_ts.update_txn_time(new_transaction_time)
 
     def get_last_transaction_time(self) -> Optional[int]:
         """
         Get the last timestamp seen by this client.
         :return:
         """
-        return self._last_txn_time.time
+        return self._last_txn_ts.time
 
     def get_query_timeout(self) -> Optional[timedelta]:
         """
@@ -205,8 +207,7 @@ class Client:
         if self._query_timeout_ms is not None:
             headers[Header.TimeoutMs] = str(self._query_timeout_ms)
 
-        if self._track_last_transaction_time:
-            headers.update(self._last_txn_time.request_header)
+        headers.update(self._last_txn_ts.request_header)
 
         query_tags = {}
         if self._tags is not None:
@@ -224,6 +225,8 @@ class Client:
                 headers[Header.TimeoutMs] = f"{opts.query_timeout_ms}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
+            if opts.last_txn_ts is not None:
+                headers[Header.LastTxnTs] = str(opts.last_txn_ts)
             if opts.additional_headers is not None:
                 headers.update(opts.additional_headers)
 
@@ -235,92 +238,95 @@ class Client:
             "arguments": arguments or {},
         }
 
-        response = self._session.request(
-            method="POST",
-            url=self._endpoint + path,
-            headers=headers,
-            data=data,
-        )
-
-        if (status_code := response.status_code()) > 399:
+        with self._session.request(
+                method="POST",
+                url=self._endpoint + path,
+                headers=headers,
+                data=data,
+        ) as response:
             response_json = response.json()
+            headers = response.headers()
+            status_code = response.status_code()
 
-            if "error" not in response_json:
-                raise ProtocolError(
-                    status_code,
-                    "Unexpected response",
-                    response_json,
-                )
+            if status_code > 399:
+                Client._handle_error(response_json, status_code)
 
-            err = ServiceError(
+            if "txn_ts" in response_json:
+                self.set_last_transaction_time(int(response_json["txn_ts"]))
+
+            return QueryResponse(response_json, headers, status_code)
+
+    @staticmethod
+    def _handle_error(response_json: Any, status_code: int):
+        if "error" not in response_json:
+            raise ProtocolError(
                 status_code,
-                response_json["error"]["code"],
-                response_json["error"]["message"],
-                response_json["summary"] if "summary" in response_json else "",
+                "Unexpected response",
+                response_json,
             )
-            if status_code == 400:
-                if err.code is not None:
-                    raise QueryCheckError(
-                        err.status_code,
-                        err.code,
-                        err.message,
-                        err.summary,
-                    )
 
-                raise QueryRuntimeError(
+        err = ServiceError(
+            status_code,
+            response_json["error"]["code"],
+            response_json["error"]["message"],
+            response_json["summary"] if "summary" in response_json else "",
+        )
+        if status_code == 400:
+            if err.code is not None:
+                raise QueryCheckError(
                     err.status_code,
                     err.code,
                     err.message,
                     err.summary,
                 )
-            elif status_code == 401:
-                raise AuthenticationError(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
-                )
-            elif status_code == 403:
-                raise AuthorizationError(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
-                )
-            elif status_code == 429:
-                raise ThrottlingException(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
-                )
-            elif status_code == 440:
-                raise QueryTimeoutException(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
-                )
-            elif status_code == 500:
-                raise ServiceInternalError(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
-                )
-            elif status_code == 503:
-                raise ServiceTimeoutError(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
-                )
-            else:
-                raise err
 
-        if self._track_last_transaction_time:
-            if Header.TxnTime in response.headers():
-                x_txn_time = response.headers()[Header.TxnTime]
-                self.set_last_transaction_time(int(x_txn_time))
-
-        return QueryResponse(response)
+            raise QueryRuntimeError(
+                err.status_code,
+                err.code,
+                err.message,
+                err.summary,
+            )
+        elif status_code == 401:
+            raise AuthenticationError(
+                err.status_code,
+                err.code,
+                err.message,
+                err.summary,
+            )
+        elif status_code == 403:
+            raise AuthorizationError(
+                err.status_code,
+                err.code,
+                err.message,
+                err.summary,
+            )
+        elif status_code == 429:
+            raise ThrottlingException(
+                err.status_code,
+                err.code,
+                err.message,
+                err.summary,
+            )
+        elif status_code == 440:
+            raise QueryTimeoutException(
+                err.status_code,
+                err.code,
+                err.message,
+                err.summary,
+            )
+        elif status_code == 500:
+            raise ServiceInternalError(
+                err.status_code,
+                err.code,
+                err.message,
+                err.summary,
+            )
+        elif status_code == 503:
+            raise ServiceTimeoutError(
+                err.status_code,
+                err.code,
+                err.message,
+                err.summary,
+            )
+        else:
+            raise err

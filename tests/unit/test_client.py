@@ -18,7 +18,6 @@ def test_client_defaults(monkeypatch):
 
     assert client._endpoint == "https://db.fauna.com"
     assert client._auth.secret == ""
-    assert client._track_last_transaction_time is True
     assert client._query_timeout_ms is None
     assert client._session == fauna.global_http_client
 
@@ -60,7 +59,6 @@ def test_client_with_args():
         query_timeout=timeout,
         linearized=linearized,
         max_contention_retries=max_retries,
-        track_last_transaction_time=track,
         tags=tags,
         http_client=http_client,
     )
@@ -68,7 +66,6 @@ def test_client_with_args():
     assert client._auth.secret == secret
     assert client._endpoint == endpoint
     assert client._query_timeout_ms == 900000
-    assert client._track_last_transaction_time == track
     assert client._tags == tags
     assert client._session == http_client
 
@@ -96,6 +93,7 @@ def test_query_options_set(
     traceparent: str,
     tags: Mapping[str, str],
     max_contention_retries: int,
+    last_txn_ts: int,
 ):
 
     def validate_headers(request: httpx.Request):
@@ -110,7 +108,7 @@ def test_query_options_set(
         assert request.headers[Header.Traceparent] == traceparent
         assert request.headers[Header.MaxContentionRetries] \
             == f"{max_contention_retries}"
-
+        assert request.headers[Header.LastTxnTs] == str(last_txn_ts)
         return httpx.Response(
             status_code=200,
             json={"data": "mocked"},
@@ -132,6 +130,7 @@ def test_query_options_set(
                 query_timeout_ms=query_timeout_ms,
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
+                last_txn_ts=last_txn_ts,
             ),
         )
 

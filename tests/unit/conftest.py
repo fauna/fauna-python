@@ -1,4 +1,5 @@
 from datetime import date, datetime, timezone, timedelta
+from random import randint
 from typing import Mapping
 
 import pytest
@@ -22,6 +23,11 @@ def tags() -> Mapping[str, str]:
 @pytest.fixture
 def query_timeout_ms() -> int:
     return 5000
+
+
+@pytest.fixture
+def last_txn_ts() -> int:
+    return randint(1, 1000)
 
 
 @pytest.fixture

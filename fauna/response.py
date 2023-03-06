@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Any, Mapping
 
-from .http_client import HTTPResponse
 from .wire_protocol import FaunaDecoder
 from .errors import ProtocolError, ServiceError
 
@@ -41,15 +40,16 @@ class QueryResponse:
     def status_code(self) -> int:
         return self._status_code
 
-    def __init__(self, http_response: HTTPResponse):
-        response_json = http_response.json()
+    def __init__(
+        self,
+        response_json: Any,
+        headers: Mapping[str, str],
+        status_code: int,
+    ):
 
-        self._headers = http_response.headers()
-
-        self._status_code = http_response.status_code()
-        self._traceparent = http_response.headers().get("traceparent", "")
-
-        http_response.close()
+        self._status_code = status_code
+        self._traceparent = headers.get("traceparent", "")
+        self._headers = headers
 
         if "data" not in response_json:
             raise ProtocolError(

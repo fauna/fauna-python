@@ -42,6 +42,12 @@ class HTTPResponse(abc.ABC):
     def close(self):
         pass
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
 
 class HTTPClient(abc.ABC):
 
@@ -91,7 +97,10 @@ class HTTPXResponse(HTTPResponse):
         return self._r.iter_bytes(size)
 
     def close(self) -> None:
-        self._r.close()
+        try:
+            self._r.close()
+        except Exception as e:
+            raise ClientError("Error closing response") from e
 
 
 class HTTPXClient(HTTPClient):

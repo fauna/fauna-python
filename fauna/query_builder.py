@@ -97,14 +97,16 @@ class QueryFragment(Fragment):
 class FQLTemplateQueryBuilder(QueryBuilder):
     """A concrete :class:`QueryBuilder` for building queries into the query template wire protocol.
     """
-
+    _rendered: Optional[Mapping[str, Any]]
     _fragments: List[Fragment]
 
     def __init__(self, fragments: Optional[List[Fragment]] = None):
+        self._rendered = None
         self._fragments = fragments or []
 
     def append(self, fragment: Fragment) -> None:
         """Appends a :class:`Fragment` to the end of the builder."""
+        self._rendered = None
         self._fragments.append(fragment)
 
     def to_query(self) -> Mapping[str, Sequence[Any]]:
@@ -113,10 +115,16 @@ class FQLTemplateQueryBuilder(QueryBuilder):
 
         :returns: A fully rendered query template.
         """
+        if self._rendered is not None:
+            return self._rendered
+
         rendered = []
         for f in self._fragments:
             rendered.append(f.render())
-        return {"fql": rendered}
+
+        result = {"fql": rendered}
+        self._rendered = result
+        return result
 
 
 def fql(query: str, **kwargs: Any) -> QueryBuilder:
