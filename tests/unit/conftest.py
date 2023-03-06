@@ -26,11 +26,6 @@ def query_timeout_ms() -> int:
 
 
 @pytest.fixture
-def last_txn_ts() -> int:
-    return randint(1, 1000)
-
-
-@pytest.fixture
 def traceparent() -> str:
     return "happy-little-fox"
 
