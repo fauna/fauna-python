@@ -17,7 +17,7 @@ Installation
 
 .. code-block:: bash
 
-    $ pip install ?
+    # TODO
 
 
 Compatibility
@@ -63,9 +63,11 @@ This driver supports query composition with Python primitives, lists, dicts, and
         return fql('{ .name, .address }')
 
     tin = "123"
-    fql("""let u = ${user}
+    q = fql("""let u = ${user}
     u ${render}
     """, user=user_by_tin(tin), render=render_user())
+    
+    res = client.query(q)
 
 Document Streaming
 ------------------
