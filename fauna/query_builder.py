@@ -32,7 +32,7 @@ class Fragment(abc.ABC):
 
 class ValueFragment(Fragment):
     """A concrete :class:`Fragment` representing a part of a query that will become a type tagged object on the wire.
-    For example, if a template contains a variable ``$foo``, and an object ``{ "prop": 1 }`` is provided for foo,
+    For example, if a template contains a variable ``${foo}``, and an object ``{ "prop": 1 }`` is provided for foo,
     then ``{ "prop": 1 }`` should be wrapped as a :class:`ValueFragment`.
 
     :param Any val: The value, which must be serializable to tagged format, to be used as a fragment.
@@ -54,7 +54,7 @@ class ValueFragment(Fragment):
 
 
 class LiteralFragment(Fragment):
-    """A concrete :class:`Fragment` representing a query literal For example, in the template ```let x = $foo```,
+    """A concrete :class:`Fragment` representing a query literal For example, in the template ```let x = ${foo}```,
     the portion ```let x = ``` is a query literal and should be wrapped as a :class:`LiteralFragment`.
 
     :param str val: The query literal to be used as a fragment.
@@ -75,7 +75,7 @@ class LiteralFragment(Fragment):
 
 class QueryFragment(Fragment):
     """A concrete :class:`Fragment` representing a subquery within a template. For example, if a template contains a
-    variable ```$foo_query```, and a :class:`QueryBuilder` is provided for foo, then it should be wrapped as a
+    variable ```${foo_query}```, and a :class:`QueryBuilder` is provided for foo, then it should be wrapped as a
     :class:`QueryFragment`.
 
     :param QueryBuilder builder: A builder that will be used as a query fragment.
@@ -129,7 +129,7 @@ class FQLTemplateQueryBuilder(QueryBuilder):
 
 def fql(query: str, **kwargs: Any) -> QueryBuilder:
     """Creates a QueryBuilder - capable of performing query composition and simple querying. It can accept a simple
-    string query, or can perform composition using $-sigil string template with ``**kwargs`` as substitutions.
+    string query, or can perform composition using ${}-sigil string template with ``**kwargs`` as substitutions.
 
     The ``**kwargs`` can be Fauna data types - such as strings, document references, or modules - and embedded
     QueryBuilders - allowing you to compose arbitrarily complex queries.
@@ -154,10 +154,10 @@ def fql(query: str, **kwargs: Any) -> QueryBuilder:
         :caption: Query composition using this function.
 
         def get_dog(id):
-            return fql('Dogs.byId($id)', id=id)
+            return fql('Dogs.byId(${id})', id=id)
 
         def get_vet_phone(id):
-            return fql('$dog { .vet_phone_number }', dog=get_dog(id))
+            return fql('${dog} { .vet_phone_number }', dog=get_dog(id))
 
         get_vet_phone('d123')
 
