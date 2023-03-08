@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from fauna import DocumentReference, Module
+from fauna import DocumentReference, Module, fql
 from fauna.wire_protocol import FaunaEncoder, FaunaDecoder
 
 
@@ -517,3 +517,83 @@ def test_encode_complex_objects(subtests, complex_untyped_object,
         assert encoded == test
         decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
+
+
+def test_encode_query_builder_strings(subtests):
+    with subtests.test(msg="pure string query"):
+        actual = FaunaEncoder.encode(fql("let x = 11"))
+        expected = {"fql": ["let x = 11"]}
+        assert expected == actual
+
+    with subtests.test(msg="pure string query with braces"):
+        actual = FaunaEncoder.encode(fql("let x = { y: 11 }"))
+        expected = {"fql": ["let x = { y: 11 }"]}
+        assert expected == actual
+
+
+def test_encode_query_builder_with_fauna_string_interpolation():
+    qb = fql("let age = ${n1}\n\"Alice is #{age} years old.\"", n1=5)
+    actual = FaunaEncoder.encode(qb)
+    expected = {
+        "fql": [
+            "let age = ",
+            {
+                "value": {
+                    "@int": "5"
+                }
+            },
+            "\n\"Alice is #{age} years old.\"",
+        ]
+    }
+    assert expected == actual
+
+
+def test_encode_query_builder_with_value(subtests):
+    with subtests.test(msg="simple value"):
+        user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}
+        qb = fql("""let x = ${my_var}""", my_var=user)
+        actual = FaunaEncoder.encode(qb)
+        expected = {
+            "fql": [
+                "let x = ", {
+                    'value': {
+                        'name': 'Dino',
+                        'age': {
+                            '@int': '0'
+                        },
+                        'birthdate': {
+                            '@date': '2023-02-24'
+                        }
+                    }
+                }
+            ]
+        }
+
+        assert expected == actual
+
+
+def test_encode_query_builder_sub_queries(subtests):
+    with subtests.test(msg="single subquery with object"):
+        user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}
+        inner = fql("let x = ${my_var}", my_var=user)
+        outer = fql("${inner}\nx { .name }", inner=inner)
+        actual = FaunaEncoder.encode(outer)
+        expected = {
+            "fql": [{
+                "fql": [
+                    "let x = ", {
+                        'value': {
+                            'name': 'Dino',
+                            'age': {
+                                '@int': '0'
+                            },
+                            'birthdate': {
+                                '@date': '2023-02-24'
+                            }
+                        }
+                    }
+                ]
+            }, "\nx { .name }"]
+        }
+
+        assert expected == actual

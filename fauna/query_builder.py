@@ -2,7 +2,6 @@ import abc
 from typing import Any, Sequence, Mapping, Optional, List
 
 from fauna.template import FaunaTemplate
-from fauna.wire_protocol import FaunaEncoder
 
 
 class QueryBuilder(abc.ABC):
@@ -10,7 +9,7 @@ class QueryBuilder(abc.ABC):
     """
 
     @abc.abstractmethod
-    def to_query(self) -> Mapping[str, Sequence[Any]]:
+    def fragments(self) -> Sequence['Fragment']:
         """An abstract method for converting a builder to query template wire protocol.
         e.g. ``{ "fql": [ ... ] }``
 
@@ -24,7 +23,7 @@ class Fragment(abc.ABC):
     """
 
     @abc.abstractmethod
-    def render(self) -> Any:
+    def get(self) -> Any:
         """An abstract method for rendering the :class:`Fragment` into a query part.
         """
         pass
@@ -35,22 +34,18 @@ class ValueFragment(Fragment):
     For example, if a template contains a variable ``${foo}``, and an object ``{ "prop": 1 }`` is provided for foo,
     then ``{ "prop": 1 }`` should be wrapped as a :class:`ValueFragment`.
 
-    :param Any val: The value, which must be serializable to tagged format, to be used as a fragment.
+    :param Any val: The value to be used as a fragment.
     """
 
     def __init__(self, val: Any):
         self._val = val
 
-    def render(self) -> Mapping[str, Any]:
-        """Renders the :class:`ValueFragment` into the wire protocol for a value of the query template API.
+    def get(self) -> Any:
+        """Gets the stored value.
 
-        e.g. ``{ "value": <encoded_value> }``
-
-        :returns: The value fragment encoded to the wire protocol.
-        :raises ValueError: If encoding to tagged format fails.
+        :returns: The stored value.
         """
-        encoded = FaunaEncoder.encode(self._val)
-        return {"value": encoded}
+        return self._val
 
 
 class LiteralFragment(Fragment):
@@ -63,7 +58,7 @@ class LiteralFragment(Fragment):
     def __init__(self, val: str):
         self._val = val
 
-    def render(self) -> str:
+    def get(self) -> str:
         """Renders the :class:`LiteralFragment` into the wire protocol for a literal of the query template API.
 
         e.g. ``let x = ``
@@ -73,28 +68,7 @@ class LiteralFragment(Fragment):
         return self._val
 
 
-class QueryFragment(Fragment):
-    """A concrete :class:`Fragment` representing a subquery within a template. For example, if a template contains a
-    variable ```${foo_query}```, and a :class:`QueryBuilder` is provided for foo, then it should be wrapped as a
-    :class:`QueryFragment`.
-
-    :param QueryBuilder builder: A builder that will be used as a query fragment.
-    """
-
-    def __init__(self, builder: QueryBuilder):
-        self._builder = builder
-
-    def render(self) -> Mapping[str, Sequence[Any]]:
-        """Renders the :class:`QueryFragment` into the wire protocol for a query within the query template API.
-
-        e.g. ``{ "fql": [ ... ] }``
-
-        :returns: The query rendered into the wire protocol.
-        """
-        return self._builder.to_query()
-
-
-class FQLTemplateQueryBuilder(QueryBuilder):
+class QueryInterpolationBuilder(QueryBuilder):
     """A concrete :class:`QueryBuilder` for building queries into the query template wire protocol.
     """
     _rendered: Optional[Mapping[str, Any]]
@@ -104,27 +78,10 @@ class FQLTemplateQueryBuilder(QueryBuilder):
         self._rendered = None
         self._fragments = fragments or []
 
-    def append(self, fragment: Fragment) -> None:
-        """Appends a :class:`Fragment` to the end of the builder."""
-        self._rendered = None
-        self._fragments.append(fragment)
-
-    def to_query(self) -> Mapping[str, Sequence[Any]]:
-        """Converts the builder and all fragments into the query template wire protocol.
-        e.g. ``{ "fql": [ ... ] }``
-
-        :returns: A fully rendered query template.
-        """
-        if self._rendered is not None:
-            return self._rendered
-
-        rendered = []
-        for f in self._fragments:
-            rendered.append(f.render())
-
-        result = {"fql": rendered}
-        self._rendered = result
-        return result
+    @property
+    def fragments(self) -> List[Fragment]:
+        """The list of stored Fragments"""
+        return self._fragments
 
 
 def fql(query: str, **kwargs: Any) -> QueryBuilder:
@@ -176,9 +133,5 @@ def fql(query: str, **kwargs: Any) -> QueryBuilder:
                 )
 
             # TODO: Reject if it's already a fragment, or accept *Fragment? Decide on API here
-            cur_arg = kwargs[field_name]
-            if isinstance(cur_arg, FQLTemplateQueryBuilder):
-                fragments.append(QueryFragment(cur_arg))
-            else:
-                fragments.append(ValueFragment(cur_arg))
-    return FQLTemplateQueryBuilder(fragments)
+            fragments.append(ValueFragment(kwargs[field_name]))
+    return QueryInterpolationBuilder(fragments)

@@ -4,9 +4,19 @@ from typing import Any, List, Optional, Set
 from iso8601 import parse_date
 
 from fauna.models import DocumentReference, Module
+from fauna.query_builder import QueryInterpolationBuilder, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [
-    "@int", "@long", "@double", "@date", "@time", "@doc", "@mod", "@object"
+    "@date",
+    "@doc",
+    "@double",
+    "@int",
+    "@long",
+    "@mod",
+    "@object",
+    "@ref",
+    "@set",
+    "@time",
 ]
 
 
@@ -45,7 +55,7 @@ class FaunaEncoder:
     """
 
     @staticmethod
-    def encode(obj: Any):
+    def encode(obj: Any) -> Any:
         """Encodes supported objects into the tagged format.
 
         Examples:
@@ -112,6 +122,23 @@ class FaunaEncoder:
         return None
 
     @staticmethod
+    def from_fragment(obj: Fragment):
+        if isinstance(obj, LiteralFragment):
+            return obj.get()
+        elif isinstance(obj, ValueFragment):
+            v = obj.get()
+            if isinstance(v, QueryInterpolationBuilder):
+                return FaunaEncoder.from_query_interpolation_builder(v)
+            else:
+                return {"value": FaunaEncoder.encode(v)}
+        else:
+            raise ValueError(f"Unknown fragment type: {type(obj)}")
+
+    @staticmethod
+    def from_query_interpolation_builder(obj: QueryInterpolationBuilder):
+        return {"fql": [FaunaEncoder.from_fragment(f) for f in obj.fragments]}
+
+    @staticmethod
     def _encode(o: Any, _markers: Optional[Set] = None):
         if _markers is None:
             _markers = set()
@@ -140,6 +167,8 @@ class FaunaEncoder:
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
             return FaunaEncoder._encode_dict(o, _markers)
+        elif isinstance(o, QueryInterpolationBuilder):
+            return FaunaEncoder.from_query_interpolation_builder(o)
         else:
             raise ValueError(f"Object {o} of type {type(o)} cannot be encoded")
 
