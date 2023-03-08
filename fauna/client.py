@@ -232,9 +232,8 @@ class Client:
             if opts.traceparent is not None:
                 headers[Header.Traceparent] = opts.traceparent
             if opts.query_timeout is not None:
-                headers[
-                    Header.
-                    TimeoutMs] = f"{opts.query_timeout.total_seconds() * 1000}"
+                headers[Header.TimeoutMs] = \
+                    f"{opts.query_timeout.total_seconds() * 1000}"
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
             if opts.additional_headers is not None:
