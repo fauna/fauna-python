@@ -203,7 +203,7 @@ class Client:
 
     def _query(
         self,
-        path,
+        path: str,
         fql: Mapping[str, Any],
         arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
