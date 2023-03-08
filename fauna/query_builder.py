@@ -5,15 +5,14 @@ from fauna.template import FaunaTemplate
 
 
 class QueryBuilder(abc.ABC):
-    """An abstract class for query builders that build to the FQL Query Template wire protocol.
+    """An abstract class for query builders.
     """
 
     @abc.abstractmethod
     def fragments(self) -> Sequence['Fragment']:
-        """An abstract method for converting a builder to query template wire protocol.
-        e.g. ``{ "fql": [ ... ] }``
+        """An abstract method accessing fragments.
 
-        :returns: a rendered query template
+        :returns: the stored fragments
         """
         pass
 
@@ -24,13 +23,13 @@ class Fragment(abc.ABC):
 
     @abc.abstractmethod
     def get(self) -> Any:
-        """An abstract method for rendering the :class:`Fragment` into a query part.
+        """An abstract method for returning a stored value.
         """
         pass
 
 
 class ValueFragment(Fragment):
-    """A concrete :class:`Fragment` representing a part of a query that will become a type tagged object on the wire.
+    """A concrete :class:`Fragment` representing a part of a query that can represent a template variable.
     For example, if a template contains a variable ``${foo}``, and an object ``{ "prop": 1 }`` is provided for foo,
     then ``{ "prop": 1 }`` should be wrapped as a :class:`ValueFragment`.
 
@@ -59,17 +58,17 @@ class LiteralFragment(Fragment):
         self._val = val
 
     def get(self) -> str:
-        """Renders the :class:`LiteralFragment` into the wire protocol for a literal of the query template API.
+        """Returns the stored value.
 
-        e.g. ``let x = ``
-
-        :returns: The query literal.
+        :returns: The stored value.
         """
         return self._val
 
 
 class QueryInterpolationBuilder(QueryBuilder):
-    """A concrete :class:`QueryBuilder` for building queries into the query template wire protocol.
+    """A concrete :class:`QueryBuilder` for building QueryInteroplation queries.
+
+       e.g. { "fql": [...] }
     """
     _rendered: Optional[Mapping[str, Any]]
     _fragments: List[Fragment]
@@ -86,7 +85,7 @@ class QueryInterpolationBuilder(QueryBuilder):
 
 def fql(query: str, **kwargs: Any) -> QueryBuilder:
     """Creates a QueryBuilder - capable of performing query composition and simple querying. It can accept a simple
-    string query, or can perform composition using ${}-sigil string template with ``**kwargs`` as substitutions.
+    string query, or can perform composition using ``${}`` sigil string template with ``**kwargs`` as substitutions.
 
     The ``**kwargs`` can be Fauna data types - such as strings, document references, or modules - and embedded
     QueryBuilders - allowing you to compose arbitrarily complex queries.

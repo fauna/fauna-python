@@ -23,35 +23,42 @@ _RESERVED_TAGS = [
 class FaunaEncoder:
     """Supports the following types:
 
-    +-------------------+---------------+
-    | Python            | Fauna Tags    |
-    +===================+===============+
-    | dict              | @object       |
-    +-------------------+---------------+
-    | list, tuple       | array         |
-    +-------------------+---------------+
-    | str               | string        |
-    +-------------------+---------------+
-    | int 32-bit signed | @int          |
-    +-------------------+---------------+
-    | int 64-bit signed | @long         |
-    +-------------------+---------------+
-    | float             | @double       |
-    +-------------------+---------------+
-    | datetime.datetime | @time         |
-    +-------------------+---------------+
-    | datetime.date     | @date         |
-    +-------------------+---------------+
-    | True              | True          |
-    +-------------------+---------------+
-    | False             | False         |
-    +-------------------+---------------+
-    | None              | None          |
-    +-------------------+---------------+
-    | DocumentReference | @doc          |
-    +-------------------+---------------+
-    | Module            | @mod          |
-    +-------------------+---------------+
+    +-------------------------------+---------------+
+    | Python                        | Fauna Tags    |
+    +===============================+===============+
+    | dict                          | @object       |
+    +-------------------------------+---------------+
+    | list, tuple                   | array         |
+    +-------------------------------+---------------+
+    | str                           | string        |
+    +-------------------------------+---------------+
+    | int 32-bit signed             | @int          |
+    +-------------------------------+---------------+
+    | int 64-bit signed             | @long         |
+    +-------------------------------+---------------+
+    | float                         | @double       |
+    +-------------------------------+---------------+
+    | datetime.datetime             | @time         |
+    +-------------------------------+---------------+
+    | datetime.date                 | @date         |
+    +-------------------------------+---------------+
+    | True                          | True          |
+    +-------------------------------+---------------+
+    | False                         | False         |
+    +-------------------------------+---------------+
+    | None                          | None          |
+    +-------------------------------+---------------+
+    | DocumentReference             | @doc          |
+    +-------------------------------+---------------+
+    | Module                        | @mod          |
+    +-------------------------------+---------------+
+    | QueryInterpolationBuilder     | fql           |
+    +-------------------------------+---------------+
+    | ValueFragment                 | value         |
+    +-------------------------------+---------------+
+    | TemplateFragment              | string        |
+    +-------------------------------+---------------+
+
     """
 
     @staticmethod
@@ -66,6 +73,9 @@ class FaunaEncoder:
             - date encodes to { "@date": "..." }
             - DocumentReference encodes to { "@doc": "..." }
             - Module encodes to { "@mod": "..." }
+            - QueryInterpolationBuilder encodes to { "fql": [...] }
+            - ValueFragment encodes to { "value": <encoded_val> }
+            - LiteralFragment encodes to a string
 
         :raises ValueError: If value cannot be encoded, cannot be encoded safely, or there's a circular reference.
         :param obj: the object to decode
