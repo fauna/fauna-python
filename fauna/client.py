@@ -12,6 +12,7 @@ from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
 from fauna.utils import _Environment, LastTxnTs
+from fauna.wire_protocol import FaunaEncoder
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -191,13 +192,13 @@ class Client:
         """
 
         try:
-            query = fql.to_query()
+            encoded_query: Mapping[str, Any] = FaunaEncoder.encode(fql)
         except Exception as e:
             raise ClientError("Failed to evaluate Query") from e
 
         return self._query(
             "/query/1",
-            fql=query,
+            fql=encoded_query,
             opts=opts,
         )
 
