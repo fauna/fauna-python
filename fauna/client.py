@@ -203,14 +203,13 @@ class Client:
 
     def _query(
         self,
-        path,
+        path: str,
         fql: Mapping[str, Any],
         arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
     ) -> QueryResponse:
 
         headers = self._headers.copy()
-        # TODO: should be removed in favor of default (tagged)
         headers[_Header.Format] = "tagged"
         headers[_Header.Authorization] = self._auth.bearer()
 
@@ -232,9 +231,8 @@ class Client:
             if opts.traceparent is not None:
                 headers[Header.Traceparent] = opts.traceparent
             if opts.query_timeout is not None:
-                headers[
-                    Header.
-                    TimeoutMs] = f"{opts.query_timeout.total_seconds() * 1000}"
+                timeout_ms = f"{opts.query_timeout.total_seconds() * 1000}"
+                headers[Header.TimeoutMs] = timeout_ms
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
             if opts.additional_headers is not None:
