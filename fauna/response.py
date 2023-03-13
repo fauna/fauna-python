@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Mapping
 
+from .query_builder import fql
 from .wire_protocol import FaunaDecoder
 from .errors import ProtocolError, ServiceError
 
@@ -42,11 +43,12 @@ class QueryResponse:
 
     def __init__(
         self,
+        client,
         response_json: Any,
         headers: Mapping[str, str],
         status_code: int,
     ):
-
+        self._client = client
         self._status_code = status_code
         self._traceparent = headers.get("traceparent", "")
         self._headers = headers
@@ -82,6 +84,9 @@ class QueryResponse:
         else:
             raise Exception("Unknown response")
 
+    def pages(self):
+        return QueryResponseIterator(self._client, self)
+
     def stat(self, key: str) -> int:
         """
         Return the value of the Stat by key. You can use the :type:`Stat` :type:`Enum`
@@ -91,3 +96,26 @@ class QueryResponse:
         :raises KeyError: Unknown stat key
         """
         return int(self._stats[key])
+
+
+class QueryResponseIterator:
+
+    def __init__(self, client, res: QueryResponse):
+        self._first = True
+        self._res = res
+        self._client = client
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> QueryResponse:
+        if self._first:
+            self._first = False
+            return self._res
+
+        if 'after' not in self._res.data:
+            raise StopIteration
+
+        q = fql('Set.paginate(${token})', token=self._res.data['after'])
+        self._res = self._client.query(q)
+        return self._res
