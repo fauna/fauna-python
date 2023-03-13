@@ -417,9 +417,20 @@ def test_encode_date_time_conflicts(subtests):
 
 def test_encode_fauna_type_conflicts(subtests):
 
-    with subtests.test(msg="@doc conflict with doc type"):
-        test = {"@doc": DocumentReference.from_string("Col:123")}
-        expected = {"@object": {"@doc": {"@doc": "Col:123"}}}
+    with subtests.test(msg="@ref conflict with ref type"):
+        test = {"@ref": DocumentReference.from_string("Col:123")}
+        expected = {
+            "@object": {
+                "@ref": {
+                    "@ref": {
+                        "id": "123",
+                        "coll": {
+                            "@mod": "Col"
+                        }
+                    }
+                }
+            }
+        }
         encoded = FaunaEncoder.encode(test)
         assert encoded == expected
         decoded = FaunaDecoder.decode(encoded)
