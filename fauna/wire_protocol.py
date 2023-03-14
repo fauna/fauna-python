@@ -109,7 +109,7 @@ class FaunaEncoder:
         return {
             "@ref": {
                 "id": obj.id,
-                "coll": FaunaEncoder.from_mod(obj.collection)
+                "coll": FaunaEncoder.from_mod(obj.coll)
             }
         }
 
@@ -118,7 +118,7 @@ class FaunaEncoder:
         return {
             "@ref": {
                 "name": obj.name,
-                "coll": FaunaEncoder.from_mod(obj.collection)
+                "coll": FaunaEncoder.from_mod(obj.coll)
             }
         }
 
@@ -162,9 +162,9 @@ class FaunaEncoder:
         elif isinstance(o, date):
             return FaunaEncoder.from_date(o)
         elif isinstance(o, Document):
-            return FaunaEncoder.from_doc_ref(o.ref())
+            return FaunaEncoder.from_doc_ref(o.ref)
         elif isinstance(o, NamedDocument):
-            return FaunaEncoder.from_named_doc_ref(o.ref())
+            return FaunaEncoder.from_named_doc_ref(o.ref)
         elif isinstance(o, (list, tuple)):
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):

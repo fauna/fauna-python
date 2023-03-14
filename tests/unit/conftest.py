@@ -113,7 +113,7 @@ def complex_typed_object():
         },
         'bug': {
             '@ref': {
-                'id': '123',
+                'id': 123,
                 'coll': {
                     '@mod': 'Bugs'
                 }

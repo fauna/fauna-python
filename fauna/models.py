@@ -18,15 +18,31 @@ class Module:
 
 class BaseReference:
     _collection: Module
-    _id: str
 
-    def __init__(self, coll: Union[str, Module], id_: str):
-        if isinstance(coll, str):
+    def __init__(self, coll: Union[str, Module]):
+        if isinstance(coll, Module):
+            self._collection = coll
+        elif isinstance(coll, str):
             self._collection = Module(coll)
         else:
-            self._collection = coll
+            raise TypeError(
+                f"Coll must be either a Module or a string, but was a {type(coll)}"
+            )
 
-        self._id = id_
+    @property
+    def coll(self) -> Module:
+        return self._collection
+
+
+class DocumentReference(BaseReference):
+    _id: int
+
+    def __init__(self, coll: Union[str, Module], ref_id: int):
+        super().__init__(coll)
+        self._id = ref_id
+
+    def __hash__(self):
+        hash((self._collection, self._id))
 
     def __str__(self):
         return f"{self._collection}:{self._id}"
@@ -34,21 +50,8 @@ class BaseReference:
     def __eq__(self, other):
         return isinstance(other, type(self)) and str(self) == str(other)
 
-    def __hash__(self):
-        hash((self._collection, self._id))
-
     @property
-    def collection(self) -> Module:
-        return self._collection
-
-
-class DocumentReference(BaseReference):
-
-    def __init__(self, collection: Union[str, Module], ref_id: str):
-        super().__init__(collection, ref_id)
-
-    @property
-    def id(self) -> str:
+    def id(self) -> int:
         return self._id
 
     @staticmethod
@@ -56,17 +59,28 @@ class DocumentReference(BaseReference):
         rs = ref.split(":")
         if len(rs) != 2:
             raise ValueError("Expects string of format <CollectionName>:<ID>")
-        return DocumentReference(rs[0], rs[1])
+        return DocumentReference(rs[0], int(rs[1]))
 
 
 class NamedDocumentReference(BaseReference):
+    _name: str
 
-    def __init__(self, collection: Union[str, Module], name: str):
-        super().__init__(collection, name)
+    def __init__(self, coll: Union[str, Module], name: str):
+        super().__init__(coll)
+        self._name = name
+
+    def __hash__(self):
+        hash((self._collection, self._name))
+
+    def __str__(self):
+        return f"{self._collection}:{self._name}"
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and str(self) == str(other)
 
     @property
     def name(self) -> str:
-        return self._id
+        return self._name
 
 
 class BaseDocument(dict):
@@ -81,6 +95,7 @@ class Document(BaseDocument):
 
         super().__init__(data)
 
+    @property
     def ref(self) -> DocumentReference:
         return DocumentReference(self["coll"], self["id"])
 
@@ -93,5 +108,6 @@ class NamedDocument(BaseDocument):
 
         super().__init__(data)
 
+    @property
     def ref(self) -> NamedDocumentReference:
         return NamedDocumentReference(self["coll"], self["name"])
