@@ -10,7 +10,7 @@ from fauna.errors import AuthenticationError, ClientError, ProtocolError, Servic
     QueryCheckError
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
-from fauna.query_builder import QueryBuilder
+from fauna.query_builder import QueryInterpolation
 from fauna.utils import _Environment, LastTxnTs
 from fauna.wire_protocol import FaunaEncoder
 
@@ -177,7 +177,7 @@ class Client:
 
     def query(
         self,
-        fql: QueryBuilder,
+        fql: QueryInterpolation,
         opts: Optional[QueryOptions] = None,
     ) -> QueryResponse:
         """

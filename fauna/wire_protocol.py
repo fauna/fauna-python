@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Set
 from iso8601 import parse_date
 
 from fauna.models import DocumentReference, Module
-from fauna.query_builder import QueryInterpolationBuilder, Fragment, LiteralFragment, ValueFragment
+from fauna.query_builder import QueryInterpolation, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [
     "@date",
@@ -137,7 +137,7 @@ class FaunaEncoder:
             return obj.get()
         elif isinstance(obj, ValueFragment):
             v = obj.get()
-            if isinstance(v, QueryInterpolationBuilder):
+            if isinstance(v, QueryInterpolation):
                 return FaunaEncoder.from_query_interpolation_builder(v)
             else:
                 return {"value": FaunaEncoder.encode(v)}
@@ -145,7 +145,7 @@ class FaunaEncoder:
             raise ValueError(f"Unknown fragment type: {type(obj)}")
 
     @staticmethod
-    def from_query_interpolation_builder(obj: QueryInterpolationBuilder):
+    def from_query_interpolation_builder(obj: QueryInterpolation):
         return {"fql": [FaunaEncoder.from_fragment(f) for f in obj.fragments]}
 
     @staticmethod
@@ -177,7 +177,7 @@ class FaunaEncoder:
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
             return FaunaEncoder._encode_dict(o, _markers)
-        elif isinstance(o, QueryInterpolationBuilder):
+        elif isinstance(o, QueryInterpolation):
             return FaunaEncoder.from_query_interpolation_builder(o)
         else:
             raise ValueError(f"Object {o} of type {type(o)} cannot be encoded")
