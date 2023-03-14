@@ -181,6 +181,24 @@ def test_encode_documents(subtests):
         # refs will decode into references, not Documents
         assert DocumentReference("Dogs", 123) == decoded
 
+    with subtests.test(msg="decode document with id and name"):
+        encoded = {
+            "@doc": {
+                "id": 123,
+                "coll": {
+                    "@mod": "Dogs"
+                },
+                "name": "Scout"
+            }
+        }
+        decoded = FaunaDecoder.decode(encoded)
+        # refs will decode into references, not Documents
+        assert Document({
+            "id": 123,
+            "coll": Module("Dogs"),
+            "name": "Scout"
+        }) == decoded
+
 
 def test_encode_named_documents(subtests):
     with subtests.test(msg="encode/decode named document"):

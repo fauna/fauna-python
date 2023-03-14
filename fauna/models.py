@@ -42,7 +42,7 @@ class DocumentReference(BaseReference):
         self._id = ref_id
 
     def __hash__(self):
-        hash((self._collection, self._id))
+        hash((type(self), self._collection, self._id))
 
     def __str__(self):
         return f"{self._collection}:{self._id}"
@@ -70,7 +70,7 @@ class NamedDocumentReference(BaseReference):
         self._name = name
 
     def __hash__(self):
-        hash((self._collection, self._name))
+        hash((type(self), self._collection, self._name))
 
     def __str__(self):
         return f"{self._collection}:{self._name}"
@@ -84,13 +84,24 @@ class NamedDocumentReference(BaseReference):
 
 
 class BaseDocument(dict):
-    pass
+
+    def __hash__(self):
+        hash((type(self), super().__hash__()))
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+
+        return super().__eq__(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Document(BaseDocument):
 
     def __init__(self, data: dict):
-        if "coll" not in data and "id" not in data:
+        if "coll" not in data or "id" not in data:
             raise ValueError("Data must contain the 'coll' and 'id' keys")
 
         super().__init__(data)
@@ -103,7 +114,7 @@ class Document(BaseDocument):
 class NamedDocument(BaseDocument):
 
     def __init__(self, data: dict):
-        if "coll" not in data and "name" not in data:
+        if "coll" not in data or "name" not in data:
             raise ValueError("Data must contain the 'coll' and 'name' keys")
 
         super().__init__(data)
