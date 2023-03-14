@@ -1,4 +1,5 @@
-from typing import Union
+from collections.abc import Mapping
+from typing import Union, Iterator, TypeVar
 
 
 class Module:
@@ -83,16 +84,37 @@ class NamedDocumentReference(BaseReference):
         return self._name
 
 
-class BaseDocument(dict):
+T = TypeVar('T')
 
-    def __hash__(self):
-        hash((type(self), super().__hash__()))
+
+class BaseDocument(Mapping[str, T]):
+
+    def __init__(self, *args, **kwargs):
+        self._store = dict(*args, **kwargs)
+
+    def __getitem__(self, __k: str) -> T:
+        return self._store[__k]
+
+    def __len__(self) -> int:
+        return len(self._store)
+
+    def __iter__(self) -> Iterator[T]:
+        return iter(self._store)
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
             return False
 
-        return super().__eq__(other)
+        if len(self) != len(other):
+            return False
+
+        for k, v in self.items():
+            if k not in other:
+                return False
+            if self[k] != other[k]:
+                return False
+
+        return True
 
     def __ne__(self, other):
         return not self.__eq__(other)
