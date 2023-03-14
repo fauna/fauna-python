@@ -1,38 +1,8 @@
 from datetime import date, datetime, timezone, timedelta
-from random import randint
-from typing import Mapping
 
 import pytest
 
 from fauna import Module, DocumentReference
-
-
-@pytest.fixture
-def linearized() -> bool:
-    return True
-
-
-@pytest.fixture
-def tags() -> Mapping[str, str]:
-    return {
-        "hello": "world",
-        "testing": "foobar",
-    }
-
-
-@pytest.fixture
-def query_timeout_ms() -> float:
-    return 5000.0
-
-
-@pytest.fixture
-def traceparent() -> str:
-    return "happy-little-fox"
-
-
-@pytest.fixture
-def max_contention_retries() -> int:
-    return 5
 
 
 @pytest.fixture
