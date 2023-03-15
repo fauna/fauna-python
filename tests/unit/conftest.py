@@ -8,21 +8,21 @@ from fauna import Module, DocumentReference
 @pytest.fixture
 def complex_untyped_object():
     return {
-        "bugs_coll":
-        Module("Bugs"),
-        "bug":
-        DocumentReference.from_string("Bugs:123"),
-        "name":
-        "fir",
-        "age":
+        'bugs_coll':
+        Module('Bugs'),
+        'bug':
+        DocumentReference.from_string('Bugs:123'),
+        'name':
+        'fir',
+        'age':
         200,
-        "birthdate":
+        'birthdate':
         date(1823, 2, 8),
-        "molecules":
+        'molecules':
         999999999999999999,
-        "circumference":
+        'circumference':
         3.82,
-        "created_at":
+        'created_at':
         datetime(2003,
                  2,
                  8,
@@ -31,23 +31,23 @@ def complex_untyped_object():
                  12,
                  555,
                  tzinfo=timezone(timedelta(0), '+00:00')),
-        "extras": {
-            "nest": {
-                "num_sticks": 58,
-                "@object": {
-                    "egg": {
-                        "fertilized": False,
+        'extras': {
+            'nest': {
+                'num_sticks': 58,
+                '@object': {
+                    'egg': {
+                        'fertilized': False,
                     },
                 },
             },
         },
-        "measurements": [
+        'measurements': [
             {
-                "id":
+                'id':
                 1,
-                "employee":
+                'employee':
                 3,
-                "time":
+                'time':
                 datetime(2013,
                          2,
                          8,
@@ -58,11 +58,11 @@ def complex_untyped_object():
                          tzinfo=timezone(timedelta(0), '+00:00'))
             },
             {
-                "id":
+                'id':
                 2,
-                "employee":
+                'employee':
                 5,
-                "time":
+                'time':
                 datetime(2023,
                          2,
                          8,
@@ -83,7 +83,12 @@ def complex_typed_object():
             '@mod': 'Bugs'
         },
         'bug': {
-            '@doc': 'Bugs:123'
+            '@ref': {
+                'id': "123",
+                'coll': {
+                    '@mod': 'Bugs'
+                }
+            }
         },
         'name':
         'fir',
