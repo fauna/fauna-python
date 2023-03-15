@@ -3,10 +3,19 @@ from typing import Any, List, Optional, Set
 
 from iso8601 import parse_date
 
-from fauna.models import DocumentReference, Module
+from fauna.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference
 
 _RESERVED_TAGS = [
-    "@int", "@long", "@double", "@date", "@time", "@doc", "@mod", "@object"
+    "@date",
+    "@doc",
+    "@double",
+    "@int",
+    "@long",
+    "@mod",
+    "@object",
+    "@ref",
+    "@set",
+    "@time",
 ]
 
 
@@ -97,7 +106,21 @@ class FaunaEncoder:
 
     @staticmethod
     def from_doc_ref(obj: DocumentReference):
-        return {"@doc": str(obj)}
+        return {
+            "@ref": {
+                "id": obj.id,
+                "coll": FaunaEncoder.from_mod(obj.coll)
+            }
+        }
+
+    @staticmethod
+    def from_named_doc_ref(obj: NamedDocumentReference):
+        return {
+            "@ref": {
+                "name": obj.name,
+                "coll": FaunaEncoder.from_mod(obj.coll)
+            }
+        }
 
     @staticmethod
     def from_mod(obj: Module):
@@ -132,10 +155,16 @@ class FaunaEncoder:
             return FaunaEncoder.from_mod(o)
         elif isinstance(o, DocumentReference):
             return FaunaEncoder.from_doc_ref(o)
+        elif isinstance(o, NamedDocumentReference):
+            return FaunaEncoder.from_named_doc_ref(o)
         elif isinstance(o, datetime):
             return FaunaEncoder.from_datetime(o)
         elif isinstance(o, date):
             return FaunaEncoder.from_date(o)
+        elif isinstance(o, Document):
+            return FaunaEncoder.from_doc_ref(o.ref)
+        elif isinstance(o, NamedDocument):
+            return FaunaEncoder.from_named_doc_ref(o.ref)
         elif isinstance(o, (list, tuple)):
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
@@ -224,24 +253,24 @@ class FaunaDecoder:
         return FaunaDecoder._decode(obj)
 
     @staticmethod
-    def _decode(o: Any, object_tagged: bool = False):
+    def _decode(o: Any, escaped: bool = False):
         if isinstance(o, (str, bool, int, float)):
             return o
         elif isinstance(o, list):
             return FaunaDecoder._decode_list(o)
         elif isinstance(o, dict):
-            return FaunaDecoder._decode_dict(o, object_tagged)
+            return FaunaDecoder._decode_dict(o, escaped)
 
     @staticmethod
     def _decode_list(lst: List):
         return [FaunaDecoder._decode(i) for i in lst]
 
     @staticmethod
-    def _decode_dict(dct: dict, object_tagged: bool):
+    def _decode_dict(dct: dict, escaped: bool):
         keys = dct.keys()
 
-        # If we're inside an object tag, everything is user-specified
-        if object_tagged:
+        # If escaped, everything is user-specified
+        if escaped:
             return {k: FaunaDecoder._decode(v) for k, v in dct.items()}
 
         if len(keys) == 1:
@@ -260,6 +289,34 @@ class FaunaDecoder:
             if "@date" in dct:
                 return parse_date(dct["@date"]).date()
             if "@doc" in dct:
-                return DocumentReference.from_string(dct["@doc"])
+                value = dct["@doc"]
+                if isinstance(value, str):
+                    # Not distinguishing between DocumentReference and NamedDocumentReference because this shouldn't
+                    # be an issue much longer
+                    return DocumentReference.from_string(value)
+
+                contents = FaunaDecoder._decode(value)
+
+                if "id" in value:
+                    return Document(contents)
+                elif "name" in value:
+                    return NamedDocument(contents)
+                else:
+                    # Unsupported document reference. Return the unwrapped value to futureproof.
+                    return contents
+
+            if "@ref" in dct:
+                value = dct["@ref"]
+                col = FaunaDecoder._decode(value["coll"])
+
+                if "id" in value:
+                    return DocumentReference(col, value["id"])
+                elif "name" in value:
+                    return NamedDocumentReference(col, value["name"])
+                else:
+                    # Unsupported document reference. Return the unwrapped value to futureproof.
+                    return value
+            if "@set" in dct:
+                return FaunaDecoder._decode(dct["@set"])
 
         return {k: FaunaDecoder._decode(v) for k, v in dct.items()}
