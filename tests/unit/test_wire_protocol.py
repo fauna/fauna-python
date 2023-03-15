@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from fauna import DocumentReference, Module, fql
+from fauna import Document, DocumentReference, Module, NamedDocumentReference, NamedDocument, fql
 from fauna.wire_protocol import FaunaEncoder, FaunaDecoder
 
 
@@ -143,20 +143,95 @@ def test_encode_dates_times(subtests):
             FaunaEncoder.encode(test)
 
 
-def test_encode_fauna_types(subtests):
-    with subtests.test(msg="encode doc ref into @doc"):
-        test = DocumentReference.from_string("Col:123")
-        encoded = FaunaEncoder.encode(test)
-        assert {"@doc": "Col:123"} == encoded
+def test_encode_document_references(subtests):
+    doc_ref = DocumentReference.from_string("Col:123")
+    with subtests.test(msg="encode/decode with @doc"):
+        encoded = FaunaEncoder.encode(doc_ref)
+        assert {'@ref': {'coll': {'@mod': 'Col'}, 'id': "123"}} == encoded
         decoded = FaunaDecoder.decode(encoded)
-        assert test == decoded
+        assert doc_ref == decoded
 
+    with subtests.test(msg="decode doc ref from @ref"):
+        test = {"@ref": {"id": "123", "coll": {"@mod": "Col"}}}
+        decoded = FaunaDecoder.decode(test)
+        assert doc_ref == decoded
+
+
+def test_encode_named_document_references(subtests):
+    doc_ref = NamedDocumentReference("Col", "Hi")
+    with subtests.test(msg="encode/decode with @doc"):
+        encoded = FaunaEncoder.encode(doc_ref)
+        assert {"@ref": {"name": "Hi", "coll": {"@mod": "Col"}}} == encoded
+        decoded = FaunaDecoder.decode(encoded)
+        assert doc_ref == decoded
+
+    with subtests.test(msg="decode doc ref from @ref"):
+        test = {"@ref": {"name": "Hi", "coll": {"@mod": "Col"}}}
+        decoded = FaunaDecoder.decode(test)
+        assert doc_ref == decoded
+
+
+def test_encode_documents(subtests):
+    with subtests.test(msg="encode/decode document"):
+        test = Document({"id": "123", "coll": Module("Dogs"), "name": "Scout"})
+        encoded = FaunaEncoder.encode(test)
+        # should encode to a ref!
+        assert {"@ref": {"id": "123", "coll": {"@mod": "Dogs"}}} == encoded
+        decoded = FaunaDecoder.decode(encoded)
+        # refs will decode into references, not Documents
+        assert DocumentReference("Dogs", "123") == decoded
+
+    with subtests.test(msg="decode document with id and name"):
+        encoded = {
+            "@doc": {
+                "id": "123",
+                "coll": {
+                    "@mod": "Dogs"
+                },
+                "name": "Scout"
+            }
+        }
+        decoded = FaunaDecoder.decode(encoded)
+        # refs will decode into references, not Documents
+        assert Document({
+            "id": "123",
+            "coll": Module("Dogs"),
+            "name": "Scout"
+        }) == decoded
+
+
+def test_encode_named_documents(subtests):
+    with subtests.test(msg="encode/decode named document"):
+        test = NamedDocument({"name": "DogSchema", "coll": Module("Dogs")})
+        encoded = FaunaEncoder.encode(test)
+        # should encode to a ref!
+        assert {
+            "@ref": {
+                "name": "DogSchema",
+                "coll": {
+                    "@mod": "Dogs"
+                }
+            }
+        } == encoded
+        decoded = FaunaDecoder.decode(encoded)
+        # refs will decode into references, not Documents
+        assert NamedDocumentReference("Dogs", "DogSchema") == decoded
+
+
+def test_encode_modules(subtests):
     with subtests.test(msg="encode module into @mod"):
         test = Module("Math")
         encoded = FaunaEncoder.encode(test)
         assert {"@mod": "Math"} == encoded
         decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
+
+
+def test_encode_sets(subtests):
+    with subtests.test(msg="unwrap @set"):
+        test = {"@set": {}}
+        decoded = FaunaDecoder.decode(test)
+        assert decoded == {}
 
 
 def test_encode_collections(subtests):
@@ -360,9 +435,20 @@ def test_encode_date_time_conflicts(subtests):
 
 def test_encode_fauna_type_conflicts(subtests):
 
-    with subtests.test(msg="@doc conflict with doc type"):
-        test = {"@doc": DocumentReference.from_string("Col:123")}
-        expected = {"@object": {"@doc": {"@doc": "Col:123"}}}
+    with subtests.test(msg="@ref conflict with ref type"):
+        test = {"@ref": DocumentReference.from_string("Col:123")}
+        expected = {
+            "@object": {
+                "@ref": {
+                    "@ref": {
+                        "id": "123",
+                        "coll": {
+                            "@mod": "Col"
+                        }
+                    }
+                }
+            }
+        }
         encoded = FaunaEncoder.encode(test)
         assert encoded == expected
         decoded = FaunaDecoder.decode(encoded)

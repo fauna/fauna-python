@@ -1,13 +1,13 @@
 import urllib.parse
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional, List
 
 import fauna
 from fauna.response import QueryResponse
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, \
-    QueryCheckError
+    QueryCheckError, ConstraintFailure
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryInterpolation
@@ -33,6 +33,7 @@ class QueryOptions:
     * query_timeout - Controls the maximum amount of time Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * typecheck - Enable or disable typechecking of the query before evaluation. If not set, the value configured on the Client will be used. If neither is set, Fauna will use the value of the "typechecked" flag on the database configuration.
     * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
     """
 
@@ -41,6 +42,7 @@ class QueryOptions:
     query_timeout: Optional[timedelta] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
+    typecheck: Optional[bool] = None
     additional_headers: Optional[Dict[str, str]] = None
 
 
@@ -55,6 +57,7 @@ class Client:
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
+        typecheck: Optional[bool] = None,
         additional_headers: Optional[Dict[str, str]] = None,
     ):
         """Initializes a Client.
@@ -66,6 +69,7 @@ class Client:
         :param linearized: If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
         :param max_contention_retries: The max number of times to retry the query if contention is encountered.
         :param query_timeout: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+        :param typecheck: Enable or disable typechecking of the query before evaluation. If not set, Fauna will use the value of the "typechecked" flag on the database configuration.
         :param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.
         """
 
@@ -97,8 +101,11 @@ class Client:
             _Header.DriverEnv: str(_DriverEnvironment()),
         }
 
-        if linearized:
-            self._headers[Header.Linearized] = "true"
+        if typecheck is not None:
+            self._headers[Header.Typecheck] = str(typecheck).lower()
+
+        if linearized is not None:
+            self._headers[Header.Linearized] = str(linearized).lower()
 
         if max_contention_retries is not None and max_contention_retries > 0:
             self._headers[Header.MaxContentionRetries] = \
@@ -185,10 +192,13 @@ class Client:
 
         :param fql: A string, but will eventually be a query expression.
         :param opts: (Optional) Query Options
+
         :return: a :class:`QueryResponse`
-        :raises NetworkException: HTTP Request failed in transit
-        :raises ProtocolException: HTTP error not from Fauna
-        :raises ServiceException: Fauna returned an error
+
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
         """
 
         try:
@@ -204,14 +214,13 @@ class Client:
 
     def _query(
         self,
-        path,
+        path: str,
         fql: Mapping[str, Any],
         arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
     ) -> QueryResponse:
 
         headers = self._headers.copy()
-        # TODO: should be removed in favor of default (tagged)
         headers[_Header.Format] = "tagged"
         headers[_Header.Authorization] = self._auth.bearer()
 
@@ -233,11 +242,12 @@ class Client:
             if opts.traceparent is not None:
                 headers[Header.Traceparent] = opts.traceparent
             if opts.query_timeout is not None:
-                headers[
-                    Header.
-                    TimeoutMs] = f"{opts.query_timeout.total_seconds() * 1000}"
+                timeout_ms = f"{opts.query_timeout.total_seconds() * 1000}"
+                headers[Header.TimeoutMs] = timeout_ms
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
+            if opts.typecheck is not None:
+                headers[Header.Typecheck] = str(opts.typecheck).lower()
             if opts.additional_headers is not None:
                 headers.update(opts.additional_headers)
 
@@ -259,85 +269,118 @@ class Client:
             headers = response.headers()
             status_code = response.status_code()
 
+            self._check_protocol(response_json, status_code)
+
             if status_code > 399:
-                Client._handle_error(response_json, status_code)
+                self._handle_error(response_json, status_code)
 
             if "txn_ts" in response_json:
                 self.set_last_txn_ts(int(response_json["txn_ts"]))
 
             return QueryResponse(response_json, headers, status_code)
 
-    @staticmethod
-    def _handle_error(response_json: Any, status_code: int):
-        if "error" not in response_json:
+    def _check_protocol(self, response_json: Any, status_code):
+        # TODO: Logic to validate wire protocol belongs elsewhere.
+        should_raise = False
+
+        # check for QuerySuccess
+        if status_code <= 399 and "data" not in response_json:
+            should_raise = True
+
+        # check for QueryFailure
+        if status_code > 399:
+            if "error" not in response_json:
+                should_raise = True
+            else:
+                e = response_json["error"]
+                if "code" not in e or "message" not in e:
+                    should_raise = True
+
+        if should_raise:
             raise ProtocolError(
                 status_code,
                 "Unexpected response",
-                response_json,
+                f"Response is in an unknown format: \n{response_json}",
             )
 
-        err = ServiceError(
-            status_code,
-            response_json["error"]["code"],
-            response_json["error"]["message"],
-            response_json["summary"] if "summary" in response_json else "",
-        )
+    def _handle_error(self, response_json: Any, status_code: int):
+        err = response_json["error"]
+        code = err["code"]
+        message = err["message"]
+        summary = response_json["summary"] if "summary" in response_json else ""
+        constraint_failures: Optional[List[ConstraintFailure]] = None
+
+        if "constraint_failures" in err:
+            constraint_failures = [
+                ConstraintFailure(
+                    message=cf["message"],
+                    name=cf["name"] if "name" in cf else None,
+                    paths=cf["paths"] if "paths" in cf else None,
+                ) for cf in err["constraint_failures"]
+            ]
+
         if status_code == 400:
-            if err.code is not None:
+            if code == "invalid_query":
                 raise QueryCheckError(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
+                    status_code,
+                    code,
+                    message,
+                    summary,
                 )
-
-            raise QueryRuntimeError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
-            )
+            else:
+                raise QueryRuntimeError(
+                    status_code,
+                    code,
+                    message,
+                    summary,
+                    constraint_failures,
+                )
         elif status_code == 401:
             raise AuthenticationError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 403:
             raise AuthorizationError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 429:
             raise ThrottlingException(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 440:
             raise QueryTimeoutException(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 500:
             raise ServiceInternalError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 503:
             raise ServiceTimeoutError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         else:
-            raise err
+            raise ServiceError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
