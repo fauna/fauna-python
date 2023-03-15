@@ -1,5 +1,5 @@
 from collections.abc import Mapping
-from typing import Union, Iterator, TypeVar
+from typing import Union, Iterator, Any
 
 
 class Module:
@@ -115,23 +115,20 @@ class NamedDocumentReference(BaseReference):
         return self._name
 
 
-T = TypeVar('T')
-
-
-class BaseDocument(Mapping[str, T]):
+class BaseDocument(Mapping):
     """A base document class implementing an immutable mapping.
     """
 
     def __init__(self, *args, **kwargs):
         self._store = dict(*args, **kwargs)
 
-    def __getitem__(self, __k: str) -> T:
+    def __getitem__(self, __k: str) -> Any:
         return self._store[__k]
 
     def __len__(self) -> int:
         return len(self._store)
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Iterator[Any]:
         return iter(self._store)
 
     def __eq__(self, other):
