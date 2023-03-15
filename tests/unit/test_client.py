@@ -50,8 +50,10 @@ def test_client_with_args():
     timeout = timedelta(seconds=900)
     linearized = True
     max_retries = 100
-    track = False
     tags = {"tag_name": "tag_value"}
+    typecheck = True
+    additional_headers = {"foo": "bar"}
+
     http_client = HTTPXClient(httpx.Client())
 
     client = Client(
@@ -62,6 +64,8 @@ def test_client_with_args():
         max_contention_retries=max_retries,
         query_tags=tags,
         http_client=http_client,
+        typecheck=typecheck,
+        additional_headers=additional_headers,
     )
 
     assert client._auth.secret == secret
@@ -69,6 +73,10 @@ def test_client_with_args():
     assert client._query_timeout_ms == 900000
     assert client._query_tags == tags
     assert client._session == http_client
+    assert client._headers[Header.Typecheck] == "true"
+    assert client._headers[Header.Linearized] == "true"
+    assert client._headers[Header.MaxContentionRetries] == "100"
+    assert client._headers["foo"] == "bar"
 
 
 def test_get_set_transaction_time():
@@ -87,27 +95,31 @@ def test_get_query_timeout():
     assert c.get_query_timeout() == timedelta(minutes=1)
 
 
-def test_query_options_set(
-    httpx_mock: HTTPXMock,
-    linearized: bool,
-    query_timeout_ms: float,
-    traceparent: str,
-    tags: Mapping[str, str],
-    max_contention_retries: int,
-):
+def test_query_options_set(httpx_mock: HTTPXMock):
+
+    typecheck = True
+    linearized = True
+    query_timeout_ms = 5000.0
+    traceparent = "happy-little-fox"
+    max_contention_retries = 5
+    tags = {
+        "hello": "world",
+        "testing": "foobar",
+    }
+    additional_headers = {"additional": "header"}
 
     def validate_headers(request: httpx.Request):
         """
         Validate each of the associated Headers are set on the request
         """
         assert request.headers[Header.Linearized] == str(linearized).lower()
-        # being explicit to not figure out encoding a Mapping in the test
-        assert request.headers[Header.Tags] == \
-            "project=teapot&hello=world&testing=foobar"
         assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
         assert request.headers[Header.Traceparent] == traceparent
-        assert request.headers[Header.MaxContentionRetries] \
-            == f"{max_contention_retries}"
+        assert request.headers[Header.Typecheck] == str(typecheck).lower()
+        assert request.headers[Header.MaxContentionRetries] == f"{max_contention_retries}"  # yapf: disable
+        assert request.headers[Header.Tags] == "project=teapot&hello=world&testing=foobar"  # yapf: disable
+        assert request.headers["additional"] == "header"
+
         return httpx.Response(
             status_code=200,
             json={"data": "mocked"},
@@ -129,6 +141,8 @@ def test_query_options_set(
                 query_timeout=timedelta(milliseconds=query_timeout_ms),
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
+                typecheck=typecheck,
+                additional_headers=additional_headers,
             ),
         )
 
@@ -224,14 +238,6 @@ def test_client_headers(
             )
             c.query(fql("just a mock"))
 
-        with subtests.test("should allow custom header"):
-            c = Client(http_client=http_client)
-            expected = {"yellow": "submarine"}
-            c.query(
-                fql("just a mock"),
-                QueryOptions(additional_headers=expected),
-            )
-
         with subtests.test("Linearized should be set on Client"):
             c = Client(
                 http_client=http_client,
@@ -239,14 +245,6 @@ def test_client_headers(
             )
             expected = {Header.Linearized: "true"}
             c.query(fql("just a mock"))
-
-        with subtests.test("Linearized should be set on Query"):
-            expected = {Header.Linearized: "true"}
-            c = Client(http_client=http_client)
-            c.query(
-                fql("just a mock"),
-                QueryOptions(linearized=True),
-            )
 
         with subtests.test("Max Contention Retries on Client"):
             count = 5
@@ -259,24 +257,14 @@ def test_client_headers(
             expected = {Header.MaxContentionRetries: f"{count}"}
             c.query(fql("just a mock"))
 
-        with subtests.test("Max Contention Retries on Query"):
-            count = 5
-            expected = {Header.MaxContentionRetries: f"{count}"}
-            c = Client(http_client=http_client)
-            c.query(
-                fql("just a mock"),
-                QueryOptions(max_contention_retries=count),
+        with subtests.test("Typecheck on Client"):
+            c = Client(
+                http_client=http_client,
+                typecheck=True,
             )
 
-        # doesn't make sense to be set on the Client
-        with subtests.test("Should have a Traceparent"):
-            traceparent = "moshi-moshi"
-            expected = {Header.Traceparent: traceparent}
-            c = Client(http_client=http_client)
-            c.query(
-                fql("just a mock"),
-                QueryOptions(traceparent=traceparent),
-            )
+            expected = {Header.Typecheck: "true"}
+            c.query(fql("just a mock"))
 
 
 def test_error_query_check_error(subtests, httpx_mock: HTTPXMock):

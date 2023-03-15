@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, timedelta
 
-from fauna import fql
+from fauna import fql, Document
 
 
 def test_float_roundtrip(client):
@@ -65,3 +65,11 @@ def test_none_roundtrip(client):
     test = fql("${none}", none=none)
     result = client.query(test).data
     assert result == none
+
+
+# def test_document_roundtrip(client, a_collection):
+#     test = client.query(
+#         fql("${col}.create({'name':'Scout'})", col=a_collection))
+#     assert type(test.data) == Document
+#     result = client.query(fql("${doc}", doc=test.data))
+#     assert test.data == result.data

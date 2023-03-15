@@ -32,6 +32,7 @@ class QueryOptions:
     * query_timeout - Controls the maximum amount of time Fauna will execute your query before marking it failed.
     * query_tags - Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
     * traceparent - A traceparent to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * typecheck - Enable or disable typechecking of the query before evaluation. If not set, the value configured on the Client will be used. If neither is set, Fauna will use the value of the "typechecked" flag on the database configuration.
     * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
     """
 
@@ -40,6 +41,7 @@ class QueryOptions:
     query_timeout: Optional[timedelta] = None
     query_tags: Optional[Mapping[str, str]] = None
     traceparent: Optional[str] = None
+    typecheck: Optional[bool] = None
     additional_headers: Optional[Dict[str, str]] = None
 
 
@@ -54,6 +56,7 @@ class Client:
         linearized: Optional[bool] = None,
         max_contention_retries: Optional[int] = None,
         query_timeout: Optional[timedelta] = None,
+        typecheck: Optional[bool] = None,
         additional_headers: Optional[Dict[str, str]] = None,
     ):
         """Initializes a Client.
@@ -65,6 +68,7 @@ class Client:
         :param linearized: If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
         :param max_contention_retries: The max number of times to retry the query if contention is encountered.
         :param query_timeout: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+        :param typecheck: Enable or disable typechecking of the query before evaluation. If not set, Fauna will use the value of the "typechecked" flag on the database configuration.
         :param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.
         """
 
@@ -96,8 +100,11 @@ class Client:
             _Header.DriverEnv: str(_DriverEnvironment()),
         }
 
-        if linearized:
-            self._headers[Header.Linearized] = "true"
+        if typecheck is not None:
+            self._headers[Header.Typecheck] = str(typecheck).lower()
+
+        if linearized is not None:
+            self._headers[Header.Linearized] = str(linearized).lower()
 
         if max_contention_retries is not None and max_contention_retries > 0:
             self._headers[Header.MaxContentionRetries] = \
@@ -238,6 +245,8 @@ class Client:
                 headers[Header.TimeoutMs] = timeout_ms
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
+            if opts.typecheck is not None:
+                headers[Header.Typecheck] = str(opts.typecheck).lower()
             if opts.additional_headers is not None:
                 headers.update(opts.additional_headers)
 
