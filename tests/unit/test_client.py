@@ -105,6 +105,7 @@ def test_query_options_set(httpx_mock: HTTPXMock):
         "hello": "world",
         "testing": "foobar",
     }
+    additional_headers = {"additional": "header"}
 
     def validate_headers(request: httpx.Request):
         """
@@ -116,6 +117,7 @@ def test_query_options_set(httpx_mock: HTTPXMock):
         assert request.headers[Header.Typecheck] == str(typecheck).lower()
         assert request.headers[Header.MaxContentionRetries] == f"{max_contention_retries}"  # yapf: disable
         assert request.headers[Header.Tags] == "project=teapot&hello=world&testing=foobar"  # yapf: disable
+        assert request.headers["additional"] == "header"
 
         return httpx.Response(
             status_code=200,
@@ -139,6 +141,7 @@ def test_query_options_set(httpx_mock: HTTPXMock):
                 traceparent=traceparent,
                 max_contention_retries=max_contention_retries,
                 typecheck=typecheck,
+                additional_headers=additional_headers,
             ),
         )
 
