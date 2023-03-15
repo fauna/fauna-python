@@ -1,3 +1,7 @@
+from dataclasses import dataclass
+from typing import Optional, List, Any
+
+
 class FaunaException(Exception):
     """Base class Fauna Exceptions"""
     pass
@@ -57,19 +61,35 @@ class ServiceError(FaunaError):
     def summary(self) -> str:
         return self._summary
 
+    @property
+    def constraint_failures(self) -> Optional[List['ConstraintFailure']]:
+        return self._constraint_failures
+
     def __init__(
         self,
         status_code: int,
         code: str,
         message: str,
-        summary: str,
+        summary: str = "",
+        constraint_failures: Optional[List['ConstraintFailure']] = None,
     ):
+        """
+        :param status_code: The HTTP status code of the error.
+        :param code: A code for the error. Codes indicate the cause of the error. It is safe to write programmatic logic against the code. They are part of the API contract.
+        :param message: A short, human readable description of the error.
+        :param summary: A comprehensive, human readable summary of any errors, warnings and/or logs returned from the query.
+        :param constraint_failures: When the code is 'constraint_failure', an array of write constraint failures associated with the error.
+        """
         super().__init__(status_code, code, message)
 
         self._summary = summary
+        self._constraint_failures = constraint_failures
 
     def __str__(self):
-        return f"{self._status_code}: {self._code}\n{self._message}\n---\n{self._summary}"
+        constraint_str = "---"
+        if self._constraint_failures:
+            constraint_str = f"---\nconstraint failures: {self._constraint_failures}\n---"
+        return f"{self._status_code}: {self._code}\n{self._message}\n{constraint_str}\n{self._summary}"
 
 
 class QueryCheckError(ServiceError):
@@ -116,6 +136,13 @@ class ServiceInternalError(ServiceError):
 
 
 class ServiceTimeoutError(ServiceError):
-    """ServiceTimeoutError indicates Fauna was not available to servce
+    """ServiceTimeoutError indicates Fauna was not available to service
     the request before the timeout was reached."""
     pass
+
+
+@dataclass
+class ConstraintFailure:
+    message: str
+    name: Optional[str] = None
+    paths: Optional[List[Any]] = None

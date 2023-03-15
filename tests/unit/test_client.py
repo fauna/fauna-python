@@ -9,6 +9,7 @@ from pytest_httpx import HTTPXMock
 import fauna
 from fauna import Client, HTTPXClient, Header, fql
 from fauna.client import QueryOptions
+from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError
 
 
 def test_client_defaults(monkeypatch):
@@ -264,3 +265,124 @@ def test_client_headers(
 
             expected = {Header.Typecheck: "true"}
             c.query(fql("just a mock"))
+
+
+def test_error_query_check_error(subtests, httpx_mock: HTTPXMock):
+
+    def callback(_: httpx.Request):
+        return httpx.Response(
+            status_code=400,
+            json={
+                "error": {
+                    "code": "invalid_query",
+                    "message": "did not jump"
+                }
+            },
+        )
+
+    httpx_mock.add_callback(callback)
+
+    with httpx.Client() as mockClient:
+        http_client = HTTPXClient(mockClient)
+        c = Client(http_client=http_client)
+        with pytest.raises(QueryCheckError, match="did not jump"):
+            c.query(fql("the quick brown fox"))
+
+
+def test_error_query_runtime_error(subtests, httpx_mock: HTTPXMock):
+
+    def callback(_: httpx.Request):
+        return httpx.Response(
+            status_code=400,
+            json={"error": {
+                "code": "anything",
+                "message": "did not jump"
+            }},
+        )
+
+    httpx_mock.add_callback(callback)
+
+    with httpx.Client() as mockClient:
+        http_client = HTTPXClient(mockClient)
+        c = Client(http_client=http_client)
+        with pytest.raises(QueryRuntimeError, match="did not jump"):
+            c.query(fql("the quick brown fox"))
+
+
+def test_error_protocol_error_missing_error_key(subtests,
+                                                httpx_mock: HTTPXMock):
+
+    def callback(_: httpx.Request):
+        return httpx.Response(
+            status_code=400,
+            json={"data": "jumped"},
+        )
+
+    httpx_mock.add_callback(callback)
+
+    with httpx.Client() as mockClient:
+        http_client = HTTPXClient(mockClient)
+        c = Client(http_client=http_client)
+        err = "400: Unexpected response\nResponse is in an unknown format: \n{'data': 'jumped'}"
+        with pytest.raises(ProtocolError, match=err):
+            c.query(fql("the quick brown fox"))
+
+
+def test_error_protocol_error_missing_error_code(subtests,
+                                                 httpx_mock: HTTPXMock):
+
+    def callback(_: httpx.Request):
+        return httpx.Response(
+            status_code=400,
+            json={"error": {
+                "message": "boo"
+            }},
+        )
+
+    httpx_mock.add_callback(callback)
+
+    with httpx.Client() as mockClient:
+        http_client = HTTPXClient(mockClient)
+        c = Client(http_client=http_client)
+        err = "400: Unexpected response\nResponse is in an unknown format: \n{'error': {'message': 'boo'}}"
+        with pytest.raises(ProtocolError, match=err):
+            c.query(fql("the quick brown fox"))
+
+
+def test_error_protocol_error_missing_error_message(subtests,
+                                                    httpx_mock: HTTPXMock):
+
+    def callback(_: httpx.Request):
+        return httpx.Response(
+            status_code=400,
+            json={"error": {
+                "code": "boo"
+            }},
+        )
+
+    httpx_mock.add_callback(callback)
+
+    with httpx.Client() as mockClient:
+        http_client = HTTPXClient(mockClient)
+        c = Client(http_client=http_client)
+        err = "400: Unexpected response\nResponse is in an unknown format: \n{'error': {'code': 'boo'}}"
+        with pytest.raises(ProtocolError, match=err):
+            c.query(fql("the quick brown fox"))
+
+
+def test_error_protocol_data_missing(subtests, httpx_mock: HTTPXMock):
+
+    def callback(_: httpx.Request):
+        return httpx.Response(
+            status_code=200,
+            json={},
+        )
+
+    httpx_mock.add_callback(callback)
+
+    with httpx.Client() as mockClient:
+        http_client = HTTPXClient(mockClient)
+        c = Client(http_client=http_client)
+        err = "200: Unexpected response\nResponse is in an unknown format: \n{}"
+        with pytest.raises(ProtocolError, match=err):
+            c.query(fql("the quick brown fox"))
