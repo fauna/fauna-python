@@ -1,13 +1,13 @@
 import urllib.parse
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional, List
 
 import fauna
 from fauna.response import QueryResponse
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, \
-    QueryCheckError
+    QueryCheckError, ConstraintFailure
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryBuilder
@@ -184,10 +184,13 @@ class Client:
 
         :param fql: A string, but will eventually be a query expression.
         :param opts: (Optional) Query Options
+
         :return: a :class:`QueryResponse`
-        :raises NetworkException: HTTP Request failed in transit
-        :raises ProtocolException: HTTP error not from Fauna
-        :raises ServiceException: Fauna returned an error
+
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
         """
 
         try:
@@ -256,85 +259,118 @@ class Client:
             headers = response.headers()
             status_code = response.status_code()
 
+            self._check_protocol(response_json, status_code)
+
             if status_code > 399:
-                Client._handle_error(response_json, status_code)
+                self._handle_error(response_json, status_code)
 
             if "txn_ts" in response_json:
                 self.set_last_txn_ts(int(response_json["txn_ts"]))
 
             return QueryResponse(response_json, headers, status_code)
 
-    @staticmethod
-    def _handle_error(response_json: Any, status_code: int):
-        if "error" not in response_json:
+    def _check_protocol(self, response_json: Any, status_code):
+        # TODO: Logic to validate wire protocol belongs elsewhere.
+        should_raise = False
+
+        # check for QuerySuccess
+        if status_code <= 399 and "data" not in response_json:
+            should_raise = True
+
+        # check for QueryFailure
+        if status_code > 399:
+            if "error" not in response_json:
+                should_raise = True
+            else:
+                e = response_json["error"]
+                if "code" not in e or "message" not in e:
+                    should_raise = True
+
+        if should_raise:
             raise ProtocolError(
                 status_code,
                 "Unexpected response",
-                response_json,
+                f"Response is in an unknown format: \n{response_json}",
             )
 
-        err = ServiceError(
-            status_code,
-            response_json["error"]["code"],
-            response_json["error"]["message"],
-            response_json["summary"] if "summary" in response_json else "",
-        )
+    def _handle_error(self, response_json: Any, status_code: int):
+        err = response_json["error"]
+        code = err["code"]
+        message = err["message"]
+        summary = response_json["summary"] if "summary" in response_json else ""
+        constraint_failures: Optional[List[ConstraintFailure]] = None
+
+        if "constraint_failures" in err:
+            constraint_failures = [
+                ConstraintFailure(
+                    message=cf["message"],
+                    name=cf["name"] if "name" in cf else None,
+                    paths=cf["paths"] if "paths" in cf else None,
+                ) for cf in err["constraint_failures"]
+            ]
+
         if status_code == 400:
-            if err.code is not None:
+            if code == "invalid_query":
                 raise QueryCheckError(
-                    err.status_code,
-                    err.code,
-                    err.message,
-                    err.summary,
+                    status_code,
+                    code,
+                    message,
+                    summary,
                 )
-
-            raise QueryRuntimeError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
-            )
+            else:
+                raise QueryRuntimeError(
+                    status_code,
+                    code,
+                    message,
+                    summary,
+                    constraint_failures,
+                )
         elif status_code == 401:
             raise AuthenticationError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 403:
             raise AuthorizationError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 429:
             raise ThrottlingException(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 440:
             raise QueryTimeoutException(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 500:
             raise ServiceInternalError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         elif status_code == 503:
             raise ServiceTimeoutError(
-                err.status_code,
-                err.code,
-                err.message,
-                err.summary,
+                status_code,
+                code,
+                message,
+                summary,
             )
         else:
-            raise err
+            raise ServiceError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
