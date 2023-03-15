@@ -12,7 +12,7 @@ class Header:
     Linearized = "X-Linearized"
     MaxContentionRetries = "X-Max-Contention-Retries"
     TimeoutMs = "X-Timeout-Ms"
-    TypeChecking = "X-Type-Checking"
+    Typecheck = "X-Typecheck"
     Tags = "X-Query-Tags"
     Traceparent = "Traceparent"
 
