@@ -147,7 +147,7 @@ def test_encode_document_references(subtests):
     doc_ref = DocumentReference.from_string("Col:123")
     with subtests.test(msg="encode/decode with @doc"):
         encoded = FaunaEncoder.encode(doc_ref)
-        assert {'@ref': {'coll': {'@mod': 'Col'}, 'id': 123}} == encoded
+        assert {'@ref': {'coll': {'@mod': 'Col'}, 'id': "123"}} == encoded
         decoded = FaunaDecoder.decode(encoded)
         assert doc_ref == decoded
 
@@ -179,12 +179,12 @@ def test_encode_documents(subtests):
         assert {"@ref": {"id": "123", "coll": {"@mod": "Dogs"}}} == encoded
         decoded = FaunaDecoder.decode(encoded)
         # refs will decode into references, not Documents
-        assert DocumentReference("Dogs", 123) == decoded
+        assert DocumentReference("Dogs", "123") == decoded
 
     with subtests.test(msg="decode document with id and name"):
         encoded = {
             "@doc": {
-                "id": 123,
+                "id": "123",
                 "coll": {
                     "@mod": "Dogs"
                 },
@@ -194,7 +194,7 @@ def test_encode_documents(subtests):
         decoded = FaunaDecoder.decode(encoded)
         # refs will decode into references, not Documents
         assert Document({
-            "id": 123,
+            "id": "123",
             "coll": Module("Dogs"),
             "name": "Scout"
         }) == decoded
@@ -441,7 +441,7 @@ def test_encode_fauna_type_conflicts(subtests):
             "@object": {
                 "@ref": {
                     "@ref": {
-                        "id": 123,
+                        "id": "123",
                         "coll": {
                             "@mod": "Col"
                         }
