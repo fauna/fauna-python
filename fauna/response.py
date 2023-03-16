@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Mapping, Union
 
-from .wire_protocol import FaunaDecoder
+from .encoding import FaunaDecoder
 
 
 class Stat(str, Enum):
