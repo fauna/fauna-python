@@ -4,6 +4,7 @@ from typing import Any, List, Optional, Set
 from iso8601 import parse_date
 
 from fauna.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference
+from fauna.query_builder import QueryInterpolation, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [
     "@date",
@@ -22,39 +23,46 @@ _RESERVED_TAGS = [
 class FaunaEncoder:
     """Supports the following types:
 
-    +-------------------+---------------+
-    | Python            | Fauna Tags    |
-    +===================+===============+
-    | dict              | @object       |
-    +-------------------+---------------+
-    | list, tuple       | array         |
-    +-------------------+---------------+
-    | str               | string        |
-    +-------------------+---------------+
-    | int 32-bit signed | @int          |
-    +-------------------+---------------+
-    | int 64-bit signed | @long         |
-    +-------------------+---------------+
-    | float             | @double       |
-    +-------------------+---------------+
-    | datetime.datetime | @time         |
-    +-------------------+---------------+
-    | datetime.date     | @date         |
-    +-------------------+---------------+
-    | True              | True          |
-    +-------------------+---------------+
-    | False             | False         |
-    +-------------------+---------------+
-    | None              | None          |
-    +-------------------+---------------+
-    | DocumentReference | @doc          |
-    +-------------------+---------------+
-    | Module            | @mod          |
-    +-------------------+---------------+
+    +-------------------------------+---------------+
+    | Python                        | Fauna Tags    |
+    +===============================+===============+
+    | dict                          | @object       |
+    +-------------------------------+---------------+
+    | list, tuple                   | array         |
+    +-------------------------------+---------------+
+    | str                           | string        |
+    +-------------------------------+---------------+
+    | int 32-bit signed             | @int          |
+    +-------------------------------+---------------+
+    | int 64-bit signed             | @long         |
+    +-------------------------------+---------------+
+    | float                         | @double       |
+    +-------------------------------+---------------+
+    | datetime.datetime             | @time         |
+    +-------------------------------+---------------+
+    | datetime.date                 | @date         |
+    +-------------------------------+---------------+
+    | True                          | True          |
+    +-------------------------------+---------------+
+    | False                         | False         |
+    +-------------------------------+---------------+
+    | None                          | None          |
+    +-------------------------------+---------------+
+    | DocumentReference             | @doc          |
+    +-------------------------------+---------------+
+    | Module                        | @mod          |
+    +-------------------------------+---------------+
+    | QueryInterpolationBuilder     | fql           |
+    +-------------------------------+---------------+
+    | ValueFragment                 | value         |
+    +-------------------------------+---------------+
+    | TemplateFragment              | string        |
+    +-------------------------------+---------------+
+
     """
 
     @staticmethod
-    def encode(obj: Any):
+    def encode(obj: Any) -> Any:
         """Encodes supported objects into the tagged format.
 
         Examples:
@@ -65,6 +73,9 @@ class FaunaEncoder:
             - date encodes to { "@date": "..." }
             - DocumentReference encodes to { "@doc": "..." }
             - Module encodes to { "@mod": "..." }
+            - QueryInterpolationBuilder encodes to { "fql": [...] }
+            - ValueFragment encodes to { "value": <encoded_val> }
+            - LiteralFragment encodes to a string
 
         :raises ValueError: If value cannot be encoded, cannot be encoded safely, or there's a circular reference.
         :param obj: the object to decode
@@ -135,6 +146,23 @@ class FaunaEncoder:
         return None
 
     @staticmethod
+    def from_fragment(obj: Fragment):
+        if isinstance(obj, LiteralFragment):
+            return obj.get()
+        elif isinstance(obj, ValueFragment):
+            v = obj.get()
+            if isinstance(v, QueryInterpolation):
+                return FaunaEncoder.from_query_interpolation_builder(v)
+            else:
+                return {"value": FaunaEncoder.encode(v)}
+        else:
+            raise ValueError(f"Unknown fragment type: {type(obj)}")
+
+    @staticmethod
+    def from_query_interpolation_builder(obj: QueryInterpolation):
+        return {"fql": [FaunaEncoder.from_fragment(f) for f in obj.fragments]}
+
+    @staticmethod
     def _encode(o: Any, _markers: Optional[Set] = None):
         if _markers is None:
             _markers = set()
@@ -169,6 +197,8 @@ class FaunaEncoder:
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
             return FaunaEncoder._encode_dict(o, _markers)
+        elif isinstance(o, QueryInterpolation):
+            return FaunaEncoder.from_query_interpolation_builder(o)
         else:
             raise ValueError(f"Object {o} of type {type(o)} cannot be encoded")
 

@@ -4,11 +4,11 @@ import string
 import pytest
 
 import fauna
-from fauna import fql, Client, QueryBuilder
+from fauna import fql, Client, QueryInterpolation
 from fauna.models import Module
 
 
-def create_collection(name) -> QueryBuilder:
+def create_collection(name) -> QueryInterpolation:
     return fql('Collection.create({ name: ${name} })', name=name)
 
 
