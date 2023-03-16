@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 
 from fauna import Document, DocumentReference, Module, NamedDocumentReference, NamedDocument, fql
-from fauna.wire_protocol import FaunaEncoder, FaunaDecoder
+from fauna.encoding import FaunaEncoder, FaunaDecoder
 
 
 def test_encode_decode_primitives(subtests):
