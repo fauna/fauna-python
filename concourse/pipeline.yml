@@ -55,8 +55,8 @@ jobs:
         file: fauna-python-repository/concourse/tasks/publish.yml
         on_success:
           params:
-            message: |
-              fauna-python driver has a new release
+            message: fauna-python driver released
+            alert_type: success
           put: notify
         params:
           TWINE_USERNAME: ((pypi-username))
