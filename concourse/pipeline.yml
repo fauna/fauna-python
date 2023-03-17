@@ -24,7 +24,7 @@ resource_types:
   - name: slack-notification
     type: docker-image
     source:
-      repository: cfcommunity/slack-notification-resource
+      repository: mockersf/concourse-slack-notifier
       tag: latest
 
 groups:
@@ -55,7 +55,8 @@ jobs:
         file: fauna-python-repository/concourse/tasks/publish.yml
         on_success:
           params:
-            text_file: slack-message/publish
+            message: |
+              fauna-python driver has a new release
           put: notify
         params:
           TWINE_USERNAME: ((pypi-username))
