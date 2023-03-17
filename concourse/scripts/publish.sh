@@ -13,3 +13,5 @@ pip install twine
 
 twine check dist/*
 twine upload dist/*
+
+echo "fauna-python@PACKAGE_VERSION has been released" > ../slack-message/publish
