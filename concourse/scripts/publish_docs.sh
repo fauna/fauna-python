@@ -42,9 +42,9 @@ git clone fauna-python-repository-docs fauna-python-repository-updated-docs
 
 cd fauna-python-repository-updated-docs
 
-mkdir "$PACKAGE_VERSION"
+mkdir -p "$PACKAGE_VERSION"
 cd "$PACKAGE_VERSION"
-mkdir api
+mkdir -p api
 cd ..
 cp -R ../docs/* ./"$PACKAGE_VERSION"/api/
 
