@@ -1,0 +1,61 @@
+version: "3.3"
+
+services:
+  faunadb:
+    image: fauna/faunadb
+    container_name: faunadb
+    ports:
+      - "8443:8443"
+    healthcheck:
+      test: ["CMD", "curl", "http://faunadb:8443/ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  tests-311:
+    environment:
+      FAUNA_ROOT_KEY: "secret"
+      FAUNA_DOMAIN: faunadb
+      FAUNA_SCHEME: "http"
+      FAUNA_PORT: "8443"
+    image: 3.11.2-alpine3.17
+    container_name: mytests-311
+    depends_on:
+      - faunadb
+    volumes:
+      - "../../:/tmp/app"
+    working_dir: "/tmp/app"
+    command:
+      - concourse/scripts/integration-tests.sh
+
+  tests-310:
+    environment:
+      FAUNA_ROOT_KEY: "secret"
+      FAUNA_DOMAIN: faunadb
+      FAUNA_SCHEME: "http"
+      FAUNA_PORT: "8443"
+    image: 3.10.10-alpine3.17
+    container_name: mytests-310
+    depends_on:
+      - faunadb
+    volumes:
+      - "../../:/tmp/app"
+    working_dir: "/tmp/app"
+    command:
+      - concourse/scripts/integration-tests.sh
+
+  tests-39:
+    environment:
+      FAUNA_ROOT_KEY: "secret"
+      FAUNA_DOMAIN: faunadb
+      FAUNA_SCHEME: "http"
+      FAUNA_PORT: "8443"
+    image: python:3.9.5-alpine3.13
+    container_name: mytests-39
+    depends_on:
+      - faunadb
+    volumes:
+      - "../../:/tmp/app"
+    working_dir: "/tmp/app"
+    command:
+      - concourse/scripts/integration-tests.sh
