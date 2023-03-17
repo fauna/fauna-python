@@ -18,7 +18,7 @@ services:
       FAUNA_DOMAIN: faunadb
       FAUNA_SCHEME: "http"
       FAUNA_PORT: "8443"
-    image: 3.11.2-alpine3.17
+    image: python:3.11.2-alpine3.17
     container_name: mytests-311
     depends_on:
       - faunadb
@@ -34,7 +34,7 @@ services:
       FAUNA_DOMAIN: faunadb
       FAUNA_SCHEME: "http"
       FAUNA_PORT: "8443"
-    image: 3.10.10-alpine3.17
+    image: python:3.10.10-alpine3.17
     container_name: mytests-310
     depends_on:
       - faunadb
