@@ -3,11 +3,11 @@ Fauna Python
 *This driver is currently under development and not suitable for production workloads.*
 
 .. image:: https://img.shields.io/codecov/c/github/fauna/fauna-python/main.svg?maxAge=21600
- :target: https://codecov.io/gh/fauna/fauna-python
+  :target: https://codecov.io/gh/fauna/fauna-python
 .. image:: https://img.shields.io/pypi/v/fauna.svg?maxAge=21600
- :target: https://pypi.python.org/pypi/fauna
+  :target: https://pypi.python.org/pypi/fauna
 .. image:: https://img.shields.io/badge/license-MPL_2.0-blue.svg?maxAge=2592000
- :target: https://raw.githubusercontent.com/fauna/fauna-python/main/LICENSE
+  :target: https://raw.githubusercontent.com/fauna/fauna-python/main/LICENSE
 
 Python driver for `Fauna <https://fauna.com>`_.
 
@@ -37,7 +37,7 @@ Documentation
 
 
 Example Usage
------------
+-------------
 
 .. code-block:: python
 
@@ -48,7 +48,7 @@ Example Usage
     client.query(fql('Dogs.create({ name: "Scout" })'))
 
 Query Composition
------------
+-----------------
 
 This driver supports query composition with Python primitives, lists, dicts, and other FQL queries. For FQL templates, denote variables with `${}` and pass variables as kwargs to `fql()`.
 
