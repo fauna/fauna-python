@@ -15,18 +15,6 @@ resources:
       branch: gh-pages
       private_key: ((github_repo_key))
 
-  - name: notify
-    type: slack-notification
-    source:
-      url: ((slack-webhook))
-
-resource_types:
-  - name: slack-notification
-    type: docker-image
-    source:
-      repository: mockersf/concourse-slack-notifier
-      tag: latest
-
 groups:
   - name: standard-release
     jobs:
@@ -53,11 +41,6 @@ jobs:
 
       - task: publish
         file: fauna-python-repository/concourse/tasks/publish.yml
-        on_success:
-          params:
-            message: fauna-python driver released
-            alert_type: success
-          put: notify
         params:
           TWINE_USERNAME: ((pypi-username))
           TWINE_PASSWORD: ((pypi-password))
