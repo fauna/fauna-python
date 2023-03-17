@@ -10,5 +10,6 @@ apk add --update make
 #pip install requests
 #make test
 
+pip install -r requirements.txt
 pip install codecov
 coverage run setup.py test
