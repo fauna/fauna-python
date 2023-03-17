@@ -4,6 +4,8 @@ set -eou
 
 cd ./fauna-python-repository
 
+pip install -r requirements.txt
+
 PACKAGE_VERSION=$(python setup.py --version)
 
 pip install .
