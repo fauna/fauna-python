@@ -11,7 +11,7 @@ build
 dist
 docs/_build
 htmlcov/
-faunadb.egg-info
+fauna.egg-info
 venv
 venv3
 
