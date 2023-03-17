@@ -52,4 +52,5 @@ git config --global user.email "nobody@fauna.com"
 git config --global user.name "Fauna, Inc"
 
 git add -A
-git commit -m "Update docs to version: $PACKAGE_VERSION"
+# only commit if we have new files
+git diff --exit-code || git commit -m "Update docs to version: $PACKAGE_VERSION"
