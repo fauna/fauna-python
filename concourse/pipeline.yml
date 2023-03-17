@@ -18,13 +18,25 @@ resources:
 groups:
   - name: standard-release
     jobs:
+      - set-self
       - release
+
 jobs:
+  - name: set-self
+    plan:
+      - get: fauna-python-repository
+        trigger: true
+      - set_pipeline: self
+        file: fauna-python-repository/concourse/pipeline.yml
+
   - name: release
     serial: true
     public: false
     plan:
       - get: fauna-python-repository
+        passed:
+          - set-self
+
       - get: fauna-python-repository-docs
 
       - task: integration-tests
