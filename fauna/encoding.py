@@ -190,9 +190,10 @@ class FaunaEncoder:
         elif isinstance(o, date):
             return FaunaEncoder.from_date(o)
         elif isinstance(o, Document):
-            return FaunaEncoder.from_doc_ref(o.ref)
+            return FaunaEncoder.from_doc_ref(DocumentReference(o.coll, o.id))
         elif isinstance(o, NamedDocument):
-            return FaunaEncoder.from_named_doc_ref(o.ref)
+            return FaunaEncoder.from_named_doc_ref(
+                NamedDocumentReference(o.coll, o.name))
         elif isinstance(o, (list, tuple)):
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
@@ -327,10 +328,28 @@ class FaunaDecoder:
 
                 contents = FaunaDecoder._decode(value)
 
-                if "id" in value:
-                    return Document(contents)
-                elif "name" in value:
-                    return NamedDocument(contents)
+                if "id" in contents and "coll" in contents and "ts" in contents:
+                    doc_id = contents.pop("id")
+                    doc_coll = contents.pop("coll")
+                    doc_ts = contents.pop("ts")
+
+                    return Document(
+                        id=doc_id,
+                        coll=doc_coll,
+                        ts=doc_ts,
+                        data=contents,
+                    )
+                elif "name" in contents and "coll" in contents and "ts" in contents:
+                    doc_name = contents.pop("name")
+                    doc_coll = contents.pop("coll")
+                    doc_ts = contents.pop("ts")
+
+                    return NamedDocument(
+                        name=doc_name,
+                        coll=doc_coll,
+                        ts=doc_ts,
+                        data=contents,
+                    )
                 else:
                     # Unsupported document reference. Return the unwrapped value to futureproof.
                     return contents

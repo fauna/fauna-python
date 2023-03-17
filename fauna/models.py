@@ -1,5 +1,6 @@
 from collections.abc import Mapping
-from typing import Union, Iterator, Any
+from datetime import datetime
+from typing import Union, Iterator, Any, Optional
 
 
 class Module:
@@ -153,28 +154,57 @@ class BaseDocument(Mapping):
 class Document(BaseDocument):
     """A class representing a user document stored in Fauna.
 
-    When working with a :class:`Document` in code, it should be considered immutable.
+    User data should be stored directly on the map, while id, ts, and coll should only be stored on the related
+    properties. When working with a :class:`Document` in code, it should be considered immutable.
     """
 
-    def __init__(self, data: dict):
-        if "coll" not in data or "id" not in data:
-            raise ValueError("Data must contain the 'coll' and 'id' keys")
+    @property
+    def id(self) -> str:
+        return self._id
 
-        id_ = data["id"]
-        if not isinstance(id_, str):
-            raise TypeError(f"'id' should be of type str, but was {type(id_)}")
+    @property
+    def ts(self) -> datetime:
+        return self._ts
 
-        coll = data["coll"]
+    @property
+    def coll(self) -> Module:
+        return self._coll
+
+    def __init__(self,
+                 id: str,
+                 ts: datetime,
+                 coll: Union[str, Module],
+                 data: Optional[Mapping] = None):
+        if not isinstance(id, str):
+            raise TypeError(f"'id' should be of type str, but was {type(id)}")
+
+        if not isinstance(ts, datetime):
+            raise TypeError(
+                f"'ts' should be of type datetime, but was {type(ts)}")
+
         if not (isinstance(coll, str) or isinstance(coll, Module)):
             raise TypeError(
                 f"'coll' should be of type Module or str, but was {type(coll)}"
             )
 
-        super().__init__(data)
+        if isinstance(coll, str):
+            coll = Module(coll)
 
-    @property
-    def ref(self) -> DocumentReference:
-        return DocumentReference(self["coll"], self["id"])
+        self._id = id
+        self._ts = ts
+        self._coll = coll
+
+        super().__init__(data or {})
+
+    def __eq__(self, other):
+        return type(self) == type(other) \
+            and self.id == other.id \
+            and self.coll == other.coll \
+            and self.ts == other.ts \
+            and super().__eq__(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class NamedDocument(BaseDocument):
@@ -184,23 +214,51 @@ class NamedDocument(BaseDocument):
     When working with a :class:`NamedDocument` in code, it should be considered immutable.
     """
 
-    def __init__(self, data: dict):
-        if "coll" not in data or "name" not in data:
-            raise ValueError("Data must contain the 'coll' and 'name' keys")
+    @property
+    def name(self) -> str:
+        return self._name
 
-        name = data["name"]
+    @property
+    def ts(self) -> datetime:
+        return self._ts
+
+    @property
+    def coll(self) -> Module:
+        return self._coll
+
+    def __init__(self,
+                 name: str,
+                 ts: datetime,
+                 coll: Union[Module, str],
+                 data: Optional[Mapping] = None):
         if not isinstance(name, str):
             raise TypeError(
                 f"'name' should be of type str, but was {type(name)}")
 
-        coll = data["coll"]
+        if not isinstance(ts, datetime):
+            raise TypeError(
+                f"'ts' should be of type datetime, but was {type(ts)}")
+
         if not (isinstance(coll, str) or isinstance(coll, Module)):
             raise TypeError(
                 f"'coll' should be of type Module or str, but was {type(coll)}"
             )
 
-        super().__init__(data)
+        if isinstance(coll, str):
+            coll = Module(coll)
 
-    @property
-    def ref(self) -> NamedDocumentReference:
-        return NamedDocumentReference(self["coll"], self["name"])
+        self._name = name
+        self._ts = ts
+        self._coll = coll
+
+        super().__init__(data or {})
+
+    def __eq__(self, other):
+        return type(self) == type(other) \
+            and self.name == other.name \
+            and self.coll == other.coll \
+            and self.ts == other.ts \
+            and super().__eq__(other)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
