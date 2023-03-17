@@ -10,4 +10,4 @@ echo "Going to publish python package: ${PACKAGE_VERSION}"
 pip install twine
 
 twine check dist/*
-twine upload dist/*
+# twine upload dist/*
