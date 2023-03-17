@@ -6,6 +6,8 @@ import pytest
 from fauna import Document, DocumentReference, Module, NamedDocumentReference, NamedDocument, fql
 from fauna.encoding import FaunaEncoder, FaunaDecoder
 
+fixed_datetime = datetime.fromisoformat("2023-03-17T00:00:00+00:00")
+
 
 def test_encode_decode_primitives(subtests):
     with subtests.test(msg="encode string"):
@@ -173,7 +175,10 @@ def test_encode_named_document_references(subtests):
 
 def test_encode_documents(subtests):
     with subtests.test(msg="encode/decode document"):
-        test = Document({"id": "123", "coll": Module("Dogs"), "name": "Scout"})
+        test = Document(id="123",
+                        coll="Dogs",
+                        ts=fixed_datetime,
+                        data={"name": "Scout"})
         encoded = FaunaEncoder.encode(test)
         # should encode to a ref!
         assert {"@ref": {"id": "123", "coll": {"@mod": "Dogs"}}} == encoded
@@ -188,21 +193,22 @@ def test_encode_documents(subtests):
                 "coll": {
                     "@mod": "Dogs"
                 },
+                "ts": {
+                    "@time": fixed_datetime.isoformat(),
+                },
                 "name": "Scout"
             }
         }
         decoded = FaunaDecoder.decode(encoded)
-        # refs will decode into references, not Documents
-        assert Document({
-            "id": "123",
-            "coll": Module("Dogs"),
-            "name": "Scout"
-        }) == decoded
+        assert Document(id="123",
+                        coll="Dogs",
+                        ts=fixed_datetime,
+                        data={"name": "Scout"}) == decoded
 
 
 def test_encode_named_documents(subtests):
     with subtests.test(msg="encode/decode named document"):
-        test = NamedDocument({"name": "DogSchema", "coll": Module("Dogs")})
+        test = NamedDocument(name="DogSchema", coll="Dogs", ts=fixed_datetime)
         encoded = FaunaEncoder.encode(test)
         # should encode to a ref!
         assert {
@@ -216,6 +222,25 @@ def test_encode_named_documents(subtests):
         decoded = FaunaDecoder.decode(encoded)
         # refs will decode into references, not Documents
         assert NamedDocumentReference("Dogs", "DogSchema") == decoded
+
+    with subtests.test(msg="decode named document"):
+        encoded = {
+            "@doc": {
+                "coll": {
+                    "@mod": "Dogs"
+                },
+                "ts": {
+                    "@time": fixed_datetime.isoformat(),
+                },
+                "name": "Scout",
+                "other": "data",
+            }
+        }
+        decoded = FaunaDecoder.decode(encoded)
+        assert NamedDocument(name="Scout",
+                             coll="Dogs",
+                             ts=fixed_datetime,
+                             data={"other": "data"}) == decoded
 
 
 def test_encode_modules(subtests):
