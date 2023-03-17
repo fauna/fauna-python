@@ -4,15 +4,15 @@ from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, List
 
 import fauna
-from fauna.response import QueryResponse
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
-    ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, \
-    QueryCheckError, ConstraintFailure
+    ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
+    QueryCheckError
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http_client import HTTPClient, HTTPXClient
 from fauna.query_builder import QueryInterpolation
 from fauna.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder
+from fauna.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -186,7 +186,7 @@ class Client:
         self,
         fql: QueryInterpolation,
         opts: Optional[QueryOptions] = None,
-    ) -> QueryResponse:
+    ) -> QuerySuccess:
         """
         Run a query on Fauna.
 
@@ -218,7 +218,7 @@ class Client:
         fql: Mapping[str, Any],
         arguments: Optional[Mapping[str, Any]] = None,
         opts: Optional[QueryOptions] = None,
-    ) -> QueryResponse:
+    ) -> QuerySuccess:
 
         headers = self._headers.copy()
         headers[_Header.Format] = "tagged"
@@ -277,7 +277,7 @@ class Client:
             if "txn_ts" in response_json:
                 self.set_last_txn_ts(int(response_json["txn_ts"]))
 
-            return QueryResponse(response_json, headers, status_code)
+            return QuerySuccess(response_json, headers)
 
     def _check_protocol(self, response_json: Any, status_code):
         # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -303,12 +303,17 @@ class Client:
                 f"Response is in an unknown format: \n{response_json}",
             )
 
-    def _handle_error(self, response_json: Any, status_code: int):
-        err = response_json["error"]
+    def _handle_error(self, body: Any, status_code: int):
+        err = body["error"]
         code = err["code"]
         message = err["message"]
-        summary = response_json["summary"] if "summary" in response_json else ""
         constraint_failures: Optional[List[ConstraintFailure]] = None
+        query_info = QueryInfo(
+            query_tags=body["query_tags"] if "query_tags" in body else None,
+            stats=body["stats"] if "stats" in body else None,
+            txn_ts=body["txn_ts"] if "txn_ts" in body else None,
+            summary=body["summary"] if "summary" in body else None,
+        )
 
         if "constraint_failures" in err:
             constraint_failures = [
@@ -325,14 +330,14 @@ class Client:
                     status_code,
                     code,
                     message,
-                    summary,
+                    query_info,
                 )
             else:
                 raise QueryRuntimeError(
                     status_code,
                     code,
                     message,
-                    summary,
+                    query_info,
                     constraint_failures,
                 )
         elif status_code == 401:
@@ -340,47 +345,47 @@ class Client:
                 status_code,
                 code,
                 message,
-                summary,
+                query_info,
             )
         elif status_code == 403:
             raise AuthorizationError(
                 status_code,
                 code,
                 message,
-                summary,
+                query_info,
             )
         elif status_code == 429:
-            raise ThrottlingException(
+            raise ThrottlingError(
                 status_code,
                 code,
                 message,
-                summary,
+                query_info,
             )
         elif status_code == 440:
-            raise QueryTimeoutException(
+            raise QueryTimeoutError(
                 status_code,
                 code,
                 message,
-                summary,
+                query_info,
             )
         elif status_code == 500:
             raise ServiceInternalError(
                 status_code,
                 code,
                 message,
-                summary,
+                query_info,
             )
         elif status_code == 503:
             raise ServiceTimeoutError(
                 status_code,
                 code,
                 message,
-                summary,
+                query_info,
             )
         else:
             raise ServiceError(
                 status_code,
                 code,
                 message,
-                summary,
+                query_info,
             )

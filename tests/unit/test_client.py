@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Dict, Mapping
+from typing import Dict
 
 import httpx
 import pytest
@@ -145,8 +145,6 @@ def test_query_options_set(httpx_mock: HTTPXMock):
                 additional_headers=additional_headers,
             ),
         )
-
-        assert res.status_code == 200
 
 
 def test_query_tags(
