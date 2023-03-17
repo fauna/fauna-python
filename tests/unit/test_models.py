@@ -28,7 +28,7 @@ def test_named_document_required_props(subtests):
         NamedDocument(name="Python", coll="hi", ts=fixed_datetime)
 
     with subtests.test(msg="accepts 'name' str and 'coll' module"):
-        NamedDocument(name="Python", coll="hi", ts=fixed_datetime)
+        NamedDocument(name="Python", coll=Module("hi"), ts=fixed_datetime)
 
 
 def test_document_equality(subtests):
