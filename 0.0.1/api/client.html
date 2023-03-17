@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>fauna.client API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>fauna.client</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import urllib.parse
+from datetime import timedelta
+from dataclasses import dataclass
+from typing import Any, Dict, Mapping, Optional, List
+
+import fauna
+from fauna.response import QueryResponse
+from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
+    ServiceInternalError, ServiceTimeoutError, ThrottlingException, QueryTimeoutException, QueryRuntimeError, \
+    QueryCheckError, ConstraintFailure
+from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
+from fauna.http_client import HTTPClient, HTTPXClient
+from fauna.query_builder import QueryInterpolation
+from fauna.utils import _Environment, LastTxnTs
+from fauna.encoding import FaunaEncoder
+
+DefaultHttpConnectTimeout = timedelta(seconds=5)
+DefaultHttpReadTimeout: Optional[timedelta] = None
+DefaultHttpWriteTimeout = timedelta(seconds=5)
+DefaultHttpPoolTimeout = timedelta(seconds=5)
+DefaultIdleConnectionTimeout = timedelta(seconds=5)
+DefaultMaxConnections = 20
+DefaultMaxIdleConnections = 20
+
+
+@dataclass
+class QueryOptions:
+    &#34;&#34;&#34;
+    A dataclass representing options available for a query.
+
+    * linearized - If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+    * max_contention_retries - The max number of times to retry the query if contention is encountered.
+    * query_timeout - Controls the maximum amount of time Fauna will execute your query before marking it failed.
+    * query_tags - Tags to associate with the query. See `logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;`_
+    * traceparent - A traceparent to associate with the query. See `logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * typecheck - Enable or disable typechecking of the query before evaluation. If not set, the value configured on the Client will be used. If neither is set, Fauna will use the value of the &#34;typechecked&#34; flag on the database configuration.
+    * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
+    &#34;&#34;&#34;
+
+    linearized: Optional[bool] = None
+    max_contention_retries: Optional[int] = None
+    query_timeout: Optional[timedelta] = None
+    query_tags: Optional[Mapping[str, str]] = None
+    traceparent: Optional[str] = None
+    typecheck: Optional[bool] = None
+    additional_headers: Optional[Dict[str, str]] = None
+
+
+class Client:
+
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        secret: Optional[str] = None,
+        http_client: Optional[HTTPClient] = None,
+        query_tags: Optional[Mapping[str, str]] = None,
+        linearized: Optional[bool] = None,
+        max_contention_retries: Optional[int] = None,
+        query_timeout: Optional[timedelta] = None,
+        typecheck: Optional[bool] = None,
+        additional_headers: Optional[Dict[str, str]] = None,
+    ):
+        &#34;&#34;&#34;Initializes a Client.
+
+        :param endpoint: The Fauna Endpoint to use. Defaults to https://db.fauna.com, or the FAUNA_ENDPOINT env variable.
+        :param secret: The Fauna Secret to use. Defaults to empty, or the FAUNA_SECRET env variable.
+        :param http_client: An :class:`HTTPClient` implementation. Defaults to a global :class:`HTTPXClient`.
+        :param query_tags: Tags to associate with the query. See `logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;`_
+        :param linearized: If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+        :param max_contention_retries: The max number of times to retry the query if contention is encountered.
+        :param query_timeout: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+        :param typecheck: Enable or disable typechecking of the query before evaluation. If not set, Fauna will use the value of the &#34;typechecked&#34; flag on the database configuration.
+        :param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.
+        &#34;&#34;&#34;
+
+        if endpoint is None:
+            self._endpoint = _Environment.EnvFaunaEndpoint()
+        else:
+            self._endpoint = endpoint
+
+        if secret is None:
+            self._auth = _Auth(_Environment.EnvFaunaSecret())
+        else:
+            self._auth = _Auth(secret)
+
+        self._last_txn_ts = LastTxnTs()
+
+        self._query_tags = {}
+        if query_tags is not None:
+            self._query_tags.update(query_tags)
+
+        if query_timeout is not None:
+            self._query_timeout_ms = query_timeout.total_seconds() * 1000
+        else:
+            self._query_timeout_ms = None
+
+        self._headers: Dict[str, str] = {
+            _Header.AcceptEncoding: &#34;gzip&#34;,
+            _Header.ContentType: &#34;application/json;charset=utf-8&#34;,
+            _Header.Driver: &#34;python&#34;,
+            _Header.DriverEnv: str(_DriverEnvironment()),
+        }
+
+        if typecheck is not None:
+            self._headers[Header.Typecheck] = str(typecheck).lower()
+
+        if linearized is not None:
+            self._headers[Header.Linearized] = str(linearized).lower()
+
+        if max_contention_retries is not None and max_contention_retries &gt; 0:
+            self._headers[Header.MaxContentionRetries] = \
+                f&#34;{max_contention_retries}&#34;
+
+        if additional_headers is not None:
+            self._headers = {
+                **self._headers,
+                **additional_headers,
+            }
+
+        self._session: HTTPClient
+
+        if http_client is not None:
+            self._session = http_client
+        else:
+            if fauna.global_http_client is None:
+                read_timeout: Optional[timedelta] = DefaultHttpReadTimeout
+                read_timeout_s: Optional[float] = None
+                if read_timeout is not None:
+                    read_timeout_s = read_timeout.total_seconds()
+
+                write_timeout_s = DefaultHttpWriteTimeout.total_seconds()
+                pool_timeout_s = DefaultHttpPoolTimeout.total_seconds()
+                idle_timeout_s = DefaultIdleConnectionTimeout.total_seconds()
+
+                import httpx
+                c = HTTPXClient(
+                    httpx.Client(
+                        http1=False,
+                        http2=True,
+                        timeout=httpx.Timeout(
+                            connect=DefaultMaxConnections,
+                            read=read_timeout_s,
+                            write=write_timeout_s,
+                            pool=pool_timeout_s,
+                        ),
+                        limits=httpx.Limits(
+                            max_connections=DefaultMaxConnections,
+                            max_keepalive_connections=DefaultMaxIdleConnections,
+                            keepalive_expiry=idle_timeout_s,
+                        ),
+                    ))
+                fauna.global_http_client = c
+
+            self._session = fauna.global_http_client
+
+    def set_last_txn_ts(self, txn_ts: int):
+        &#34;&#34;&#34;
+        Set the last timestamp seen by this client.
+        This has no effect if earlier than stored timestamp.
+
+        .. WARNING:: This should be used only when coordinating timestamps across
+        multiple clients. Moving the timestamp arbitrarily forward into
+        the future will cause transactions to stall.
+
+        :param txn_ts: the new transaction time.
+        &#34;&#34;&#34;
+        self._last_txn_ts.update_txn_time(txn_ts)
+
+    def get_last_txn_ts(self) -&gt; Optional[int]:
+        &#34;&#34;&#34;
+        Get the last timestamp seen by this client.
+        :return:
+        &#34;&#34;&#34;
+        return self._last_txn_ts.time
+
+    def get_query_timeout(self) -&gt; Optional[timedelta]:
+        &#34;&#34;&#34;
+        Get the query timeout for all queries.
+        &#34;&#34;&#34;
+        if self._query_timeout_ms is not None:
+            return timedelta(milliseconds=self._query_timeout_ms)
+        else:
+            return None
+
+    def query(
+        self,
+        fql: QueryInterpolation,
+        opts: Optional[QueryOptions] = None,
+    ) -&gt; QueryResponse:
+        &#34;&#34;&#34;
+        Run a query on Fauna.
+
+        :param fql: A string, but will eventually be a query expression.
+        :param opts: (Optional) Query Options
+
+        :return: a :class:`QueryResponse`
+
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
+        &#34;&#34;&#34;
+
+        try:
+            encoded_query: Mapping[str, Any] = FaunaEncoder.encode(fql)
+        except Exception as e:
+            raise ClientError(&#34;Failed to evaluate Query&#34;) from e
+
+        return self._query(
+            &#34;/query/1&#34;,
+            fql=encoded_query,
+            opts=opts,
+        )
+
+    def _query(
+        self,
+        path: str,
+        fql: Mapping[str, Any],
+        arguments: Optional[Mapping[str, Any]] = None,
+        opts: Optional[QueryOptions] = None,
+    ) -&gt; QueryResponse:
+
+        headers = self._headers.copy()
+        headers[_Header.Format] = &#34;tagged&#34;
+        headers[_Header.Authorization] = self._auth.bearer()
+
+        if self._query_timeout_ms is not None:
+            headers[Header.TimeoutMs] = str(self._query_timeout_ms)
+
+        headers.update(self._last_txn_ts.request_header)
+
+        query_tags = {}
+        if self._query_tags is not None:
+            query_tags.update(self._query_tags)
+
+        if opts is not None:
+            if opts.linearized is not None:
+                headers[Header.Linearized] = str(opts.linearized).lower()
+            if opts.max_contention_retries is not None:
+                headers[Header.MaxContentionRetries] = \
+                    f&#34;{opts.max_contention_retries}&#34;
+            if opts.traceparent is not None:
+                headers[Header.Traceparent] = opts.traceparent
+            if opts.query_timeout is not None:
+                timeout_ms = f&#34;{opts.query_timeout.total_seconds() * 1000}&#34;
+                headers[Header.TimeoutMs] = timeout_ms
+            if opts.query_tags is not None:
+                query_tags.update(opts.query_tags)
+            if opts.typecheck is not None:
+                headers[Header.Typecheck] = str(opts.typecheck).lower()
+            if opts.additional_headers is not None:
+                headers.update(opts.additional_headers)
+
+        if len(query_tags) &gt; 0:
+            headers[Header.Tags] = urllib.parse.urlencode(query_tags)
+
+        data: dict[str, Any] = {
+            &#34;query&#34;: fql,
+            &#34;arguments&#34;: arguments or {},
+        }
+
+        with self._session.request(
+                method=&#34;POST&#34;,
+                url=self._endpoint + path,
+                headers=headers,
+                data=data,
+        ) as response:
+            response_json = response.json()
+            headers = response.headers()
+            status_code = response.status_code()
+
+            self._check_protocol(response_json, status_code)
+
+            if status_code &gt; 399:
+                self._handle_error(response_json, status_code)
+
+            if &#34;txn_ts&#34; in response_json:
+                self.set_last_txn_ts(int(response_json[&#34;txn_ts&#34;]))
+
+            return QueryResponse(response_json, headers, status_code)
+
+    def _check_protocol(self, response_json: Any, status_code):
+        # TODO: Logic to validate wire protocol belongs elsewhere.
+        should_raise = False
+
+        # check for QuerySuccess
+        if status_code &lt;= 399 and &#34;data&#34; not in response_json:
+            should_raise = True
+
+        # check for QueryFailure
+        if status_code &gt; 399:
+            if &#34;error&#34; not in response_json:
+                should_raise = True
+            else:
+                e = response_json[&#34;error&#34;]
+                if &#34;code&#34; not in e or &#34;message&#34; not in e:
+                    should_raise = True
+
+        if should_raise:
+            raise ProtocolError(
+                status_code,
+                &#34;Unexpected response&#34;,
+                f&#34;Response is in an unknown format: \n{response_json}&#34;,
+            )
+
+    def _handle_error(self, response_json: Any, status_code: int):
+        err = response_json[&#34;error&#34;]
+        code = err[&#34;code&#34;]
+        message = err[&#34;message&#34;]
+        summary = response_json[&#34;summary&#34;] if &#34;summary&#34; in response_json else &#34;&#34;
+        constraint_failures: Optional[List[ConstraintFailure]] = None
+
+        if &#34;constraint_failures&#34; in err:
+            constraint_failures = [
+                ConstraintFailure(
+                    message=cf[&#34;message&#34;],
+                    name=cf[&#34;name&#34;] if &#34;name&#34; in cf else None,
+                    paths=cf[&#34;paths&#34;] if &#34;paths&#34; in cf else None,
+                ) for cf in err[&#34;constraint_failures&#34;]
+            ]
+
+        if status_code == 400:
+            if code == &#34;invalid_query&#34;:
+                raise QueryCheckError(
+                    status_code,
+                    code,
+                    message,
+                    summary,
+                )
+            else:
+                raise QueryRuntimeError(
+                    status_code,
+                    code,
+                    message,
+                    summary,
+                    constraint_failures,
+                )
+        elif status_code == 401:
+            raise AuthenticationError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 403:
+            raise AuthorizationError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 429:
+            raise ThrottlingException(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 440:
+            raise QueryTimeoutException(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 500:
+            raise ServiceInternalError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 503:
+            raise ServiceTimeoutError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        else:
+            raise ServiceError(
+                status_code,
+                code,
+                message,
+                summary,
+            )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="fauna.client.Client"><code class="flex name class">
+<span>class <span class="ident">Client</span></span>
+<span>(</span><span>endpoint: Optional[str] = None, secret: Optional[str] = None, http_client: Optional[<a title="fauna.http_client.HTTPClient" href="http_client.html#fauna.http_client.HTTPClient">HTTPClient</a>] = None, query_tags: Optional[Mapping[str, str]] = None, linearized: Optional[bool] = None, max_contention_retries: Optional[int] = None, query_timeout: Optional[datetime.timedelta] = None, typecheck: Optional[bool] = None, additional_headers: Optional[Dict[str, str]] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Initializes a Client.</p>
+<p>:param endpoint: The Fauna Endpoint to use. Defaults to <a href="https://db.fauna.com,">https://db.fauna.com,</a> or the FAUNA_ENDPOINT env variable.
+:param secret: The Fauna Secret to use. Defaults to empty, or the FAUNA_SECRET env variable.
+:param http_client: An :class:<code>HTTPClient</code> implementation. Defaults to a global :class:<code>HTTPXClient</code>.
+:param query_tags: Tags to associate with the query. See <code>logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;</code>_
+:param linearized: If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+:param max_contention_retries: The max number of times to retry the query if contention is encountered.
+:param query_timeout: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+:param typecheck: Enable or disable typechecking of the query before evaluation. If not set, Fauna will use the value of the "typechecked" flag on the database configuration.
+:param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Client:
+
+    def __init__(
+        self,
+        endpoint: Optional[str] = None,
+        secret: Optional[str] = None,
+        http_client: Optional[HTTPClient] = None,
+        query_tags: Optional[Mapping[str, str]] = None,
+        linearized: Optional[bool] = None,
+        max_contention_retries: Optional[int] = None,
+        query_timeout: Optional[timedelta] = None,
+        typecheck: Optional[bool] = None,
+        additional_headers: Optional[Dict[str, str]] = None,
+    ):
+        &#34;&#34;&#34;Initializes a Client.
+
+        :param endpoint: The Fauna Endpoint to use. Defaults to https://db.fauna.com, or the FAUNA_ENDPOINT env variable.
+        :param secret: The Fauna Secret to use. Defaults to empty, or the FAUNA_SECRET env variable.
+        :param http_client: An :class:`HTTPClient` implementation. Defaults to a global :class:`HTTPXClient`.
+        :param query_tags: Tags to associate with the query. See `logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;`_
+        :param linearized: If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+        :param max_contention_retries: The max number of times to retry the query if contention is encountered.
+        :param query_timeout: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
+        :param typecheck: Enable or disable typechecking of the query before evaluation. If not set, Fauna will use the value of the &#34;typechecked&#34; flag on the database configuration.
+        :param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.
+        &#34;&#34;&#34;
+
+        if endpoint is None:
+            self._endpoint = _Environment.EnvFaunaEndpoint()
+        else:
+            self._endpoint = endpoint
+
+        if secret is None:
+            self._auth = _Auth(_Environment.EnvFaunaSecret())
+        else:
+            self._auth = _Auth(secret)
+
+        self._last_txn_ts = LastTxnTs()
+
+        self._query_tags = {}
+        if query_tags is not None:
+            self._query_tags.update(query_tags)
+
+        if query_timeout is not None:
+            self._query_timeout_ms = query_timeout.total_seconds() * 1000
+        else:
+            self._query_timeout_ms = None
+
+        self._headers: Dict[str, str] = {
+            _Header.AcceptEncoding: &#34;gzip&#34;,
+            _Header.ContentType: &#34;application/json;charset=utf-8&#34;,
+            _Header.Driver: &#34;python&#34;,
+            _Header.DriverEnv: str(_DriverEnvironment()),
+        }
+
+        if typecheck is not None:
+            self._headers[Header.Typecheck] = str(typecheck).lower()
+
+        if linearized is not None:
+            self._headers[Header.Linearized] = str(linearized).lower()
+
+        if max_contention_retries is not None and max_contention_retries &gt; 0:
+            self._headers[Header.MaxContentionRetries] = \
+                f&#34;{max_contention_retries}&#34;
+
+        if additional_headers is not None:
+            self._headers = {
+                **self._headers,
+                **additional_headers,
+            }
+
+        self._session: HTTPClient
+
+        if http_client is not None:
+            self._session = http_client
+        else:
+            if fauna.global_http_client is None:
+                read_timeout: Optional[timedelta] = DefaultHttpReadTimeout
+                read_timeout_s: Optional[float] = None
+                if read_timeout is not None:
+                    read_timeout_s = read_timeout.total_seconds()
+
+                write_timeout_s = DefaultHttpWriteTimeout.total_seconds()
+                pool_timeout_s = DefaultHttpPoolTimeout.total_seconds()
+                idle_timeout_s = DefaultIdleConnectionTimeout.total_seconds()
+
+                import httpx
+                c = HTTPXClient(
+                    httpx.Client(
+                        http1=False,
+                        http2=True,
+                        timeout=httpx.Timeout(
+                            connect=DefaultMaxConnections,
+                            read=read_timeout_s,
+                            write=write_timeout_s,
+                            pool=pool_timeout_s,
+                        ),
+                        limits=httpx.Limits(
+                            max_connections=DefaultMaxConnections,
+                            max_keepalive_connections=DefaultMaxIdleConnections,
+                            keepalive_expiry=idle_timeout_s,
+                        ),
+                    ))
+                fauna.global_http_client = c
+
+            self._session = fauna.global_http_client
+
+    def set_last_txn_ts(self, txn_ts: int):
+        &#34;&#34;&#34;
+        Set the last timestamp seen by this client.
+        This has no effect if earlier than stored timestamp.
+
+        .. WARNING:: This should be used only when coordinating timestamps across
+        multiple clients. Moving the timestamp arbitrarily forward into
+        the future will cause transactions to stall.
+
+        :param txn_ts: the new transaction time.
+        &#34;&#34;&#34;
+        self._last_txn_ts.update_txn_time(txn_ts)
+
+    def get_last_txn_ts(self) -&gt; Optional[int]:
+        &#34;&#34;&#34;
+        Get the last timestamp seen by this client.
+        :return:
+        &#34;&#34;&#34;
+        return self._last_txn_ts.time
+
+    def get_query_timeout(self) -&gt; Optional[timedelta]:
+        &#34;&#34;&#34;
+        Get the query timeout for all queries.
+        &#34;&#34;&#34;
+        if self._query_timeout_ms is not None:
+            return timedelta(milliseconds=self._query_timeout_ms)
+        else:
+            return None
+
+    def query(
+        self,
+        fql: QueryInterpolation,
+        opts: Optional[QueryOptions] = None,
+    ) -&gt; QueryResponse:
+        &#34;&#34;&#34;
+        Run a query on Fauna.
+
+        :param fql: A string, but will eventually be a query expression.
+        :param opts: (Optional) Query Options
+
+        :return: a :class:`QueryResponse`
+
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
+        &#34;&#34;&#34;
+
+        try:
+            encoded_query: Mapping[str, Any] = FaunaEncoder.encode(fql)
+        except Exception as e:
+            raise ClientError(&#34;Failed to evaluate Query&#34;) from e
+
+        return self._query(
+            &#34;/query/1&#34;,
+            fql=encoded_query,
+            opts=opts,
+        )
+
+    def _query(
+        self,
+        path: str,
+        fql: Mapping[str, Any],
+        arguments: Optional[Mapping[str, Any]] = None,
+        opts: Optional[QueryOptions] = None,
+    ) -&gt; QueryResponse:
+
+        headers = self._headers.copy()
+        headers[_Header.Format] = &#34;tagged&#34;
+        headers[_Header.Authorization] = self._auth.bearer()
+
+        if self._query_timeout_ms is not None:
+            headers[Header.TimeoutMs] = str(self._query_timeout_ms)
+
+        headers.update(self._last_txn_ts.request_header)
+
+        query_tags = {}
+        if self._query_tags is not None:
+            query_tags.update(self._query_tags)
+
+        if opts is not None:
+            if opts.linearized is not None:
+                headers[Header.Linearized] = str(opts.linearized).lower()
+            if opts.max_contention_retries is not None:
+                headers[Header.MaxContentionRetries] = \
+                    f&#34;{opts.max_contention_retries}&#34;
+            if opts.traceparent is not None:
+                headers[Header.Traceparent] = opts.traceparent
+            if opts.query_timeout is not None:
+                timeout_ms = f&#34;{opts.query_timeout.total_seconds() * 1000}&#34;
+                headers[Header.TimeoutMs] = timeout_ms
+            if opts.query_tags is not None:
+                query_tags.update(opts.query_tags)
+            if opts.typecheck is not None:
+                headers[Header.Typecheck] = str(opts.typecheck).lower()
+            if opts.additional_headers is not None:
+                headers.update(opts.additional_headers)
+
+        if len(query_tags) &gt; 0:
+            headers[Header.Tags] = urllib.parse.urlencode(query_tags)
+
+        data: dict[str, Any] = {
+            &#34;query&#34;: fql,
+            &#34;arguments&#34;: arguments or {},
+        }
+
+        with self._session.request(
+                method=&#34;POST&#34;,
+                url=self._endpoint + path,
+                headers=headers,
+                data=data,
+        ) as response:
+            response_json = response.json()
+            headers = response.headers()
+            status_code = response.status_code()
+
+            self._check_protocol(response_json, status_code)
+
+            if status_code &gt; 399:
+                self._handle_error(response_json, status_code)
+
+            if &#34;txn_ts&#34; in response_json:
+                self.set_last_txn_ts(int(response_json[&#34;txn_ts&#34;]))
+
+            return QueryResponse(response_json, headers, status_code)
+
+    def _check_protocol(self, response_json: Any, status_code):
+        # TODO: Logic to validate wire protocol belongs elsewhere.
+        should_raise = False
+
+        # check for QuerySuccess
+        if status_code &lt;= 399 and &#34;data&#34; not in response_json:
+            should_raise = True
+
+        # check for QueryFailure
+        if status_code &gt; 399:
+            if &#34;error&#34; not in response_json:
+                should_raise = True
+            else:
+                e = response_json[&#34;error&#34;]
+                if &#34;code&#34; not in e or &#34;message&#34; not in e:
+                    should_raise = True
+
+        if should_raise:
+            raise ProtocolError(
+                status_code,
+                &#34;Unexpected response&#34;,
+                f&#34;Response is in an unknown format: \n{response_json}&#34;,
+            )
+
+    def _handle_error(self, response_json: Any, status_code: int):
+        err = response_json[&#34;error&#34;]
+        code = err[&#34;code&#34;]
+        message = err[&#34;message&#34;]
+        summary = response_json[&#34;summary&#34;] if &#34;summary&#34; in response_json else &#34;&#34;
+        constraint_failures: Optional[List[ConstraintFailure]] = None
+
+        if &#34;constraint_failures&#34; in err:
+            constraint_failures = [
+                ConstraintFailure(
+                    message=cf[&#34;message&#34;],
+                    name=cf[&#34;name&#34;] if &#34;name&#34; in cf else None,
+                    paths=cf[&#34;paths&#34;] if &#34;paths&#34; in cf else None,
+                ) for cf in err[&#34;constraint_failures&#34;]
+            ]
+
+        if status_code == 400:
+            if code == &#34;invalid_query&#34;:
+                raise QueryCheckError(
+                    status_code,
+                    code,
+                    message,
+                    summary,
+                )
+            else:
+                raise QueryRuntimeError(
+                    status_code,
+                    code,
+                    message,
+                    summary,
+                    constraint_failures,
+                )
+        elif status_code == 401:
+            raise AuthenticationError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 403:
+            raise AuthorizationError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 429:
+            raise ThrottlingException(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 440:
+            raise QueryTimeoutException(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 500:
+            raise ServiceInternalError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        elif status_code == 503:
+            raise ServiceTimeoutError(
+                status_code,
+                code,
+                message,
+                summary,
+            )
+        else:
+            raise ServiceError(
+                status_code,
+                code,
+                message,
+                summary,
+            )</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="fauna.client.Client.get_last_txn_ts"><code class="name flex">
+<span>def <span class="ident">get_last_txn_ts</span></span>(<span>self) ‑> Optional[int]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the last timestamp seen by this client.
+:return:</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_last_txn_ts(self) -&gt; Optional[int]:
+    &#34;&#34;&#34;
+    Get the last timestamp seen by this client.
+    :return:
+    &#34;&#34;&#34;
+    return self._last_txn_ts.time</code></pre>
+</details>
+</dd>
+<dt id="fauna.client.Client.get_query_timeout"><code class="name flex">
+<span>def <span class="ident">get_query_timeout</span></span>(<span>self) ‑> Optional[datetime.timedelta]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get the query timeout for all queries.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_query_timeout(self) -&gt; Optional[timedelta]:
+    &#34;&#34;&#34;
+    Get the query timeout for all queries.
+    &#34;&#34;&#34;
+    if self._query_timeout_ms is not None:
+        return timedelta(milliseconds=self._query_timeout_ms)
+    else:
+        return None</code></pre>
+</details>
+</dd>
+<dt id="fauna.client.Client.query"><code class="name flex">
+<span>def <span class="ident">query</span></span>(<span>self, fql: <a title="fauna.query_builder.QueryInterpolation" href="query_builder.html#fauna.query_builder.QueryInterpolation">QueryInterpolation</a>, opts: Optional[<a title="fauna.client.QueryOptions" href="#fauna.client.QueryOptions">QueryOptions</a>] = None) ‑> <a title="fauna.response.QueryResponse" href="response.html#fauna.response.QueryResponse">QueryResponse</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Run a query on Fauna.</p>
+<p>:param fql: A string, but will eventually be a query expression.
+:param opts: (Optional) Query Options</p>
+<p>:return: a :class:<code>QueryResponse</code></p>
+<p>:raises NetworkError: HTTP Request failed in transit
+:raises ProtocolError: HTTP error not from Fauna
+:raises ServiceError: Fauna returned an error
+:raises ValueError: Encoding and decoding errors</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def query(
+    self,
+    fql: QueryInterpolation,
+    opts: Optional[QueryOptions] = None,
+) -&gt; QueryResponse:
+    &#34;&#34;&#34;
+    Run a query on Fauna.
+
+    :param fql: A string, but will eventually be a query expression.
+    :param opts: (Optional) Query Options
+
+    :return: a :class:`QueryResponse`
+
+    :raises NetworkError: HTTP Request failed in transit
+    :raises ProtocolError: HTTP error not from Fauna
+    :raises ServiceError: Fauna returned an error
+    :raises ValueError: Encoding and decoding errors
+    &#34;&#34;&#34;
+
+    try:
+        encoded_query: Mapping[str, Any] = FaunaEncoder.encode(fql)
+    except Exception as e:
+        raise ClientError(&#34;Failed to evaluate Query&#34;) from e
+
+    return self._query(
+        &#34;/query/1&#34;,
+        fql=encoded_query,
+        opts=opts,
+    )</code></pre>
+</details>
+</dd>
+<dt id="fauna.client.Client.set_last_txn_ts"><code class="name flex">
+<span>def <span class="ident">set_last_txn_ts</span></span>(<span>self, txn_ts: int)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the last timestamp seen by this client.
+This has no effect if earlier than stored timestamp.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning:&ensp;This should be used only when coordinating timestamps across</p>
+</div>
+<p>multiple clients. Moving the timestamp arbitrarily forward into
+the future will cause transactions to stall.</p>
+<p>:param txn_ts: the new transaction time.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_last_txn_ts(self, txn_ts: int):
+    &#34;&#34;&#34;
+    Set the last timestamp seen by this client.
+    This has no effect if earlier than stored timestamp.
+
+    .. WARNING:: This should be used only when coordinating timestamps across
+    multiple clients. Moving the timestamp arbitrarily forward into
+    the future will cause transactions to stall.
+
+    :param txn_ts: the new transaction time.
+    &#34;&#34;&#34;
+    self._last_txn_ts.update_txn_time(txn_ts)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fauna.client.QueryOptions"><code class="flex name class">
+<span>class <span class="ident">QueryOptions</span></span>
+<span>(</span><span>linearized: Optional[bool] = None, max_contention_retries: Optional[int] = None, query_timeout: Optional[datetime.timedelta] = None, query_tags: Optional[Mapping[str, str]] = None, traceparent: Optional[str] = None, typecheck: Optional[bool] = None, additional_headers: Optional[Dict[str, str]] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A dataclass representing options available for a query.</p>
+<ul>
+<li>linearized - If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.</li>
+<li>max_contention_retries - The max number of times to retry the query if contention is encountered.</li>
+<li>query_timeout - Controls the maximum amount of time Fauna will execute your query before marking it failed.</li>
+<li>query_tags - Tags to associate with the query. See <code>logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;</code>_</li>
+<li>traceparent - A traceparent to associate with the query. See <code>logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;</code>_ Must match format: <a href="https://www.w3.org/TR/trace-context/#traceparent-header">https://www.w3.org/TR/trace-context/#traceparent-header</a></li>
+<li>typecheck - Enable or disable typechecking of the query before evaluation. If not set, the value configured on the Client will be used. If neither is set, Fauna will use the value of the "typechecked" flag on the database configuration.</li>
+<li>additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class QueryOptions:
+    &#34;&#34;&#34;
+    A dataclass representing options available for a query.
+
+    * linearized - If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
+    * max_contention_retries - The max number of times to retry the query if contention is encountered.
+    * query_timeout - Controls the maximum amount of time Fauna will execute your query before marking it failed.
+    * query_tags - Tags to associate with the query. See `logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;`_
+    * traceparent - A traceparent to associate with the query. See `logging &lt;https://docs.fauna.com/fauna/current/build/logs/query_log/&gt;`_ Must match format: https://www.w3.org/TR/trace-context/#traceparent-header
+    * typecheck - Enable or disable typechecking of the query before evaluation. If not set, the value configured on the Client will be used. If neither is set, Fauna will use the value of the &#34;typechecked&#34; flag on the database configuration.
+    * additional_headers - Add/update HTTP request headers for the query. In general, this should not be necessary.
+    &#34;&#34;&#34;
+
+    linearized: Optional[bool] = None
+    max_contention_retries: Optional[int] = None
+    query_timeout: Optional[timedelta] = None
+    query_tags: Optional[Mapping[str, str]] = None
+    traceparent: Optional[str] = None
+    typecheck: Optional[bool] = None
+    additional_headers: Optional[Dict[str, str]] = None</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="fauna.client.QueryOptions.additional_headers"><code class="name">var <span class="ident">additional_headers</span> : Optional[Dict[str, str]]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.client.QueryOptions.linearized"><code class="name">var <span class="ident">linearized</span> : Optional[bool]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.client.QueryOptions.max_contention_retries"><code class="name">var <span class="ident">max_contention_retries</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.client.QueryOptions.query_tags"><code class="name">var <span class="ident">query_tags</span> : Optional[Mapping[str, str]]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.client.QueryOptions.query_timeout"><code class="name">var <span class="ident">query_timeout</span> : Optional[datetime.timedelta]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.client.QueryOptions.traceparent"><code class="name">var <span class="ident">traceparent</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.client.QueryOptions.typecheck"><code class="name">var <span class="ident">typecheck</span> : Optional[bool]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="fauna" href="index.html">fauna</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="fauna.client.Client" href="#fauna.client.Client">Client</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.client.Client.get_last_txn_ts" href="#fauna.client.Client.get_last_txn_ts">get_last_txn_ts</a></code></li>
+<li><code><a title="fauna.client.Client.get_query_timeout" href="#fauna.client.Client.get_query_timeout">get_query_timeout</a></code></li>
+<li><code><a title="fauna.client.Client.query" href="#fauna.client.Client.query">query</a></code></li>
+<li><code><a title="fauna.client.Client.set_last_txn_ts" href="#fauna.client.Client.set_last_txn_ts">set_last_txn_ts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fauna.client.QueryOptions" href="#fauna.client.QueryOptions">QueryOptions</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.client.QueryOptions.additional_headers" href="#fauna.client.QueryOptions.additional_headers">additional_headers</a></code></li>
+<li><code><a title="fauna.client.QueryOptions.linearized" href="#fauna.client.QueryOptions.linearized">linearized</a></code></li>
+<li><code><a title="fauna.client.QueryOptions.max_contention_retries" href="#fauna.client.QueryOptions.max_contention_retries">max_contention_retries</a></code></li>
+<li><code><a title="fauna.client.QueryOptions.query_tags" href="#fauna.client.QueryOptions.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.client.QueryOptions.query_timeout" href="#fauna.client.QueryOptions.query_timeout">query_timeout</a></code></li>
+<li><code><a title="fauna.client.QueryOptions.traceparent" href="#fauna.client.QueryOptions.traceparent">traceparent</a></code></li>
+<li><code><a title="fauna.client.QueryOptions.typecheck" href="#fauna.client.QueryOptions.typecheck">typecheck</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
