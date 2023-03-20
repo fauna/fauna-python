@@ -9,7 +9,7 @@ build
 dist
 docs/
 htmlcov/
-faunadb.egg-info
+fauna.egg-info
 venv
 venv3
 results/

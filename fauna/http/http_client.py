@@ -1,11 +1,7 @@
 import abc
-import json
-from typing import Optional, Iterator, Mapping, Any
+
+from typing import Iterator, Mapping, Any
 from dataclasses import dataclass
-
-import httpx
-
-from fauna.errors import ClientError, NetworkError
 
 
 @dataclass(frozen=True)
