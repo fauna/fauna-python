@@ -1,37 +1,29 @@
 import pytest
 
 from fauna import fql, Document
-from fauna.errors import QueryRuntimeError, ConstraintFailure
-from fauna.response import Stat
+from fauna.errors import QueryRuntimeError
+from fauna.wire_protocol import ConstraintFailure, QueryStat
 
 
-def test_query(subtests, client):
+def test_query_smoke_test(subtests, client):
     with subtests.test(msg="valid query"):
         res = client.query(fql("Math.abs(-5.123e3)"))
 
-        assert res.status_code == 200
         assert res.data == float(5123.0)
-        assert res.stats[Stat.ComputeOps] > 0
+        assert res.stats[QueryStat.ComputeOps] > 0
         assert res.traceparent != ""
         assert res.summary == ""
 
     with subtests.test(msg="with debug"):
         res = client.query(fql('dbg("Hello, World")'))
 
-        assert res.status_code == 200
         assert res.summary != ""
 
-    with subtests.test(msg="stats"):
-        res = client.query(fql("Math.abs(-5.123e3)"))
-        with subtests.test(msg="valid stat"):
-            assert res.stats[Stat.ComputeOps] > 0
-        with subtests.test(msg="invalid stat"):
-            with pytest.raises(Exception) as e:
-                assert res.stats["silly"] == 0
-            assert e.type == KeyError
-        with subtests.test(msg="manual stat"):
-            # prove that we can use a plain string
-            assert res.stats["read_ops"] == 0
+
+def test_query_with_all_stats(client, a_collection):
+    res = client.query(fql("${col}.create({})", col=a_collection))
+    for stat in QueryStat:
+        assert res.stats[stat] >= 0
 
 
 def test_query_with_constraint_failure(client):
@@ -47,7 +39,8 @@ def test_query_with_constraint_failure(client):
     assert e.value.status_code == 400
     assert e.value.code == "constraint_failure"
     assert e.value.message == "Failed to create document in collection Function."
-    assert len(e.value.summary) > 0
+    qi = e.value.query_info
+    assert qi is not None and len(qi.summary) > 0
 
 
 def test_advanced_composition(client, a_collection):

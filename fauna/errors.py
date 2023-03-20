@@ -1,5 +1,6 @@
-from dataclasses import dataclass
-from typing import Optional, List, Any
+from typing import Optional, List
+
+from fauna.wire_protocol import ConstraintFailure, QueryInfo
 
 
 class FaunaException(Exception):
@@ -58,38 +59,43 @@ class ServiceError(FaunaError):
     """An error representing a query failure returned by Fauna."""
 
     @property
-    def summary(self) -> str:
-        return self._summary
+    def constraint_failures(self) -> Optional[List[ConstraintFailure]]:
+        return self._constraint_failures
 
     @property
-    def constraint_failures(self) -> Optional[List['ConstraintFailure']]:
-        return self._constraint_failures
+    def query_info(self) -> Optional[QueryInfo]:
+        return self._query_info
 
     def __init__(
         self,
         status_code: int,
         code: str,
         message: str,
-        summary: str = "",
-        constraint_failures: Optional[List['ConstraintFailure']] = None,
+        query_info: Optional[QueryInfo] = None,
+        constraint_failures: Optional[List[ConstraintFailure]] = None,
     ):
         """
         :param status_code: The HTTP status code of the error.
         :param code: A code for the error. Codes indicate the cause of the error. It is safe to write programmatic logic against the code. They are part of the API contract.
         :param message: A short, human readable description of the error.
-        :param summary: A comprehensive, human readable summary of any errors, warnings and/or logs returned from the query.
+        :param query_info: A :class:`QueryInfo` instance
         :param constraint_failures: When the code is 'constraint_failure', an array of write constraint failures associated with the error.
         """
         super().__init__(status_code, code, message)
 
-        self._summary = summary
+        self._query_info = query_info
         self._constraint_failures = constraint_failures
 
     def __str__(self):
         constraint_str = "---"
         if self._constraint_failures:
             constraint_str = f"---\nconstraint failures: {self._constraint_failures}\n---"
-        return f"{self._status_code}: {self._code}\n{self._message}\n{constraint_str}\n{self._summary}"
+
+        summary = ""
+        if self._query_info is not None:
+            summary = self._query_info.summary
+
+        return f"{self._status_code}: {self._code}\n{self._message}\n{constraint_str}\n{summary}"
 
 
 class QueryCheckError(ServiceError):
@@ -116,13 +122,13 @@ class AuthorizationError(ServiceError):
     pass
 
 
-class ThrottlingException(ServiceError):
+class ThrottlingError(ServiceError):
     """ThrottlingError indicates some capacity limit was exceeded
     and thus the request could not be served."""
     pass
 
 
-class QueryTimeoutException(ServiceError):
+class QueryTimeoutError(ServiceError):
     """A failure due to the timeout being exceeded, but the timeout
     was set lower than the query's expected processing time.
     This response is distinguished from a ServiceTimeoutException
@@ -139,10 +145,3 @@ class ServiceTimeoutError(ServiceError):
     """ServiceTimeoutError indicates Fauna was not available to service
     the request before the timeout was reached."""
     pass
-
-
-@dataclass
-class ConstraintFailure:
-    message: str
-    name: Optional[str] = None
-    paths: Optional[List[Any]] = None
