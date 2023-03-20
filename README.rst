@@ -1,6 +1,5 @@
 Fauna Python
 ==============
-*This driver is currently under development and not suitable for production workloads.*
 
 .. image:: https://img.shields.io/codecov/c/github/fauna/fauna-python/main.svg?maxAge=21600
   :target: https://codecov.io/gh/fauna/fauna-python
@@ -11,6 +10,13 @@ Fauna Python
 
 Python driver for `Fauna <https://fauna.com>`_.
 
+.. warning::
+    This driver is in beta release and not recommended for production use.
+    It operates with the Fauna database service via an API which is also in
+    beta release, and is not recommended for production use. This driver is
+    not compatible with v4 or earlier versions of Fauna. If you would like
+    to participate in the private beta program please contact product@fauna.com.
+    
 
 Installation
 ------------
