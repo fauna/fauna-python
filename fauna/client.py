@@ -1,4 +1,3 @@
-import urllib.parse
 from datetime import timedelta
 from dataclasses import dataclass
 from typing import Any, Dict, Mapping, Optional, List
@@ -12,7 +11,7 @@ from fauna.http.http_client import HTTPClient
 from fauna.query_builder import QueryInterpolation
 from fauna.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder
-from fauna.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo
+from fauna.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -253,7 +252,7 @@ class Client:
                 headers.update(opts.additional_headers)
 
         if len(query_tags) > 0:
-            headers[Header.Tags] = urllib.parse.urlencode(query_tags)
+            headers[Header.Tags] = QueryTags.encode(query_tags)
 
         data: dict[str, Any] = {
             "query": fql,

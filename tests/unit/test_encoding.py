@@ -131,10 +131,10 @@ def test_encode_dates_times(subtests):
                         10,
                         10,
                         10,
-                        10,
+                        1,
                         tzinfo=timezone(timedelta(0), '+00:00'))
         encoded = FaunaEncoder.encode(test)
-        assert {"@time": "2023-02-28T10:10:10.000010+00:00"} == encoded
+        assert {"@time": "2023-02-28T10:10:10.000001+00:00"} == encoded
         decoded = FaunaDecoder.decode(encoded)
         assert test == decoded
 

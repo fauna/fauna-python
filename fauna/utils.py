@@ -1,6 +1,6 @@
 import os
 import threading
-from typing import Generic, Callable, TypeVar, Optional
+from typing import Generic, Callable, TypeVar, Optional, Mapping
 
 from fauna.endpoints import Endpoints
 from fauna.headers import Header
