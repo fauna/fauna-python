@@ -8,7 +8,7 @@ from fauna.errors import AuthenticationError, ClientError, ProtocolError, Servic
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
     QueryCheckError
 from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
-from fauna.http_client import HTTPClient, HTTPXClient
+from fauna.http.http_client import HTTPClient
 from fauna.query_builder import QueryInterpolation
 from fauna.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder
@@ -133,6 +133,7 @@ class Client:
                 idle_timeout_s = DefaultIdleConnectionTimeout.total_seconds()
 
                 import httpx
+                from fauna.http.httpx_client import HTTPXClient
                 c = HTTPXClient(
                     httpx.Client(
                         http1=False,
