@@ -55,11 +55,11 @@ def test_bad_request(client):
     assert len(e.value.query_info.summary) > 0
 
 
-# todo: Uncomment once fixed in core
-# def test_traceparent_echos(client):
-#     tp = "00-3afc487855c5de345d8752f464add590-5a0bef45234dc1b6-00"
-#     res = client.query(fql("'Hello'"), QueryOptions(traceparent=tp))
-#     assert res.traceparent == tp
+@pytest.mark.skip(reason="not currently supported by core")
+def test_traceparent_echos(client):
+    tp = "00-3afc487855c5de345d8752f464add590-5a0bef45234dc1b6-00"
+    res = client.query(fql("'Hello'"), QueryOptions(traceparent=tp))
+    assert res.traceparent == tp
 
 
 def test_query_tags_echo():
