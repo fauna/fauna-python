@@ -50,15 +50,18 @@ class QueryInfo:
 
     def __init__(
         self,
-        query_tags: Optional[Mapping[str, Any]] = None,
+        query_tags: Optional[str] = None,
         stats: Optional[Mapping[Union[str, QueryStat], Any]] = None,
-        txn_ts: Optional[int] = None,
         summary: Optional[str] = None,
+        txn_ts: Optional[int] = None,
     ):
-        self._txn_ts = txn_ts or 0
-        self._query_tags = query_tags or {}
+        if query_tags is not None:
+            self._query_tags = QueryTags.decode(query_tags)
+        else:
+            self._query_tags = {}
         self._stats = stats or {}
         self._summary = summary or ""
+        self._txn_ts = txn_ts or 0
 
 
 class QuerySuccess(QueryInfo):
@@ -102,3 +105,18 @@ class ConstraintFailure:
     message: str
     name: Optional[str] = None
     paths: Optional[List[Any]] = None
+
+
+class QueryTags:
+
+    @staticmethod
+    def encode(tags: Mapping[str, str]) -> str:
+        return ",".join([f"{k}={v}" for k, v in tags.items()])
+
+    @staticmethod
+    def decode(tag_str: str) -> Mapping[str, str]:
+        res: dict[str, str] = {}
+        for pair in tag_str.split(","):
+            kv = pair.split("=")
+            res[kv[0]] = kv[1]
+        return res

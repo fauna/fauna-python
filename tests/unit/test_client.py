@@ -117,7 +117,7 @@ def test_query_options_set(httpx_mock: HTTPXMock):
         assert request.headers[Header.Traceparent] == traceparent
         assert request.headers[Header.Typecheck] == str(typecheck).lower()
         assert request.headers[Header.MaxContentionRetries] == f"{max_contention_retries}"  # yapf: disable
-        assert request.headers[Header.Tags] == "project=teapot&hello=world&testing=foobar"  # yapf: disable
+        assert request.headers[Header.Tags] == "project=teapot,hello=world,testing=foobar"  # yapf: disable
         assert request.headers["additional"] == "header"
 
         return httpx.Response(
