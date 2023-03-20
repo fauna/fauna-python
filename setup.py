@@ -46,7 +46,7 @@ setup(
         "Operating System :: Unix",
     ],
     keywords="faunadb fauna",
-    packages=["fauna"],
+    packages=["fauna", "fauna.http"],
     install_requires=requires,
     extras_require=extras_require,
 )
