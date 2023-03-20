@@ -12,6 +12,6 @@ echo "Going to publish python package: ${PACKAGE_VERSION}"
 pip install twine
 
 twine check dist/*
-# twine upload dist/*
+twine upload dist/*
 
 echo "fauna-python@$PACKAGE_VERSION has been released" > ../slack-message/publish
