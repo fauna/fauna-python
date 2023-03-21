@@ -67,6 +67,13 @@ class QueryInterpolation:
         """The list of stored Fragments"""
         return self._fragments
 
+    def __str__(self) -> str:
+        res = ""
+        for f in self._fragments:
+            res += str(f.get())
+
+        return res
+
 
 def fql(query: str, **kwargs: Any) -> QueryInterpolation:
     """Creates a QueryInterpolation - capable of performing query composition and simple querying. It can accept a
