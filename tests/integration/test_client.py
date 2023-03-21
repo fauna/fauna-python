@@ -1,4 +1,5 @@
-from fauna import Client, fql
+from fauna import fql
+from fauna.client import Client
 
 
 def test_client_tracks_last_txn_ts(a_collection):

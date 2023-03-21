@@ -6,12 +6,12 @@ import fauna
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
     QueryCheckError
-from fauna.headers import _DriverEnvironment, _Header, _Auth, Header
+from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
-from fauna.query_builder import QueryInterpolation
-from fauna.utils import _Environment, LastTxnTs
+from fauna.query.query_builder import QueryInterpolation
+from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder
-from fauna.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags
+from fauna.client.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -76,6 +76,8 @@ class Client:
             self._endpoint = _Environment.EnvFaunaEndpoint()
         else:
             self._endpoint = endpoint
+
+        print(f"endpoint set to {self._endpoint}")
 
         if secret is None:
             self._auth = _Auth(_Environment.EnvFaunaSecret())

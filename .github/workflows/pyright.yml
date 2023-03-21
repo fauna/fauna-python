@@ -32,7 +32,7 @@ jobs:
           cache: "pip"
 
       - name: Install project deps
-        run: pip install -r requirements.txt
+        run: pip install . .[test] .[lint]
 
       - name: Run pyright type-checker
         run: pyright .

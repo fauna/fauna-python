@@ -1,9 +1,9 @@
 import os
 import threading
-from typing import Generic, Callable, TypeVar, Optional, Mapping
+from typing import Generic, Callable, TypeVar, Optional
 
-from fauna.endpoints import Endpoints
-from fauna.headers import Header
+from fauna.client.endpoints import Endpoints
+from fauna.client.headers import Header
 
 
 def _fancy_bool_from_str(val: str) -> bool:

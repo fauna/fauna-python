@@ -1,4 +1,4 @@
-from fauna.utils import LastTxnTs
+from fauna.client.utils import LastTxnTs
 
 
 def test_last_txn_time_initializes_with_none():

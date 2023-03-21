@@ -3,8 +3,9 @@ from typing import Any
 
 import pytest
 
-from fauna import Document, DocumentReference, Module, NamedDocumentReference, NamedDocument, fql
+from fauna import fql
 from fauna.encoding import FaunaEncoder, FaunaDecoder
+from fauna.query.models import DocumentReference, NamedDocumentReference, Document, NamedDocument, Module
 
 fixed_datetime = datetime.fromisoformat("2023-03-17T00:00:00+00:00")
 
