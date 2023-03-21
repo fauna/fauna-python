@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fauna import Document, NamedDocument, Module
+from fauna.query.models import Document, Module, NamedDocument
 
 fixed_datetime = datetime.fromisoformat("2023-03-17")
 

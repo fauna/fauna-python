@@ -3,9 +3,9 @@ import string
 
 import pytest
 
-import fauna
-from fauna import fql, Client, QueryInterpolation
-from fauna.models import Module
+from fauna import fql, Module
+from fauna.client import Client
+from fauna.query import QueryInterpolation
 
 
 def create_collection(name) -> QueryInterpolation:
@@ -20,7 +20,7 @@ def suffix() -> str:
 
 @pytest.fixture(scope="module")
 def client() -> Client:
-    return fauna.Client()
+    return Client()
 
 
 @pytest.fixture

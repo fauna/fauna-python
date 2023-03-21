@@ -1,4 +1,4 @@
-from fauna import Document, fql
+from fauna import fql, Document
 
 
 def test_subquery_composition(client, a_collection):

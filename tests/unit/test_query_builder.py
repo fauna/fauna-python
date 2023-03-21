@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Any
 
-from fauna.query_builder import fql, QueryInterpolation, LiteralFragment, ValueFragment
+from fauna.query.query_builder import fql, QueryInterpolation, LiteralFragment, ValueFragment
 
 
 def assert_builders(expected: Any, actual: Any):

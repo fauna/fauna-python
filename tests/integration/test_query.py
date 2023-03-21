@@ -1,9 +1,9 @@
 import pytest
 
-import fauna
-from fauna import fql, QueryRuntimeError, QueryCheckError
-from fauna.client import QueryOptions
-from fauna.wire_protocol import QueryStat, ConstraintFailure
+from fauna import fql
+from fauna.client import Client, QueryOptions, QueryStat
+from fauna.errors import QueryCheckError, QueryRuntimeError
+from fauna.client.wire_protocol import ConstraintFailure
 
 
 def test_query_smoke_test(subtests, client):
@@ -65,14 +65,14 @@ def test_traceparent_echos(client):
 def test_query_tags_echo():
     client_qt = {"env": "valhalla"}
     qt = {"version": "thor"}
-    client = fauna.Client(query_tags=client_qt)
+    client = Client(query_tags=client_qt)
     opts = QueryOptions(query_tags=qt)
     res = client.query(fql("42"), opts)
     assert res.query_tags == client_qt | qt
 
 
 def test_handles_typecheck_format():
-    client = fauna.Client(typecheck=True)
+    client = Client(typecheck=True)
     res = client.query(fql("""
 if (true) { 
   42

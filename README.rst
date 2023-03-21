@@ -23,7 +23,7 @@ Installation
 
 .. code-block:: bash
 
-    # TODO
+    pip install fauna
 
 
 Compatibility
@@ -35,37 +35,46 @@ The following versions of Python are supported:
 * Python 3.10
 * Python 3.11
 
-Documentation
--------------
 
-# TODO
-
-
-Example Usage
+Basic Usage
 -------------
 
 .. code-block:: python
 
-    from fauna import fql, Client
+    from fauna import fql
+    from fauna.client import Client
+    from fauna.errors import FaunaException
 
     client = Client()
-    client.query(fql('Collection.create({ name: "Dogs" })'))
-    client.query(fql('Dogs.create({ name: "Scout" })'))
+
+    try:
+        # create a collection
+        create_col = fql('Collection.create({ name: "Dogs" })')
+        client.query(create_col)
+
+        # create a document
+        create_doc = fql('Dogs.create({ name: "Scout" })')
+        client.query(create_doc)
+    except FaunaException as e:
+        # handle errors
 
 Query Composition
 -----------------
 
-This driver supports query composition with Python primitives, lists, dicts, and other FQL queries. For FQL templates, denote variables with `${}` and pass variables as kwargs to `fql()`.
+This driver supports query composition with Python primitives, lists, dicts, and other FQL queries. Serialization to and from user-defined classes is not yet supported—for now, adapt your classes into a dict or list prior to using it in composition.
+
+For FQL templates, denote variables with ``${}`` and pass variables as kwargs to ``fql()``. You can escape a variable with by prepending an additional ``$``.
 
 .. code-block:: python
 
-    from fauna import fql, Client
+    from fauna import fql
+    from fauna.client import Client
 
     def user_by_tin(tin: str):
         return fql('Users.byTin(${tin})', tin=tin)
 
     def render_user():
-        return fql('{ .name, .address }')
+        return fql('{ name, address }')
 
     tin = "123"
     q = fql("""let u = ${user}
@@ -78,6 +87,32 @@ Document Streaming
 ------------------
 
 Not implemented
+
+Query Stats
+------------------
+
+Stats are returned on query responses and ServiceErrors.
+
+.. code-block:: python
+
+    from fauna import fql
+    from fauna.client import Client, QuerySuccess
+    from fauna.errors import ServiceError
+
+    client = Client()
+
+    def emit_stats(stats: Mapping[str, Any]):
+        for stat, val in stats:
+            print(f"{stat}: {val}")
+
+    try:
+        q = fql('Collection.create({ name: "Dogs" })')
+        qs: QuerySuccess = client.query(q)
+        emit_stats(qs.stats)
+    except ServiceError as e:
+        if e.query_info is not None:
+            emit_stats(e.query_info.stats)
+        # more error handling...
 
 Building it yourself
 --------------------
@@ -96,23 +131,10 @@ Setup
 Testing
 ~~~~~~~
 
-To run the tests you must have a Fauna database available.
-Then set the environment variable ``FAUNA_ROOT_KEY`` to your database's root key.
-If you use Fauna cloud, this is the password you log in with.
-
-Then run ``make test``.
-To test a single test, use e.g. ``python -m unittest tests.test_client.ClientTest.test_ping``.
-
-Tests can also be run via a Docker container with ``FAUNA_ROOT_KEY="your-cloud-secret" make docker-test``
-(an alternate Alpine-based Python image can be provided via `RUNTIME_IMAGE`).
-
 
 Coverage
 ~~~~~~~~
 
-To run the tests with coverage, install the coverage dependencies with ``pip install .[coverage]``,
-and then run ``make coverage``. A summary will be displayed to the terminal, and a detailed coverage report
-will be available at ``htmlcov/index.html``.
 
 
 Contribute

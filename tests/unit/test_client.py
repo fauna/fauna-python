@@ -7,9 +7,10 @@ import pytest_subtests
 from pytest_httpx import HTTPXMock
 
 import fauna
-from fauna import Client, HTTPXClient, Header, fql
-from fauna.client import QueryOptions
+from fauna import fql
+from fauna.client import Client, Header, QueryOptions
 from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError
+from fauna.http import HTTPXClient
 
 
 def test_client_defaults(monkeypatch):

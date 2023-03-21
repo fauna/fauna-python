@@ -1,7 +1,7 @@
 import abc
 from typing import Any, Optional, List
 
-from fauna.template import FaunaTemplate
+from .template import FaunaTemplate
 
 
 class Fragment(abc.ABC):

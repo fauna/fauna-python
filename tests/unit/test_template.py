@@ -1,6 +1,6 @@
 import pytest
 
-from fauna.template import FaunaTemplate
+from fauna.query.template import FaunaTemplate
 
 
 def test_templates_with_variables(subtests):

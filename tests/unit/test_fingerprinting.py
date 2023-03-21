@@ -1,5 +1,6 @@
 from typing import Mapping
-import fauna
+
+from fauna.client.headers import _DriverEnvironment
 
 
 def test_fingerprinting(monkeypatch, subtests):
@@ -37,4 +38,4 @@ def test_fingerprinting(monkeypatch, subtests):
                 for e in tests[t]:
                     m.setenv(e, tests[t][e])
 
-                assert fauna.headers._DriverEnvironment().env == t
+                assert _DriverEnvironment().env == t

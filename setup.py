@@ -19,7 +19,8 @@ requires = [
 ]
 
 extras_require = {
-    "lint": ["pylint"],
+    "lint": ["yapf"],
+    "test": ["pytest", "pytest-env", "pytest-cov", "pytest-httpx", "pytest-subtests"]
 }
 
 setup(
@@ -47,7 +48,7 @@ setup(
         "Operating System :: Unix",
     ],
     keywords="faunadb fauna",
-    packages=["fauna", "fauna.http"],
+    packages=["fauna", "fauna.client", "fauna.encoding", "fauna.errors", "fauna.http", "fauna.query"],
     install_requires=requires,
     extras_require=extras_require,
 )

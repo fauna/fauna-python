@@ -1,11 +1,3 @@
-# package runtime dependencies
 iso8601
 future
 httpx[http2]
-
-# dependencies required for development
-pytest
-pytest-env
-pytest-cov
-pytest-httpx
-pytest-subtests
