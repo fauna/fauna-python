@@ -51,6 +51,9 @@ jobs:
 
       - get: fauna-python-repository-docs
 
+      - task: unit-tests
+        file: fauna-python-repository/concourse/tasks/unit-tests.yml
+
       - task: integration-tests
         file: fauna-python-repository/concourse/tasks/integration-tests.yml
         privileged: true
