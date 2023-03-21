@@ -41,6 +41,7 @@ def test_query_builder_supports_fauna_interpolated_strings():
     ])
 
     assert_builders(expected, actual)
+    assert str(actual) == "let age = 5\n\"Alice is #{age} years old.\""
 
 
 def test_query_builder_values(subtests):
@@ -59,10 +60,13 @@ def test_query_builder_sub_queries(subtests):
     with subtests.test(msg="single subquery with object"):
         user = {"name": "Dino", "age": 0, "birthdate": date(2023, 2, 24)}
         inner = fql("""let x = ${my_var}""", my_var=user)
-        actual = fql("${inner}\nx { .name }", inner=inner)
+        actual = fql("${inner}\nx { name }", inner=inner)
         expected = QueryInterpolation([
             ValueFragment(inner),
-            LiteralFragment("\nx { .name }"),
+            LiteralFragment("\nx { name }"),
         ])
 
         assert_builders(expected, actual)
+        assert str(actual) == "let x = " \
+               + "{'name': 'Dino', 'age': 0, 'birthdate': datetime.date(2023, 2, 24)}\n" \
+               + "x { name }"
