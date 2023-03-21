@@ -21,10 +21,10 @@ run:
     - -ceu
     - |
       # start containers
-      docker-compose -f fauna-python-repository/concourse/tasks/docker-compose-fauna.yml run python-311
-      docker-compose -f fauna-python-repository/concourse/tasks/docker-compose-fauna.yml run python-310
-      docker-compose -f fauna-python-repository/concourse/tasks/docker-compose-fauna.yml run python-39
+      docker-compose -f fauna-python-repository/concourse/scripts/docker-compose-fauna.yml run python-311
+      docker-compose -f fauna-python-repository/concourse/scripts/docker-compose-fauna.yml run python-310
+      docker-compose -f fauna-python-repository/concourse/scripts/docker-compose-fauna.yml run python-39
       # stop and remove containers
-      docker-compose -f fauna-python-repository/concourse/tasks/docker-compose-fauna.yml down
+      docker-compose -f fauna-python-repository/concourse/scripts/docker-compose-fauna.yml down
       # remove volumes
       docker volume rm $(docker volume ls -q)
