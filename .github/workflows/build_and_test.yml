@@ -44,7 +44,7 @@ jobs:
         run: ulimit -a
 
       - name: "Install ci dependencies"
-        run: pip install -r requirements.txt --use-pep517
+        run: pip install . .[test] .[lint] --use-pep517
 
       - name: Run unit tests
         run: pytest -v --cov=fauna --cov-context=test tests/unit
