@@ -27,6 +27,7 @@ setup(
     version=pkg_version,
     description="Fauna Python driver for FQL 10+",
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     url="https://github.com/fauna/fauna-python",
     author=pkg_author,
     author_email="priority@fauna.com",

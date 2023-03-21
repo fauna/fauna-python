@@ -1,0 +1,13 @@
+---
+platform: linux
+image_resource:
+  type: registry-image
+  source:
+    repository: python
+    tag: 3.9.16-alpine3.16
+
+inputs:
+  - name: fauna-python-repository
+
+run:
+  path: ./fauna-python-repository/concourse/scripts/unit-tests.sh
