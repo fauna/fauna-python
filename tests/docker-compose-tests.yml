@@ -14,7 +14,7 @@ services:
 
   python-311:
     environment:
-      FAUNA_ROOT_KEY: "secret"
+      FAUNA_SECRET: "secret"
       FAUNA_ENDPOINT: http://faunadb:8443
     image: python:3.11.2-alpine3.17
     container_name: python-311
@@ -28,7 +28,7 @@ services:
 
   python-310:
     environment:
-      FAUNA_ROOT_KEY: "secret"
+      FAUNA_SECRET: "secret"
       FAUNA_ENDPOINT: http://faunadb:8443
     image: python:3.10.10-alpine3.17
     container_name: python-310
@@ -42,7 +42,6 @@ services:
 
   python-39:
     environment:
-      FAUNA_ROOT_KEY: "secret"
       FAUNA_SECRET: "secret"
       FAUNA_ENDPOINT: http://faunadb:8443
     image: python:3.9.5-alpine3.13
