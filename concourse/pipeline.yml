@@ -11,7 +11,6 @@ resources:
     source:
       url: ((slack-webhook))
 
-
   - name: fauna-python-repository
     type: git
     icon: github
@@ -54,9 +53,6 @@ jobs:
       - task: tests
         file: fauna-python-repository/concourse/tasks/tests.yml
         privileged: true
-        params:
-          FAUNA_ROOT_KEY: ((fauna.secret))
-          FAUNA_ENDPOINT: ((fauna.scheme))://((fauna.domain)):((fauna.port))
 
       - task: build
         file: fauna-python-repository/concourse/tasks/build.yml
