@@ -56,9 +56,7 @@ jobs:
         privileged: true
         params:
           FAUNA_ROOT_KEY: ((fauna.secret))
-          FAUNA_DOMAIN: ((fauna.domain))
-          FAUNA_SCHEME: ((fauna.scheme))
-          FAUNA_PORT: ((fauna.port))
+          FAUNA_ENDPOINT: ((fauna.scheme))://((fauna.domain)):((fauna.port))
 
       - task: build
         file: fauna-python-repository/concourse/tasks/build.yml
