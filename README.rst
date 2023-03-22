@@ -1,8 +1,6 @@
 Fauna Python
 ==============
 
-.. image:: https://img.shields.io/codecov/c/github/fauna/fauna-python/main.svg?maxAge=21600
-  :target: https://codecov.io/gh/fauna/fauna-python
 .. image:: https://img.shields.io/pypi/v/fauna.svg?maxAge=21600
   :target: https://pypi.python.org/pypi/fauna
 .. image:: https://img.shields.io/badge/license-MPL_2.0-blue.svg?maxAge=2592000
@@ -114,28 +112,40 @@ Stats are returned on query responses and ServiceErrors.
             emit_stats(e.query_info.stats)
         # more error handling...
 
-Building it yourself
---------------------
-
 
 Setup
-~~~~~
+-----
 
 .. code-block:: bash
 
     $ virtualenv venv
     $ source venv/bin/activate
-    $ pip install .
+    $ pip install . .[test] .[lint]
 
 
 Testing
-~~~~~~~
+-------
 
+We use pytest. You can run tests directly or with docker. If you run integration tests directly, you must have fauna running locally.
+
+.. code-block:: bash
+
+    $ source venv/bin/activate
+    $ make unit-test
+
+.. code-block:: bash
+
+    $ make docker-test
+
+See the ``Makefile`` for more.
 
 Coverage
-~~~~~~~~
+--------
 
+.. code-block:: bash
 
+    $ source venv/bin/activate
+    $ make coverage
 
 Contribute
 ----------

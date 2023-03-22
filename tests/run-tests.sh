@@ -4,6 +4,7 @@ set -eou
 
 apk add --update make
 
-pip install -r requirements.txt
+pip install . .[test]
 pip install codecov
-coverage run setup.py test
+
+make test
