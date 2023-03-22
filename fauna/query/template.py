@@ -3,12 +3,12 @@ import re as _re
 
 
 class FaunaTemplate:
-    """A template class that supports variables marked with a $-sigil. Its primary purpose
+    """A template class that supports variables marked with a ${}-sigil. Its primary purpose
     is to expose an iterator for the template parts that support composition of FQL queries.
 
     Implementation adapted from https://github.com/python/cpython/blob/main/Lib/string.py
 
-    :param template: A string template e.g. "$my_var { .name }"
+    :param template: A string template e.g. "${my_var} { name }"
     :type template: str
     """
 

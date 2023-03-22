@@ -49,7 +49,8 @@ class FaunaDecoder:
             - { "@long": "100" } decodes to 100 of type int
             - { "@time": "..." } decodes to a datetime
             - { "@date": "..." } decodes to a date
-            - { "@doc": "..." } decodes to a DocumentReference
+            - { "@doc": "..." } decodes to a Document or NamedDocument
+            - { "@ref": "..." } decodes to a DocumentReference or NamedDocumentReference
             - { "@mod": "..." } decodes to a Module
 
         :param obj: the object to decode

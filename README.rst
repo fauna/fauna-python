@@ -128,10 +128,24 @@ Testing
 
 We use pytest. You can run tests directly or with docker. If you run integration tests directly, you must have fauna running locally.
 
+If you want to run fauna, then run integration tests separately:
+
+.. code-block:: bash
+
+    $ make docker-fauna
+    $ source venv/bin/activate
+    $ make install
+    $ make integration-test
+
+To run unit tests locally:
+
 .. code-block:: bash
 
     $ source venv/bin/activate
+    $ make install
     $ make unit-test
+
+To stand up a container and run all tests at the same time:
 
 .. code-block:: bash
 
