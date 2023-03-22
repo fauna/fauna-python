@@ -5,12 +5,6 @@ image_resource:
   source:
     repository: karlkfi/concourse-dcind
 
-params:
-  FAUNA_ROOT_KEY:
-  FAUNA_DOMAIN:
-  FAUNA_SCHEME:
-  FAUNA_PORT:
-
 inputs:
   - name: fauna-python-repository
 
