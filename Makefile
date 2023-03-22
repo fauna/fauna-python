@@ -23,6 +23,8 @@ lint-fauna:
 lint-tests:
 	python -m yapf -i --recursive tests
 
+run-fauna:
+	docker-compose -f tests/docker-compose-tests.yml up --build faunadb
+
 docker-test:
 	docker-compose -f tests/docker-compose-tests.yml run --rm --build $(PYTHON_VERSION)
-	docker-compose -f tests/docker-compose-tests.yml down

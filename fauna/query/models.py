@@ -50,13 +50,13 @@ class DocumentReference(BaseReference):
 
     _id: str
 
-    def __init__(self, coll: Union[str, Module], ref_id: str):
+    def __init__(self, coll: Union[str, Module], id: str):
         super().__init__(coll)
 
-        if not isinstance(ref_id, str):
+        if not isinstance(id, str):
             raise TypeError(
-                f"'ref_id' should be of type str, but was {type(ref_id)}")
-        self._id = ref_id
+                f"'ref_id' should be of type str, but was {type(id)}")
+        self._id = id
 
     def __hash__(self):
         hash((type(self), self._collection, self._id))
