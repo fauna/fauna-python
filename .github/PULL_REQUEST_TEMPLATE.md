@@ -17,3 +17,8 @@ What will change as a result of your pull request? Note that sometimes this sect
 ## Testing
 
 Describe the manual and automated tests you completed to verify the change is working as expected.
+
+
+----
+By submitting this pull request, I confirm that you can use, modify, copy, and redistribute this contribution, under the terms of your choice.
+
