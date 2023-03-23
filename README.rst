@@ -11,7 +11,7 @@ Python driver for `Fauna <https://fauna.com>`_.
 .. warning::
     This driver is in beta release and not recommended for production use.
     It operates with the Fauna database service via an API which is also in
-    beta release, and is not recommended for production use. This driver is
+    beta release and is not recommended for production use. This driver is
     not compatible with v4 or earlier versions of Fauna. If you would like
     to participate in the private beta program contact product@fauna.com.
     
@@ -52,7 +52,7 @@ Supported Environment Variables:
     from fauna.errors import FaunaException
 
     # As a best practice, don't store your secret directly in your code.
-    # Either set the FAUNA_SECRET env variable, or retrieve it from a secret store.
+    # Either set the FAUNA_SECRET env variable or retrieve it from a secret store.
     client = Client(secret=my_secret)
 
     try:
