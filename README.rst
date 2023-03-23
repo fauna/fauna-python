@@ -53,7 +53,7 @@ Supported Environment Variables:
 
     # Assumes you have retrieved a secret from a secret store and set it to `my_secret`.
     # As a best practice, don't store your secret directly in your code.
-    # Either set the FAUNA_SECRET, or retrieve it from a secret store.
+    # Either set the FAUNA_SECRET env variable, or retrieve it from a secret store.
     client = Client(secret=my_secret)
 
     try:
