@@ -11,9 +11,9 @@ Python driver for `Fauna <https://fauna.com>`_.
 .. warning::
     This driver is in beta release and not recommended for production use.
     It operates with the Fauna database service via an API which is also in
-    beta release, and is not recommended for production use. This driver is
+    beta release and is not recommended for production use. This driver is
     not compatible with v4 or earlier versions of Fauna. If you would like
-    to participate in the private beta program please contact product@fauna.com.
+    to participate in the private beta program contact product@fauna.com.
     
 
 Installation
@@ -36,6 +36,14 @@ The following versions of Python are supported:
 
 Basic Usage
 -------------
+You can expect a ``Client`` instance to have reasonable defaults, like the Fauna endpoint ``db.fauna.com`` and a global HTTP client, but you will always need to configure a secret.
+
+You can configure your secret by passing it directly to the client or by setting an environment variable.
+
+Supported Environment Variables:
+
+* ``FAUNA_ENDPOINT``: The Fauna endpoint to use. For example, ``http://localhost:8443``
+* ``FAUNA_SECRET``: The Fauna secret to use.
 
 .. code-block:: python
 
@@ -43,7 +51,9 @@ Basic Usage
     from fauna.client import Client
     from fauna.errors import FaunaException
 
-    client = Client()
+    # As a best practice, don't store your secret directly in your code.
+    # Either set the FAUNA_SECRET env variable or retrieve it from a secret store.
+    client = Client(secret=my_secret)
 
     try:
         # create a collection
@@ -61,7 +71,7 @@ Query Composition
 
 This driver supports query composition with Python primitives, lists, dicts, and other FQL queries. Serialization to and from user-defined classes is not yet supported—for now, adapt your classes into a dict or list prior to using it in composition.
 
-For FQL templates, denote variables with ``${}`` and pass variables as kwargs to ``fql()``. You can escape a variable with by prepending an additional ``$``.
+For FQL templates, denote variables with ``${}`` and pass variables as kwargs to ``fql()``. You can escape a variable by prepending an additional ``$``.
 
 .. code-block:: python
 
@@ -174,7 +184,7 @@ Copyright 2023 `Fauna, Inc. <https://fauna.com>`_
 
 Licensed under the Mozilla Public License, Version 2.0 (the
 "License"); you may not use this software except in compliance with
-the License. You may obtain a copy of the License at
+the License. You can obtain a copy of the License at
 
 `http://mozilla.org/MPL/2.0/ <http://mozilla.org/MPL/2.0/>`_
 
