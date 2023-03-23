@@ -51,7 +51,6 @@ Supported Environment Variables:
     from fauna.client import Client
     from fauna.errors import FaunaException
 
-    # Assumes you have retrieved a secret from a secret store and set it to `my_secret`.
     # As a best practice, don't store your secret directly in your code.
     # Either set the FAUNA_SECRET env variable, or retrieve it from a secret store.
     client = Client(secret=my_secret)
