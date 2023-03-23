@@ -36,7 +36,7 @@ The following versions of Python are supported:
 
 Basic Usage
 -------------
-You can expect a ``Client`` instance to have reasonable defaults, like the Fauna endpoint ``db.fauna.com`` and a global HTTP client, but you will always need to supply a secret.
+You can expect a ``Client`` instance to have reasonable defaults, like the Fauna endpoint ``db.fauna.com`` and a global HTTP client, but you will always need to configure a secret.
 
 You can configure your secret by passing it directly to the client or by setting an environment variable.
 
