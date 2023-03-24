@@ -5,10 +5,10 @@ import pytest
 
 from fauna import fql, Module
 from fauna.client import Client
-from fauna.query import QueryInterpolation
+from fauna.query import Query
 
 
-def create_collection(name) -> QueryInterpolation:
+def create_collection(name) -> Query:
     return fql('Collection.create({ name: ${name} })', name=name)
 
 

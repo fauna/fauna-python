@@ -52,8 +52,8 @@ class LiteralFragment(Fragment):
         return self._val
 
 
-class QueryInterpolation:
-    """A class for building Query Interpolation queries.
+class Query:
+    """A class for representing a query.
 
        e.g. { "fql": [...] }
     """
@@ -75,20 +75,20 @@ class QueryInterpolation:
         return res
 
 
-def fql(query: str, **kwargs: Any) -> QueryInterpolation:
-    """Creates a QueryInterpolation - capable of performing query composition and simple querying. It can accept a
+def fql(query: str, **kwargs: Any) -> Query:
+    """Creates a Query - capable of performing query composition and simple querying. It can accept a
     simple string query, or can perform composition using ``${}`` sigil string template with ``**kwargs`` as
     substitutions.
 
     The ``**kwargs`` can be Fauna data types - such as strings, document references, or modules - and embedded
-    QueryInterpolation - allowing you to compose arbitrarily complex queries.
+    Query - allowing you to compose arbitrarily complex queries.
 
     When providing ``**kwargs``, following types are accepted:
         - :class:`str`, :class:`int`, :class:`float`, :class:`bool`, :class:`datetime.datetime`, :class:`datetime.date`,
-          :class:`dict`, :class:`list`, :class:`QueryInterpolation`, :class:`DocumentReference`, :class:`Module`
+          :class:`dict`, :class:`list`, :class:`Query`, :class:`DocumentReference`, :class:`Module`
 
     :raises ValueError: If there is an invalid template placeholder or a value that cannot be encoded.
-    :returns: A :class:`QueryInterpolation` that can be passed to the client for evaluation against Fauna.
+    :returns: A :class:`Query` that can be passed to the client for evaluation against Fauna.
 
     Examples:
 
@@ -126,4 +126,4 @@ def fql(query: str, **kwargs: Any) -> QueryInterpolation:
 
             # TODO: Reject if it's already a fragment, or accept *Fragment? Decide on API here
             fragments.append(ValueFragment(kwargs[field_name]))
-    return QueryInterpolation(fragments)
+    return Query(fragments)

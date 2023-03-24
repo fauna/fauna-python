@@ -1,2 +1,2 @@
-from .query_builder import fql, QueryInterpolation
+from .query_builder import fql, Query
 from .models import Document, DocumentReference, NamedDocument, NamedDocumentReference, Module

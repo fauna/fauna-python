@@ -8,7 +8,7 @@ from fauna.errors import AuthenticationError, ClientError, ProtocolError, Servic
     QueryCheckError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
-from fauna.query.query_builder import QueryInterpolation
+from fauna.query.query_builder import Query
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
 from fauna.client.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags
@@ -181,7 +181,7 @@ class Client:
 
     def query(
         self,
-        fql: QueryInterpolation,
+        fql: Query,
         opts: Optional[QueryOptions] = None,
     ) -> QuerySuccess:
         """
@@ -199,9 +199,9 @@ class Client:
         :raises TypeError: Invalid param types
         """
 
-        if not isinstance(fql, QueryInterpolation):
-            err_msg = f"'fql' must be a QueryInterpolation but was a {type(fql)}. You can build a " \
-                       f"QueryInterpolation by calling fauna.fql()"
+        if not isinstance(fql, Query):
+            err_msg = f"'fql' must be a Query but was a {type(fql)}. You can build a " \
+                       f"Query by calling fauna.fql()"
             raise TypeError(err_msg)
 
         try:
