@@ -198,7 +198,13 @@ class Client:
         :raises ProtocolError: HTTP error not from Fauna
         :raises ServiceError: Fauna returned an error
         :raises ValueError: Encoding and decoding errors
+        :raises TypeError: Invalid param types
         """
+
+        if not isinstance(fql, QueryInterpolation):
+            err_msg = f"'fql' must be a QueryInterpolation but was a {type(fql)}. You can build a " \
+                       f"QueryInterpolation by calling fauna.fql()"
+            raise TypeError(err_msg)
 
         try:
             encoded_query: Mapping[str, Any] = FaunaEncoder.encode(fql)
