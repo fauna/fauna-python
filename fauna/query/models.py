@@ -16,8 +16,8 @@ class Module:
     def __init__(self, name: str):
         self.name = name
 
-    def __str__(self):
-        return self.name
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name={repr(self.name)})"
 
     def __eq__(self, other):
         return isinstance(other, Module) and str(self) == str(other)
@@ -29,6 +29,10 @@ class Module:
 class BaseReference:
     _collection: Module
 
+    @property
+    def coll(self) -> Module:
+        return self._collection
+
     def __init__(self, coll: Union[str, Module]):
         if isinstance(coll, Module):
             self._collection = coll
@@ -39,16 +43,24 @@ class BaseReference:
                 f"'coll' should be of type Module or str, but was {type(coll)}"
             )
 
-    @property
-    def coll(self) -> Module:
-        return self._collection
+    def __repr__(self):
+        return f"{self.__class__.__name__}(coll={repr(self._collection)})"
+
+    def __eq__(self, other):
+        return isinstance(other, type(self)) and str(self) == str(other)
 
 
 class DocumentReference(BaseReference):
     """A class representing a reference to a :class:`Document` stored in Fauna.
     """
 
-    _id: str
+    @property
+    def id(self) -> str:
+        """The ID for the :class:`Document`. Valid IDs are 64-bit integers, stored as strings.
+
+        :rtype: str
+        """
+        return self._id
 
     def __init__(self, coll: Union[str, Module], id: str):
         super().__init__(coll)
@@ -61,19 +73,8 @@ class DocumentReference(BaseReference):
     def __hash__(self):
         hash((type(self), self._collection, self._id))
 
-    def __str__(self):
-        return f"{self._collection}:{self._id}"
-
-    def __eq__(self, other):
-        return isinstance(other, type(self)) and str(self) == str(other)
-
-    @property
-    def id(self) -> str:
-        """The ID for the :class:`Document`. Valid IDs are 64-bit integers, stored as strings.
-
-        :rtype: str
-        """
-        return self._id
+    def __repr__(self):
+        return f"{self.__class__.__name__}(id={repr(self._id)},coll={repr(self._collection)})"
 
     @staticmethod
     def from_string(ref: str):
@@ -87,7 +88,13 @@ class NamedDocumentReference(BaseReference):
     """A class representing a reference to a :class:`NamedDocument` stored in Fauna.
     """
 
-    _name: str
+    @property
+    def name(self) -> str:
+        """The name of the :class:`NamedDocument`.
+
+        :rtype: str
+        """
+        return self._name
 
     def __init__(self, coll: Union[str, Module], name: str):
         super().__init__(coll)
@@ -101,19 +108,8 @@ class NamedDocumentReference(BaseReference):
     def __hash__(self):
         hash((type(self), self._collection, self._name))
 
-    def __str__(self):
-        return f"{self._collection}:{self._name}"
-
-    def __eq__(self, other):
-        return isinstance(other, type(self)) and str(self) == str(other)
-
-    @property
-    def name(self) -> str:
-        """The name of the :class:`NamedDocument`.
-
-        :rtype: str
-        """
-        return self._name
+    def __repr__(self):
+        return f"{self.__class__.__name__}(name={repr(self._name)},coll={repr(self._collection)})"
 
 
 class BaseDocument(Mapping):
@@ -206,6 +202,15 @@ class Document(BaseDocument):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __repr__(self):
+        kvs = ",".join([f"{repr(k)}:{repr(v)}" for k, v in self.items()])
+
+        return f"{self.__class__.__name__}(" \
+               f"id={repr(self.id)}," \
+               f"coll={repr(self.coll)}," \
+               f"ts={repr(self.ts)}," \
+               f"data={{{kvs}}})"
+
 
 class NamedDocument(BaseDocument):
     """A class representing a named document stored in Fauna. Examples of named documents include Collection
@@ -262,3 +267,12 @@ class NamedDocument(BaseDocument):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __repr__(self):
+        kvs = ",".join([f"{repr(k)}:{repr(v)}" for k, v in self.items()])
+
+        return f"{self.__class__.__name__}(" \
+               f"name={repr(self.name)}," \
+               f"coll={repr(self.coll)}," \
+               f"ts={repr(self.ts)}," \
+               f"data={{{kvs}}})"

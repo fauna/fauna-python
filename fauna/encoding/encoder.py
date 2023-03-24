@@ -135,7 +135,7 @@ class FaunaEncoder:
 
     @staticmethod
     def from_mod(obj: Module):
-        return {"@mod": str(obj)}
+        return {"@mod": obj.name}
 
     @staticmethod
     def from_dict(obj: Any):

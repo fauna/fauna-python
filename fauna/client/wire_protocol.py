@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Mapping, Any, Union, List
 
-from fauna.encoding import FaunaDecoder
-
 
 class QueryStat(str, Enum):
     """Query stat names."""
@@ -34,14 +32,17 @@ class QueryInfo:
 
     @property
     def query_tags(self) -> Mapping[str, Any]:
+        """The tags associated with the query."""
         return self._query_tags
 
     @property
     def summary(self) -> str:
+        """A comprehensive, human readable summary of any errors, warnings and/or logs returned from the query."""
         return self._summary
 
     @property
     def stats(self) -> Mapping[Union[str, QueryStat], Any]:
+        """Query stats associated with the query."""
         return self._stats
 
     @property
@@ -50,18 +51,22 @@ class QueryInfo:
 
     def __init__(
         self,
-        query_tags: Optional[str] = None,
+        query_tags: Optional[Mapping[str, str]] = None,
         stats: Optional[Mapping[Union[str, QueryStat], Any]] = None,
         summary: Optional[str] = None,
         txn_ts: Optional[int] = None,
     ):
-        if query_tags is not None:
-            self._query_tags = QueryTags.decode(query_tags)
-        else:
-            self._query_tags = {}
+        self._query_tags = query_tags or {}
         self._stats = stats or {}
         self._summary = summary or ""
         self._txn_ts = txn_ts or 0
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(" \
+               f"query_tags={repr(self.query_tags)}," \
+               f"stats={repr(self.stats)}," \
+               f"summary={repr(self.summary)}," \
+               f"txn_ts={repr(self.txn_ts)})"
 
 
 class QuerySuccess(QueryInfo):
@@ -69,35 +74,48 @@ class QuerySuccess(QueryInfo):
 
     @property
     def data(self) -> Any:
+        """The data returned by the query. This is the result of the FQL query."""
         return self._data
 
     @property
     def static_type(self) -> Optional[str]:
+        """If typechecked, the query's inferred static result type, if the query was typechecked."""
         return self._static_type
 
     @property
     def traceparent(self) -> Optional[str]:
+        """The traceparent for the query."""
         return self._traceparent
 
     def __init__(
         self,
-        body: Any,
-        headers: Mapping[str, str],
+        data: Any,
+        query_tags: Optional[Mapping[str, str]],
+        static_type: Optional[str],
+        stats: Optional[Mapping[str, Any]],
+        summary: Optional[str],
+        traceparent: Optional[str],
+        txn_ts: Optional[int],
     ):
 
-        stats = body["stats"] if "stats" in body else None
-        summary = body["summary"] if "summary" in body else None
-        query_tags = body["query_tags"] if "query_tags" in body else None
-        txn_ts = body["txn_ts"] if "txn_ts" in body else None
         super().__init__(query_tags=query_tags,
                          stats=stats,
                          summary=summary,
                          txn_ts=txn_ts)
 
-        self._traceparent = headers.get("traceparent", None)
-        self._static_type = body[
-            "static_type"] if "static_type" in body else None
-        self._data = FaunaDecoder.decode(body["data"])
+        self._traceparent = traceparent
+        self._static_type = static_type
+        self._data = data
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(" \
+               f"query_tags={repr(self.query_tags)}," \
+               f"static_type={repr(self.static_type)}," \
+               f"stats={repr(self.stats)}," \
+               f"summary={repr(self.summary)}," \
+               f"traceparent={repr(self.traceparent)}," \
+               f"txn_ts={repr(self.txn_ts)}," \
+               f"data={repr(self.data)})"
 
 
 @dataclass
