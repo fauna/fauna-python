@@ -11,7 +11,7 @@ from fauna.http.http_client import HTTPClient
 from fauna.query.query_builder import QueryInterpolation
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
-from fauna.client.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags
+from fauna.client.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags, QueryStats
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -280,7 +280,8 @@ class Client:
             if "txn_ts" in response_json:
                 self.set_last_txn_ts(int(response_json["txn_ts"]))
 
-            stats = response_json["stats"] if "stats" in response_json else None
+            stats = QueryStats(
+                response_json["stats"]) if "stats" in response_json else None
             summary = response_json[
                 "summary"] if "summary" in response_json else None
             query_tags = QueryTags.decode(
@@ -334,7 +335,7 @@ class Client:
         query_info = QueryInfo(
             query_tags=QueryTags.decode(body["query_tags"])
             if "query_tags" in body else None,
-            stats=body["stats"] if "stats" in body else None,
+            stats=QueryStats(body["stats"]) if "stats" in body else None,
             txn_ts=body["txn_ts"] if "txn_ts" in body else None,
             summary=body["summary"] if "summary" in body else None,
         )
