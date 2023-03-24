@@ -69,7 +69,7 @@ class _SettingFromEnviron(Generic[T]):
 class _Environment:
     EnvFaunaEndpoint = _SettingFromEnviron(
         "FAUNA_ENDPOINT",
-        Endpoints.Production,
+        Endpoints.Cloud,
         str,
     )
     """environment variable for Fauna Client HTTP endpoint"""

@@ -44,7 +44,7 @@ def test_client_strips_endpoint_trailing_slash(monkeypatch, subtests):
         monkeypatch.setenv("FAUNA_SECRET", secret)
         client = Client()
 
-        assert client._endpoint == Endpoints.Production
+        assert client._endpoint == Endpoints.Cloud
         assert client._auth.secret == secret
 
     with subtests.test(msg="trailing slash on param"):
