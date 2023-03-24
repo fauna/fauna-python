@@ -10,7 +10,7 @@ from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query.query_builder import QueryInterpolation
 from fauna.client.utils import _Environment, LastTxnTs
-from fauna.encoding import FaunaEncoder
+from fauna.encoding import FaunaEncoder, FaunaDecoder
 from fauna.client.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
@@ -280,7 +280,27 @@ class Client:
             if "txn_ts" in response_json:
                 self.set_last_txn_ts(int(response_json["txn_ts"]))
 
-            return QuerySuccess(response_json, headers)
+            stats = response_json["stats"] if "stats" in response_json else None
+            summary = response_json[
+                "summary"] if "summary" in response_json else None
+            query_tags = QueryTags.decode(
+                response_json["query_tags"]
+            ) if "query_tags" in response_json else None
+            txn_ts = response_json[
+                "txn_ts"] if "txn_ts" in response_json else None
+            traceparent = headers.get("traceparent", None)
+            static_type = response_json[
+                "static_type"] if "static_type" in response_json else None
+
+            return QuerySuccess(
+                data=FaunaDecoder.decode(response_json["data"]),
+                query_tags=query_tags,
+                static_type=static_type,
+                stats=stats,
+                summary=summary,
+                traceparent=traceparent,
+                txn_ts=txn_ts,
+            )
 
     def _check_protocol(self, response_json: Any, status_code):
         # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -312,7 +332,8 @@ class Client:
         message = err["message"]
         constraint_failures: Optional[List[ConstraintFailure]] = None
         query_info = QueryInfo(
-            query_tags=body["query_tags"] if "query_tags" in body else None,
+            query_tags=QueryTags.decode(body["query_tags"])
+            if "query_tags" in body else None,
             stats=body["stats"] if "stats" in body else None,
             txn_ts=body["txn_ts"] if "txn_ts" in body else None,
             summary=body["summary"] if "summary" in body else None,

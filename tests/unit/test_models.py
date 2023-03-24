@@ -1,8 +1,60 @@
-from datetime import datetime
+import datetime
 
-from fauna.query.models import Document, Module, NamedDocument
+from fauna.query.models import Document, Module, NamedDocument, BaseReference, DocumentReference, NamedDocumentReference
 
-fixed_datetime = datetime.fromisoformat("2023-03-17")
+fixed_datetime = datetime.datetime.fromisoformat("2023-03-17")
+
+
+def test_module_repr():
+    m = Module("mod_name")
+    assert repr(m) == "Module(name='mod_name')"
+    assert eval(repr(m)) == m
+
+
+def test_base_reference_repr():
+    br = BaseReference(Module("mod"))
+    assert repr(br) == "BaseReference(coll=Module(name='mod'))"
+    assert eval(repr(br)) == br
+
+
+def test_doc_reference_repr():
+    dr = DocumentReference(id="123", coll=Module("mod"))
+    assert repr(dr) == "DocumentReference(id='123',coll=Module(name='mod'))"
+    assert eval(repr(dr)) == dr
+
+
+def test_named_doc_reference_repr():
+    dr = NamedDocumentReference(name="Def", coll=Module("MyCol"))
+    assert repr(
+        dr) == "NamedDocumentReference(name='Def',coll=Module(name='MyCol'))"
+    assert eval(repr(dr)) == dr
+
+
+def test_doc_repr():
+    doc = Document(id="123",
+                   coll="MyCol",
+                   ts=fixed_datetime,
+                   data={"foo": "bar"})
+    assert repr(doc) == "Document(id='123'," \
+                        "coll=Module(name='MyCol')," \
+                        "ts=datetime.datetime(2023, 3, 17, 0, 0)," \
+                        "data={'foo':'bar'})"
+    assert eval(repr(doc)) == doc
+
+
+def test_named_doc_repr():
+    doc = NamedDocument(name="Things",
+                        coll="Foo",
+                        ts=fixed_datetime,
+                        data={
+                            "foo": "bar",
+                            "my_date": fixed_datetime
+                        })
+    assert repr(doc) == "NamedDocument(name='Things'," \
+                        "coll=Module(name='Foo')," \
+                        "ts=datetime.datetime(2023, 3, 17, 0, 0)," \
+                        "data={'foo':'bar','my_date':datetime.datetime(2023, 3, 17, 0, 0)})"
+    assert eval(repr(doc)) == doc
 
 
 def test_document_required_props(subtests):
