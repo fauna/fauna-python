@@ -48,12 +48,13 @@ Supported Environment Variables:
 .. code-block:: python
 
     from fauna import fql
-    from fauna.client import Client
+    from fauna.client import Client, QuerySuccess
     from fauna.errors import FaunaException
 
-    # As a best practice, don't store your secret directly in your code.
+    client = Client()
+    # The client defaults to using using the value stored FAUNA_SECRET for its secret.
     # Either set the FAUNA_SECRET env variable or retrieve it from a secret store.
-    client = Client(secret=my_secret)
+    # As a best practice, don't store your secret directly in your code.
 
     try:
         # create a collection
@@ -62,9 +63,12 @@ Supported Environment Variables:
 
         # create a document
         create_doc = fql('Dogs.create({ name: "Scout" })')
-        client.query(create_doc)
+        res: QuerySuccess = client.query(create_doc)
+        doc = res.data
+        print(doc)
     except FaunaException as e:
         # handle errors
+        print(e)
 
 Query Composition
 -----------------
@@ -88,7 +92,8 @@ For FQL templates, denote variables with ``${}`` and pass variables as kwargs to
     q = fql("""let u = ${user}
     u ${render}
     """, user=user_by_tin(tin), render=render_user())
-    
+
+    client = Client()
     res = client.query(q)
 
 Document Streaming
@@ -105,11 +110,11 @@ Stats are returned on query responses and ServiceErrors.
 
     from fauna import fql
     from fauna.client import Client, QuerySuccess
-    from fauna.errors import ServiceError
+    from fauna.errors import AuthenticationError, ServiceError
 
     client = Client()
 
-    def emit_stats(stats: Mapping[str, Any]):
+    def emit_stats(stats):
         for stat, val in stats:
             print(f"{stat}: {val}")
 
@@ -117,6 +122,8 @@ Stats are returned on query responses and ServiceErrors.
         q = fql('Collection.create({ name: "Dogs" })')
         qs: QuerySuccess = client.query(q)
         emit_stats(qs.stats)
+    except AuthenticationError as e:
+        print(e)
     except ServiceError as e:
         if e.query_info is not None:
             emit_stats(e.query_info.stats)
