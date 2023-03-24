@@ -1,6 +1,6 @@
 #!/bin/sh
-
-set -eou
+# NOTE: this meant to be run from within the Docker image
+set -eou pipefail
 
 apk add --update make curl
 
