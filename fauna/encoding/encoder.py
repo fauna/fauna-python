@@ -2,7 +2,7 @@ from datetime import datetime, date
 from typing import Any, Optional, Set
 
 from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference
-from fauna.query.query_builder import QueryInterpolation, Fragment, LiteralFragment, ValueFragment
+from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [
     "@date",
@@ -52,7 +52,7 @@ class FaunaEncoder:
     +-------------------------------+---------------+
     | Module                        | @mod          |
     +-------------------------------+---------------+
-    | QueryInterpolationBuilder     | fql           |
+    | Query                         | fql           |
     +-------------------------------+---------------+
     | ValueFragment                 | value         |
     +-------------------------------+---------------+
@@ -73,7 +73,7 @@ class FaunaEncoder:
             - date encodes to { "@date": "..." }
             - DocumentReference encodes to { "@doc": "..." }
             - Module encodes to { "@mod": "..." }
-            - QueryInterpolationBuilder encodes to { "fql": [...] }
+            - Query encodes to { "fql": [...] }
             - ValueFragment encodes to { "value": <encoded_val> }
             - LiteralFragment encodes to a string
 
@@ -151,7 +151,7 @@ class FaunaEncoder:
             return obj.get()
         elif isinstance(obj, ValueFragment):
             v = obj.get()
-            if isinstance(v, QueryInterpolation):
+            if isinstance(v, Query):
                 return FaunaEncoder.from_query_interpolation_builder(v)
             else:
                 return {"value": FaunaEncoder.encode(v)}
@@ -159,7 +159,7 @@ class FaunaEncoder:
             raise ValueError(f"Unknown fragment type: {type(obj)}")
 
     @staticmethod
-    def from_query_interpolation_builder(obj: QueryInterpolation):
+    def from_query_interpolation_builder(obj: Query):
         return {"fql": [FaunaEncoder.from_fragment(f) for f in obj.fragments]}
 
     @staticmethod
@@ -198,7 +198,7 @@ class FaunaEncoder:
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
             return FaunaEncoder._encode_dict(o, _markers)
-        elif isinstance(o, QueryInterpolation):
+        elif isinstance(o, Query):
             return FaunaEncoder.from_query_interpolation_builder(o)
         else:
             raise ValueError(f"Object {o} of type {type(o)} cannot be encoded")

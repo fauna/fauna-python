@@ -413,6 +413,6 @@ def test_call_query_with_string():
     with pytest.raises(
             TypeError,
             match=
-            "'fql' must be a QueryInterpolation but was a <class 'str'>. You can build a QueryInterpolation by "
+            "'fql' must be a Query but was a <class 'str'>. You can build a Query by "
             "calling fauna.fql()"):
         c.query("fake")  # type: ignore
