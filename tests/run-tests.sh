@@ -4,13 +4,13 @@ set -eou pipefail
 
 apk add --update make curl
 
-pip install . .[test]
+pip install . ".[test]"
 pip install codecov
 
 attempt_counter=0
 max_attempts=100
 
-until $(curl -m 1 --output /dev/null --silent --head --fail $FAUNA_ENDPOINT/ping); do
+until curl -m 1 --output /dev/null --silent --head --fail "${FAUNA_ENDPOINT}/ping"; do
   if [ ${attempt_counter} -eq ${max_attempts} ];then
     echo ""
     echo "Max attempts reached to $FAUNA_ENDPOINT/ping"
@@ -18,7 +18,7 @@ until $(curl -m 1 --output /dev/null --silent --head --fail $FAUNA_ENDPOINT/ping
   fi
 
   printf '.'
-  attempt_counter=$(($attempt_counter+1))
+  attempt_counter=$((attempt_counter+1))
   sleep 5
 done
 
