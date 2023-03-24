@@ -8,7 +8,7 @@ from pytest_httpx import HTTPXMock
 
 import fauna
 from fauna import fql
-from fauna.client import Client, Header, QueryOptions
+from fauna.client import Client, Header, QueryOptions, Endpoints
 from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError
 from fauna.http import HTTPXClient
 
@@ -33,6 +33,27 @@ def test_client_env_overrides(monkeypatch):
 
     assert client._endpoint == ep
     assert client._auth.secret == secret
+
+
+def test_client_strips_endpoint_trailing_slash(monkeypatch, subtests):
+
+    with subtests.test(msg="trailing slash on env var"):
+        ep = "https://db.fauna.com/"
+        secret = "my_secret"
+        monkeypatch.setenv("FAUNA_ENDPOINT", ep)
+        monkeypatch.setenv("FAUNA_SECRET", secret)
+        client = Client()
+
+        assert client._endpoint == Endpoints.Cloud
+        assert client._auth.secret == secret
+
+    with subtests.test(msg="trailing slash on param"):
+        ep = "https://db.fauna-preview.com/"
+        secret = "secret"
+        client = Client(endpoint=ep, secret=secret)
+
+        assert client._endpoint == Endpoints.Preview
+        assert client._auth.secret == secret
 
 
 def test_client_only_creates_one_global_http_client():
