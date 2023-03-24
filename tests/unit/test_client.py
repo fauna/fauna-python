@@ -406,3 +406,13 @@ def test_error_protocol_data_missing(subtests, httpx_mock: HTTPXMock):
         err = "200: Unexpected response\nResponse is in an unknown format: \n{}"
         with pytest.raises(ProtocolError, match=err):
             c.query(fql("the quick brown fox"))
+
+
+def test_call_query_with_string():
+    c = Client()
+    with pytest.raises(
+            TypeError,
+            match=
+            "'fql' must be a QueryInterpolation but was a <class 'str'>. You can build a QueryInterpolation by "
+            "calling fauna.fql()"):
+        c.query("fake")  # type: ignore
