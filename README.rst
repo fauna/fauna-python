@@ -109,14 +109,15 @@ Stats are returned on query responses and ServiceErrors.
 .. code-block:: python
 
     from fauna import fql
-    from fauna.client import Client, QuerySuccess
+    from fauna.client import Client, QuerySuccess, QueryStats
     from fauna.errors import AuthenticationError, ServiceError
 
     client = Client()
 
-    def emit_stats(stats):
-        for stat, val in stats:
-            print(f"{stat}: {val}")
+    def emit_stats(stats: QueryStats):
+        print(f"Compute Ops: {stats.compute_ops}")
+        print(f"Read Ops: {stats.read_ops}")
+        print(f"Write Ops: {stats.write_ops}")
 
     try:
         q = fql('Collection.create({ name: "Dogs" })')

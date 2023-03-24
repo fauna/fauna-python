@@ -1,31 +1,79 @@
 from dataclasses import dataclass
-from enum import Enum
-from typing import Optional, Mapping, Any, Union, List
+from typing import Optional, Mapping, Any, List
 
 
-class QueryStat(str, Enum):
-    """Query stat names."""
+class QueryStats:
+    """Query stats"""
 
-    ComputeOps = "compute_ops"
-    """The amount of Transactional Compute Ops consumed by the query."""
+    @property
+    def compute_ops(self) -> int:
+        """The amount of Transactional Compute Ops consumed by the query."""
+        return self._compute_ops
 
-    ReadOps = "read_ops"
-    """The amount of Transactional Read Ops consumed by the query."""
+    @property
+    def read_ops(self) -> int:
+        """The amount of Transactional Read Ops consumed by the query."""
+        return self._read_ops
 
-    WriteOps = "write_ops"
-    """The amount of Transactional Write Ops consumed by the query."""
+    @property
+    def write_ops(self) -> int:
+        """The amount of Transactional Write Ops consumed by the query."""
+        return self._write_ops
 
-    QueryTimeMS = "query_time_ms"
-    """The query run time in milliseconds."""
+    @property
+    def query_time_ms(self) -> int:
+        """The query run time in milliseconds."""
+        return self._query_time_ms
 
-    StorageBytesRead = "storage_bytes_read"
-    """The amount of data read from storage, in bytes."""
+    @property
+    def storage_bytes_read(self) -> int:
+        """The amount of data read from storage, in bytes."""
+        return self._storage_bytes_read
 
-    StorageBytesWrite = "storage_bytes_write"
-    """The amount of data written to storage, in bytes."""
+    @property
+    def storage_bytes_write(self) -> int:
+        """The amount of data written to storage, in bytes."""
+        return self._storage_bytes_write
 
-    ContentionRetries = "contention_retries"
-    """The number of times the transaction was retried due to write contention."""
+    @property
+    def contention_retries(self) -> int:
+        """The number of times the transaction was retried due to write contention."""
+        return self._contention_retries
+
+    def __init__(self, stats: Mapping[str, Any]):
+        self._compute_ops = stats.get("compute_ops", 0)
+        self._read_ops = stats.get("read_ops", 0)
+        self._write_ops = stats.get("write_ops", 0)
+        self._query_time_ms = stats.get("query_time_ms", 0)
+        self._storage_bytes_read = stats.get("storage_bytes_read", 0)
+        self._storage_bytes_write = stats.get("storage_bytes_write", 0)
+        self._contention_retries = stats.get("contention_retries", 0)
+
+    def __repr__(self):
+        stats = {
+            "compute_ops": self._compute_ops,
+            "read_ops": self._read_ops,
+            "write_ops": self._write_ops,
+            "query_time_ms": self._query_time_ms,
+            "storage_bytes_read": self._storage_bytes_read,
+            "storage_bytes_write": self._storage_bytes_write,
+            "contention_retries": self._contention_retries,
+        }
+
+        return f"{self.__class__.__name__}(stats={repr(stats)})"
+
+    def __eq__(self, other):
+        return type(self) == type(other) \
+            and self.compute_ops == other.compute_ops \
+            and self.read_ops == other.read_ops \
+            and self.write_ops == other.write_ops \
+            and self.query_time_ms == other.query_time_ms \
+            and self.storage_bytes_read == other.storage_bytes_read \
+            and self.storage_bytes_write == other.storage_bytes_write \
+            and self.contention_retries == other.contention_retries
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class QueryInfo:
@@ -41,7 +89,7 @@ class QueryInfo:
         return self._summary
 
     @property
-    def stats(self) -> Mapping[Union[str, QueryStat], Any]:
+    def stats(self) -> QueryStats:
         """Query stats associated with the query."""
         return self._stats
 
@@ -52,12 +100,12 @@ class QueryInfo:
     def __init__(
         self,
         query_tags: Optional[Mapping[str, str]] = None,
-        stats: Optional[Mapping[Union[str, QueryStat], Any]] = None,
+        stats: Optional[QueryStats] = None,
         summary: Optional[str] = None,
         txn_ts: Optional[int] = None,
     ):
         self._query_tags = query_tags or {}
-        self._stats = stats or {}
+        self._stats = stats or QueryStats({})
         self._summary = summary or ""
         self._txn_ts = txn_ts or 0
 
@@ -92,7 +140,7 @@ class QuerySuccess(QueryInfo):
         data: Any,
         query_tags: Optional[Mapping[str, str]],
         static_type: Optional[str],
-        stats: Optional[Mapping[str, Any]],
+        stats: Optional[QueryStats],
         summary: Optional[str],
         traceparent: Optional[str],
         txn_ts: Optional[int],

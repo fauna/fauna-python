@@ -1,7 +1,7 @@
 import pytest
 
 from fauna import fql
-from fauna.client import Client, QueryOptions, QueryStat
+from fauna.client import Client, QueryOptions
 from fauna.errors import QueryCheckError, QueryRuntimeError
 from fauna.client.wire_protocol import ConstraintFailure
 
@@ -11,7 +11,7 @@ def test_query_smoke_test(subtests, client):
         res = client.query(fql("Math.abs(-5.123e3)"))
 
         assert res.data == float(5123.0)
-        assert res.stats[QueryStat.ComputeOps] > 0
+        assert res.stats.compute_ops > 0
         assert res.traceparent != ""
         assert res.summary == ""
 
@@ -23,8 +23,13 @@ def test_query_smoke_test(subtests, client):
 
 def test_query_with_all_stats(client, a_collection):
     res = client.query(fql("${col}.create({})", col=a_collection))
-    for stat in QueryStat:
-        assert res.stats[stat] >= 0
+    assert res.stats.compute_ops > 0
+    assert res.stats.read_ops > 0
+    assert res.stats.write_ops > 0
+    assert res.stats.storage_bytes_read > 0
+    assert res.stats.storage_bytes_write > 0
+    assert res.stats.query_time_ms > 0
+    assert res.stats.contention_retries == 0
 
 
 def test_query_with_constraint_failure(client):
@@ -51,7 +56,7 @@ def test_bad_request(client):
     assert e.value.code == "invalid_query"
     assert len(e.value.message) > 0
     assert e.value.query_info is not None
-    assert len(e.value.query_info.stats) > 0
+    assert e.value.query_info.stats.query_time_ms > 0
     assert len(e.value.query_info.summary) > 0
 
 
