@@ -72,10 +72,7 @@ class Client:
         :param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.
         """
 
-        if endpoint is None:
-            self._endpoint = _Environment.EnvFaunaEndpoint()
-        else:
-            self._endpoint = endpoint
+        self._set_endpoint(endpoint)
 
         print(f"endpoint set to {self._endpoint}")
 
@@ -395,3 +392,12 @@ class Client:
                 message,
                 query_info,
             )
+
+    def _set_endpoint(self, endpoint):
+        if endpoint is None:
+            endpoint = _Environment.EnvFaunaEndpoint()
+
+        if endpoint[-1:] == "/":
+            endpoint = endpoint[:-1]
+
+        self._endpoint = endpoint
