@@ -38,9 +38,11 @@ def test_query_with_constraint_failure(client):
             fql('Function.create({"name": "double", "body": "x => x * 2"})'))
 
     assert e.value.constraint_failures == [
-        ConstraintFailure(message="The identifier `double` is reserved.",
-                          name=None,
-                          paths=[["name"]]),
+        ConstraintFailure(
+            message="The identifier `double` is reserved.",
+            name=None,
+            paths=[["name"]],
+        ),
     ]
     assert e.value.status_code == 400
     assert e.value.code == "constraint_failure"
