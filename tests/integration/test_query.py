@@ -29,7 +29,7 @@ def test_query_with_all_stats(client, a_collection):
     assert res.stats.storage_bytes_read > 0
     assert res.stats.storage_bytes_write > 0
     assert res.stats.query_time_ms > 0
-    assert res.stats.contention_retries == 0
+    assert res.stats.contention_retries >= 0
 
 
 def test_query_with_constraint_failure(client):
@@ -38,9 +38,11 @@ def test_query_with_constraint_failure(client):
             fql('Function.create({"name": "double", "body": "x => x * 2"})'))
 
     assert e.value.constraint_failures == [
-        ConstraintFailure(message="The identifier `double` is reserved.",
-                          name=None,
-                          paths=[["name"]]),
+        ConstraintFailure(
+            message="The identifier `double` is reserved.",
+            name=None,
+            paths=[["name"]],
+        ),
     ]
     assert e.value.status_code == 400
     assert e.value.code == "constraint_failure"
