@@ -74,8 +74,6 @@ class Client:
 
         self._set_endpoint(endpoint)
 
-        print(f"endpoint set to {self._endpoint}")
-
         if secret is None:
             self._auth = _Auth(_Environment.EnvFaunaSecret())
         else:
