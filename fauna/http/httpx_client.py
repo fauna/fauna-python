@@ -25,8 +25,8 @@ class HTTPXResponse(HTTPResponse):
             return json.loads(decoded)
         except (JSONDecodeError, UnicodeDecodeError) as e:
             raise ClientError(
-                f"Unable to decode response from endpoint {self._r.request.url}. Check that your "
-                f"endpoint is valid.") from e
+                f"Unable to decode response from endpoint {self._r.request.url}. Check that your endpoint is valid."
+            ) from e
 
     def status_code(self) -> int:
         return self._r.status_code
