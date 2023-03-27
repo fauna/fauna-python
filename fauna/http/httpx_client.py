@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 from typing import Mapping, Any, Optional, Iterator
 
 import httpx
@@ -19,7 +20,13 @@ class HTTPXResponse(HTTPResponse):
         return h
 
     def json(self) -> Any:
-        return json.loads(self._r.read().decode("utf-8"))
+        try:
+            decoded = self._r.read().decode("utf-8")
+            return json.loads(decoded)
+        except (JSONDecodeError, UnicodeDecodeError) as e:
+            raise ClientError(
+                f"Unable to decode response from endpoint {self._r.request.url}. Check that your "
+                f"endpoint is valid.") from e
 
     def status_code(self) -> int:
         return self._r.status_code
