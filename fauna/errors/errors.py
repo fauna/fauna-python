@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from fauna.client.wire_protocol import ConstraintFailure, QueryInfo
+from fauna.encoding import ConstraintFailure, QueryInfo
 
 
 class FaunaException(Exception):
