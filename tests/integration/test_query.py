@@ -3,7 +3,7 @@ import pytest
 from fauna import fql
 from fauna.client import Client, QueryOptions
 from fauna.errors import QueryCheckError, QueryRuntimeError
-from fauna.client.wire_protocol import ConstraintFailure
+from fauna.encoding import ConstraintFailure
 
 
 def test_query_smoke_test(subtests, client):
@@ -81,7 +81,7 @@ def test_query_tags_echo():
 def test_handles_typecheck_format():
     client = Client(typecheck=True)
     res = client.query(fql("""
-if (true) { 
+if (true) {
   42
 } else {
   41
