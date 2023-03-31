@@ -39,5 +39,5 @@ git config --global user.name "Fauna, Inc"
 
 git add --all
 # only commit if we have new files
-git diff --exit-code || git commit -m "Update docs to version: ${PACKAGE_VERSION}"
+git diff --staged --exit-code || git commit -m "Update docs to version: ${PACKAGE_VERSION}"
 
