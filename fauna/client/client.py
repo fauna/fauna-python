@@ -11,7 +11,7 @@ from fauna.http.http_client import HTTPClient
 from fauna.query.query_builder import Query
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
-from fauna.client.wire_protocol import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags, QueryStats
+from fauna.encoding import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags, QueryStats
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None

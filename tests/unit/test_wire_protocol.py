@@ -1,5 +1,4 @@
-from fauna.client import QuerySuccess, QueryInfo
-from fauna.client.wire_protocol import QueryStats
+from fauna.encoding import QuerySuccess, QueryInfo, QueryStats
 
 
 def test_query_success_repr():
