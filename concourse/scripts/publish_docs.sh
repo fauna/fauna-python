@@ -27,6 +27,7 @@ sed -i.bak "0,/<body>/{s/<body>/<body>${BODY_GTM}/}" ./docs/index.html
 
 rm ./docs/index.html.bak
 
+git clone fauna-python-repository-docs fauna-python-repository-updated-docs
 cd fauna-python-repository-updated-docs
 
 # copy modified docs into repo
@@ -39,3 +40,4 @@ git config --global user.name "Fauna, Inc"
 git add --all
 # only commit if we have new files
 git diff --exit-code || git commit -m "Update docs to version: ${PACKAGE_VERSION}"
+
