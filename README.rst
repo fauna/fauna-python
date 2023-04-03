@@ -48,7 +48,8 @@ Supported Environment Variables:
 .. code-block:: python
 
     from fauna import fql
-    from fauna.client import Client, QuerySuccess
+    from fauna.client import Client
+    from fauna.encoding import QuerySuccess
     from fauna.errors import FaunaException
 
     client = Client()
@@ -109,7 +110,8 @@ Stats are returned on query responses and ServiceErrors.
 .. code-block:: python
 
     from fauna import fql
-    from fauna.client import Client, QuerySuccess, QueryStats
+    from fauna.client import Client
+    from fauna.encoding import QuerySuccess, QueryStats
     from fauna.errors import AuthenticationError, ServiceError
 
     client = Client()
