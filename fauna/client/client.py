@@ -350,10 +350,7 @@ class Client:
             ]
 
         if status_code == 400:
-            query_check_codes = [
-                "invalid_function_definition", "invalid_identifier",
-                "invalid_query", "invalid_syntax", "invalid_type"
-            ]
+            query_check_codes = ["invalid_query"]
             if code in query_check_codes:
                 raise QueryCheckError(
                     status_code,
