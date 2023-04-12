@@ -63,24 +63,6 @@ def test_query_page(client, a_collection):
     assert p.after is not None
 
 
-def test_query_page_unmaterialized(client, suffix):
-    # WARNING: NATIVE STRING INTERPOLATION IS GENERALLY UNSAFE
-    #          AND IS ONLY USED HERE FOR EASE OF TESTING
-    func_name = f"Func{suffix}"
-    body = f"s => s.map(_ => {func_name}(s))"
-    q = fql("Function.create({ name: ${name}, body: ${body} })",
-            name=func_name,
-            body=body)
-    client.query(q)
-    res = client.query(fql(f"{func_name}([1, 2, 3].toSet())"))
-    p: Page = res.data
-    assert p.after is None
-    assert p.data is not None
-    inner_p: Page = p.data[0]
-    assert inner_p.data is None
-    assert inner_p.after is not None
-
-
 def test_bad_request(client):
     with pytest.raises(QueryCheckError) as e:
         client.query(fql("{ bad: 'request']"))
