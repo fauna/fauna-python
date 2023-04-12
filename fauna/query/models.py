@@ -1,6 +1,37 @@
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Union, Iterator, Any, Optional
+from typing import Union, Iterator, Any, Optional, List
+
+
+class Page:
+    """A class representing a Set in Fauna."""
+
+    def __init__(self,
+                 data: Optional[List[Any]] = None,
+                 after: Optional[str] = None):
+        self.data = data
+        self.after = after
+
+    def __repr__(self):
+        args = []
+        if self.data is not None:
+            args.append(f"data={repr(self.data)}")
+
+        if self.after is not None:
+            args.append(f"after={repr(self.after)}")
+
+        return f"{self.__class__.__name__}({','.join(args)})"
+
+    def __eq__(self, other):
+        return isinstance(
+            other,
+            Page) and self.data == other.data and self.after == other.after
+
+    def __hash__(self):
+        hash((type(self), self.data, self.after))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class Module:

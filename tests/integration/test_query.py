@@ -1,6 +1,8 @@
+import time
+
 import pytest
 
-from fauna import fql
+from fauna import fql, Page
 from fauna.client import Client, QueryOptions
 from fauna.errors import QueryCheckError, QueryRuntimeError
 from fauna.encoding import ConstraintFailure
@@ -49,6 +51,34 @@ def test_query_with_constraint_failure(client):
     assert e.value.message == "Failed to create document in collection Function."
     qi = e.value.query_info
     assert qi is not None and len(qi.summary) > 0
+
+
+def test_query_page(client, a_collection):
+    for n in range(100):
+        client.query(fql("${col}.create({ n: ${n} })", col=a_collection, n=n))
+
+    res = client.query(fql("${col}.all().map(x => x.n)", col=a_collection))
+    p: Page = res.data
+    assert p.data is not None and len(p.data) < 100
+    assert p.after is not None
+
+
+def test_query_page_unmaterialized(client, suffix):
+    # WARNING: NATIVE STRING INTERPOLATION IS GENERALLY UNSAFE
+    #          AND IS ONLY USED HERE FOR EASE OF TESTING
+    func_name = f"Func{suffix}"
+    body = f"s => s.map(_ => {func_name}(s))"
+    q = fql("Function.create({ name: ${name}, body: ${body} })",
+            name=func_name,
+            body=body)
+    client.query(q)
+    res = client.query(fql(f"{func_name}([1, 2, 3].toSet())"))
+    p: Page = res.data
+    assert p.after is None
+    assert p.data is not None
+    inner_p: Page = p.data[0]
+    assert inner_p.data is None
+    assert inner_p.after is not None
 
 
 def test_bad_request(client):

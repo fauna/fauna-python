@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Any, Optional, Set
 
-from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference
+from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, Page
 from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [

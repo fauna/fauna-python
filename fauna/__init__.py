@@ -5,6 +5,6 @@ __author__ = "Fauna, Inc"
 __license__ = "MPL 2.0"
 __copyright__ = "2023 Fauna, Inc"
 
-from fauna.query import fql, Document, DocumentReference, NamedDocument, NamedDocumentReference, Module
+from fauna.query import fql, Document, DocumentReference, NamedDocument, NamedDocumentReference, Module, Page
 
 global_http_client = None

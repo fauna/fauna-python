@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime, timezone, timedelta
 from typing import Any
 
@@ -5,7 +6,7 @@ import pytest
 
 from fauna import fql
 from fauna.encoding import FaunaEncoder, FaunaDecoder
-from fauna.query.models import DocumentReference, NamedDocumentReference, Document, NamedDocument, Module
+from fauna.query.models import DocumentReference, NamedDocumentReference, Document, NamedDocument, Module, Page
 
 fixed_datetime = datetime.fromisoformat("2023-03-17T00:00:00+00:00")
 
@@ -254,10 +255,26 @@ def test_encode_modules(subtests):
 
 
 def test_encode_sets(subtests):
-    with subtests.test(msg="unwrap @set"):
-        test = {"@set": {}}
+    with subtests.test(msg="decode @set into page"):
+        test = {"@set": {"data": [1, 2], "after": "asdflkj"}}
         decoded = FaunaDecoder.decode(test)
-        assert decoded == {}
+        assert decoded == Page(data=[1, 2], after="asdflkj")
+
+    with subtests.test(msg="decode @set into page with no after token"):
+        test = {"@set": {"data": [1, 2]}}
+        decoded = FaunaDecoder.decode(test)
+        assert decoded == Page(data=[1, 2])
+
+    with subtests.test(msg="decode @set string into page"):
+        test = {"@set": "lkjlkj"}
+        decoded = FaunaDecoder.decode(test)
+        assert decoded == Page(after="lkjlkj")
+
+    with subtests.test(msg="encoding Page raises error"):
+        p = Page()
+        err = "Object Page() of type <class 'fauna.query.models.Page'> cannot be encoded"
+        with pytest.raises(ValueError, match=re.escape(err)):
+            FaunaEncoder.encode(p)
 
 
 def test_encode_collections(subtests):
