@@ -5,7 +5,7 @@ set -eou pipefail
 apk add --update make curl
 
 pip install . ".[test]"
-pip install codecov
+pip install coverage
 
 attempt_counter=0
 max_attempts=100
