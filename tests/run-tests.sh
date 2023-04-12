@@ -22,6 +22,6 @@ until curl -m 1 --output /dev/null --silent --head --fail "${FAUNA_ENDPOINT}/pin
   sleep 5
 done
 
-python -m coverage run -m pytest tests/unit
-python -m coverage run -m pytest tests/integration
+python -m coverage run -m pytest -v tests/unit
+python -m coverage run -m pytest -v tests/integration
 python -m coverage report -m

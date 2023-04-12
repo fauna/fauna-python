@@ -6,10 +6,10 @@ install:
 test: unit-test integration-test coverage
 
 unit-test:
-	python -m coverage run -m pytest tests/unit
+	python -m coverage run -m pytest -v tests/unit
 
 integration-test:
-	python -m coverage run -m pytest tests/integration
+	python -m coverage run -m pytest -v tests/integration
 
 coverage:
 	python -m coverage report -m
