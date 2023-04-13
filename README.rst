@@ -120,7 +120,7 @@ Stats are returned on query responses and ServiceErrors.
     from fauna import fql
     from fauna.client import Client
     from fauna.encoding import QuerySuccess, QueryStats
-    from fauna.errors import AuthenticationError, ServiceError
+    from fauna.errors import ServiceError
 
     client = Client()
 
@@ -133,8 +133,6 @@ Stats are returned on query responses and ServiceErrors.
         q = fql('Collection.create({ name: "Dogs" })')
         qs: QuerySuccess = client.query(q)
         emit_stats(qs.stats)
-    except AuthenticationError as e:
-        print(e)
     except ServiceError as e:
         if e.stats is not None:
             emit_stats(e.stats)
