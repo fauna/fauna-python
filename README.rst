@@ -1,5 +1,5 @@
 A Python driver for `Fauna <https://fauna.com>`_.
-------------
+==============
 
 .. warning::
     This driver is in beta release and not recommended for production use.
@@ -20,8 +20,8 @@ See the `Fauna Documentation <https://fqlx-beta--fauna-docs.netlify.app/fqlx/bet
 for additional information how to configure and query your databases.
 
 This driver can only be used with FQL X, and is not compatible with earlier versions
-of FQL. To query your databases with earlier API versions, see the
- `faunadb <https://pypi.org/project/faunadb/>`_` package.
+of FQL. To query your databases with earlier API versions, see
+the `faunadb <https://pypi.org/project/faunadb/>`_ package.
 
 
 Installation
