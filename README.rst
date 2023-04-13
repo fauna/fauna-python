@@ -1,5 +1,5 @@
 A Python driver for `Fauna <https://fauna.com>`_.
-==============
+=================================================
 
 .. warning::
     This driver is in beta release and not recommended for production use.
