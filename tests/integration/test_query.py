@@ -2,7 +2,7 @@ import pytest
 
 from fauna import fql, Page
 from fauna.client import Client, QueryOptions
-from fauna.errors import QueryCheckError, QueryRuntimeError
+from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError
 from fauna.encoding import ConstraintFailure
 
 
@@ -47,8 +47,7 @@ def test_query_with_constraint_failure(client):
     assert e.value.status_code == 400
     assert e.value.code == "constraint_failure"
     assert e.value.message == "Failed to create document in collection Function."
-    qi = e.value.query_info
-    assert qi is not None and len(qi.summary) > 0
+    assert len(e.value.summary) > 0
 
 
 def test_query_page(client, a_collection):
@@ -67,9 +66,22 @@ def test_bad_request(client):
 
     assert e.value.code == "invalid_query"
     assert len(e.value.message) > 0
-    assert e.value.query_info is not None
-    assert e.value.query_info.stats.query_time_ms > 0
-    assert len(e.value.query_info.summary) > 0
+    assert len(e.value.summary) > 0
+
+    stats = e.value.stats
+    assert stats is not None
+    assert stats.query_time_ms > 0
+
+
+def test_abort(client):
+    with pytest.raises(AbortError) as e:
+        client.query(fql("abort({'foo': 123})"))
+
+    ae: AbortError = e.value
+    assert ae.abort == {"foo": 123}
+    assert ae.code == "abort"
+    assert ae.status_code == 400
+    assert ae.stats.compute_ops == 1
 
 
 @pytest.mark.skip(reason="not currently supported by core")

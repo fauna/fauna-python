@@ -343,7 +343,7 @@ def test_error_protocol_error_missing_error_key(subtests,
     with httpx.Client() as mockClient:
         http_client = HTTPXClient(mockClient)
         c = Client(http_client=http_client)
-        err = "400: Unexpected response\nResponse is in an unknown format: \n{'data': 'jumped'}"
+        err = "400: Response is in an unknown format: \n{'data': 'jumped'}"
         with pytest.raises(ProtocolError, match=err):
             c.query(fql("the quick brown fox"))
 
@@ -364,7 +364,7 @@ def test_error_protocol_error_missing_error_code(subtests,
     with httpx.Client() as mockClient:
         http_client = HTTPXClient(mockClient)
         c = Client(http_client=http_client)
-        err = "400: Unexpected response\nResponse is in an unknown format: \n{'error': {'message': 'boo'}}"
+        err = "400: Response is in an unknown format: \n{'error': {'message': 'boo'}}"
         with pytest.raises(ProtocolError, match=err):
             c.query(fql("the quick brown fox"))
 
@@ -385,7 +385,7 @@ def test_error_protocol_error_missing_error_message(subtests,
     with httpx.Client() as mockClient:
         http_client = HTTPXClient(mockClient)
         c = Client(http_client=http_client)
-        err = "400: Unexpected response\nResponse is in an unknown format: \n{'error': {'code': 'boo'}}"
+        err = "400: Response is in an unknown format: \n{'error': {'code': 'boo'}}"
         with pytest.raises(ProtocolError, match=err):
             c.query(fql("the quick brown fox"))
 
@@ -403,7 +403,7 @@ def test_error_protocol_data_missing(subtests, httpx_mock: HTTPXMock):
     with httpx.Client() as mockClient:
         http_client = HTTPXClient(mockClient)
         c = Client(http_client=http_client)
-        err = "200: Unexpected response\nResponse is in an unknown format: \n{}"
+        err = "200: Response is in an unknown format: \n{}"
         with pytest.raises(ProtocolError, match=err):
             c.query(fql("the quick brown fox"))
 
