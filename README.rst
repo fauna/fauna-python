@@ -136,8 +136,8 @@ Stats are returned on query responses and ServiceErrors.
     except AuthenticationError as e:
         print(e)
     except ServiceError as e:
-        if e.query_info is not None:
-            emit_stats(e.query_info.stats)
+        if e.stats is not None:
+            emit_stats(e.stats)
         # more error handling...
 
 

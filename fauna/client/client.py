@@ -5,13 +5,13 @@ from typing import Any, Dict, Mapping, Optional, List
 import fauna
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
-    QueryCheckError
+    QueryCheckError, AbortError, InvalidRequestError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query.query_builder import Query
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
-from fauna.encoding import QuerySuccess, ConstraintFailure, QueryInfo, QueryTags, QueryStats
+from fauna.encoding import QuerySuccess, ConstraintFailure, QueryTags, QueryStats
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -274,27 +274,24 @@ class Client:
 
             self._check_protocol(response_json, status_code)
 
-            if status_code > 399:
-                self._handle_error(response_json, status_code)
+            dec: Any = FaunaDecoder.decode(response_json)
 
-            if "txn_ts" in response_json:
+            if status_code > 399:
+                self._handle_error(dec, status_code)
+
+            if "txn_ts" in dec:
                 self.set_last_txn_ts(int(response_json["txn_ts"]))
 
-            stats = QueryStats(
-                response_json["stats"]) if "stats" in response_json else None
-            summary = response_json[
-                "summary"] if "summary" in response_json else None
+            stats = QueryStats(dec["stats"]) if "stats" in dec else None
+            summary = dec["summary"] if "summary" in dec else None
             query_tags = QueryTags.decode(
-                response_json["query_tags"]
-            ) if "query_tags" in response_json else None
-            txn_ts = response_json[
-                "txn_ts"] if "txn_ts" in response_json else None
+                dec["query_tags"]) if "query_tags" in dec else None
+            txn_ts = dec["txn_ts"] if "txn_ts" in dec else None
             traceparent = headers.get("traceparent", None)
-            static_type = response_json[
-                "static_type"] if "static_type" in response_json else None
+            static_type = dec["static_type"] if "static_type" in dec else None
 
             return QuerySuccess(
-                data=FaunaDecoder.decode(response_json["data"]),
+                data=dec["data"],
                 query_tags=query_tags,
                 static_type=static_type,
                 stats=stats,
@@ -323,7 +320,6 @@ class Client:
         if should_raise:
             raise ProtocolError(
                 status_code,
-                "Unexpected response",
                 f"Response is in an unknown format: \n{response_json}",
             )
 
@@ -331,15 +327,14 @@ class Client:
         err = body["error"]
         code = err["code"]
         message = err["message"]
-        constraint_failures: Optional[List[ConstraintFailure]] = None
-        query_info = QueryInfo(
-            query_tags=QueryTags.decode(body["query_tags"])
-            if "query_tags" in body else None,
-            stats=QueryStats(body["stats"]) if "stats" in body else None,
-            txn_ts=body["txn_ts"] if "txn_ts" in body else None,
-            summary=body["summary"] if "summary" in body else None,
-        )
 
+        query_tags = QueryTags.decode(
+            body["query_tags"]) if "query_tags" in body else None
+        stats = QueryStats(body["stats"]) if "stats" in body else None
+        txn_ts = body["txn_ts"] if "txn_ts" in body else None
+        summary = body["summary"] if "summary" in body else None
+
+        constraint_failures: Optional[List[ConstraintFailure]] = None
         if "constraint_failures" in err:
             constraint_failures = [
                 ConstraintFailure(
@@ -350,70 +345,129 @@ class Client:
             ]
 
         if status_code == 400:
-            query_check_codes = ["invalid_query"]
-            if code in query_check_codes:
+            if code == "invalid_query":
                 raise QueryCheckError(
-                    status_code,
-                    code,
-                    message,
-                    query_info,
+                    status_code=status_code,
+                    code=code,
+                    message=message,
+                    summary=summary,
+                    constraint_failures=constraint_failures,
+                    query_tags=query_tags,
+                    stats=stats,
+                    txn_ts=txn_ts,
                 )
+            elif code == "invalid_request":
+                raise InvalidRequestError(
+                    status_code=status_code,
+                    code=code,
+                    message=message,
+                    summary=summary,
+                    constraint_failures=constraint_failures,
+                    query_tags=query_tags,
+                    stats=stats,
+                    txn_ts=txn_ts,
+                )
+            elif code == "abort":
+                abort = err["abort"] if "abort" in err else None
+                raise AbortError(
+                    status_code=status_code,
+                    code=code,
+                    message=message,
+                    summary=summary,
+                    abort=abort,
+                    constraint_failures=constraint_failures,
+                    query_tags=query_tags,
+                    stats=stats,
+                    txn_ts=txn_ts,
+                )
+
             else:
                 raise QueryRuntimeError(
-                    status_code,
-                    code,
-                    message,
-                    query_info,
-                    constraint_failures,
+                    status_code=status_code,
+                    code=code,
+                    message=message,
+                    summary=summary,
+                    constraint_failures=constraint_failures,
+                    query_tags=query_tags,
+                    stats=stats,
+                    txn_ts=txn_ts,
                 )
         elif status_code == 401:
             raise AuthenticationError(
-                status_code,
-                code,
-                message,
-                query_info,
+                status_code=status_code,
+                code=code,
+                message=message,
+                summary=summary,
+                constraint_failures=constraint_failures,
+                query_tags=query_tags,
+                stats=stats,
+                txn_ts=txn_ts,
             )
         elif status_code == 403:
             raise AuthorizationError(
-                status_code,
-                code,
-                message,
-                query_info,
+                status_code=status_code,
+                code=code,
+                message=message,
+                summary=summary,
+                constraint_failures=constraint_failures,
+                query_tags=query_tags,
+                stats=stats,
+                txn_ts=txn_ts,
             )
         elif status_code == 429:
             raise ThrottlingError(
-                status_code,
-                code,
-                message,
-                query_info,
+                status_code=status_code,
+                code=code,
+                message=message,
+                summary=summary,
+                constraint_failures=constraint_failures,
+                query_tags=query_tags,
+                stats=stats,
+                txn_ts=txn_ts,
             )
         elif status_code == 440:
             raise QueryTimeoutError(
-                status_code,
-                code,
-                message,
-                query_info,
+                status_code=status_code,
+                code=code,
+                message=message,
+                summary=summary,
+                constraint_failures=constraint_failures,
+                query_tags=query_tags,
+                stats=stats,
+                txn_ts=txn_ts,
             )
         elif status_code == 500:
             raise ServiceInternalError(
-                status_code,
-                code,
-                message,
-                query_info,
+                status_code=status_code,
+                code=code,
+                message=message,
+                summary=summary,
+                constraint_failures=constraint_failures,
+                query_tags=query_tags,
+                stats=stats,
+                txn_ts=txn_ts,
             )
         elif status_code == 503:
             raise ServiceTimeoutError(
-                status_code,
-                code,
-                message,
-                query_info,
+                status_code=status_code,
+                code=code,
+                message=message,
+                summary=summary,
+                constraint_failures=constraint_failures,
+                query_tags=query_tags,
+                stats=stats,
+                txn_ts=txn_ts,
             )
         else:
             raise ServiceError(
-                status_code,
-                code,
-                message,
-                query_info,
+                status_code=status_code,
+                code=code,
+                message=message,
+                summary=summary,
+                constraint_failures=constraint_failures,
+                query_tags=query_tags,
+                stats=stats,
+                txn_ts=txn_ts,
             )
 
     def _set_endpoint(self, endpoint):

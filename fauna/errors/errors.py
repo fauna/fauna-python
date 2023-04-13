@@ -1,6 +1,6 @@
-from typing import Optional, List
+from typing import Optional, List, Any, Mapping
 
-from fauna.encoding import ConstraintFailure, QueryInfo
+from fauna.encoding import ConstraintFailure, QueryStats, QueryInfo
 
 
 class FaunaException(Exception):
@@ -21,6 +21,25 @@ class NetworkError(FaunaException):
     pass
 
 
+class ProtocolError(FaunaException):
+    """An error representing a HTTP failure - but one not directly emitted by Fauna."""
+
+    @property
+    def status_code(self) -> int:
+        return self._status_code
+
+    @property
+    def message(self) -> str:
+        return self._message
+
+    def __init__(self, status_code: int, message: str):
+        self._status_code = status_code
+        self._message = message
+
+    def __str__(self):
+        return f"{self.status_code}: {self.message}"
+
+
 class FaunaError(FaunaException):
     """Base class Fauna Errors"""
 
@@ -36,66 +55,78 @@ class FaunaError(FaunaException):
     def message(self) -> str:
         return self._message
 
+    @property
+    def abort(self) -> Optional[Any]:
+        return self._abort
+
+    @property
+    def constraint_failures(self) -> Optional[List['ConstraintFailure']]:
+        return self._constraint_failures
+
     def __init__(
         self,
         status_code: int,
         code: str,
         message: str,
+        abort: Optional[Any] = None,
+        constraint_failures: Optional[List['ConstraintFailure']] = None,
     ):
         self._status_code = status_code
         self._code = code
         self._message = message
+        self._abort = abort
+        self._constraint_failures = constraint_failures
 
     def __str__(self):
         return f"{self.status_code}: {self.code}\n{self.message}"
 
 
-class ProtocolError(FaunaError):
-    """An error representing a HTTP failure - but one not directly emitted by Fauna."""
-    pass
-
-
-class ServiceError(FaunaError):
+class ServiceError(FaunaError, QueryInfo):
     """An error representing a query failure returned by Fauna."""
-
-    @property
-    def constraint_failures(self) -> Optional[List[ConstraintFailure]]:
-        return self._constraint_failures
-
-    @property
-    def query_info(self) -> Optional[QueryInfo]:
-        return self._query_info
 
     def __init__(
         self,
         status_code: int,
         code: str,
         message: str,
-        query_info: Optional[QueryInfo] = None,
-        constraint_failures: Optional[List[ConstraintFailure]] = None,
+        summary: Optional[str] = None,
+        abort: Optional[Any] = None,
+        constraint_failures: Optional[List['ConstraintFailure']] = None,
+        query_tags: Optional[Mapping[str, str]] = None,
+        stats: Optional[QueryStats] = None,
+        txn_ts: Optional[int] = None,
     ):
-        """
-        :param status_code: The HTTP status code of the error.
-        :param code: A code for the error. Codes indicate the cause of the error. It is safe to write programmatic logic against the code. They are part of the API contract.
-        :param message: A short, human readable description of the error.
-        :param query_info: A :class:`QueryInfo` instance
-        :param constraint_failures: When the code is 'constraint_failure', an array of write constraint failures associated with the error.
-        """
-        super().__init__(status_code, code, message)
+        QueryInfo.__init__(
+            self,
+            query_tags=query_tags,
+            stats=stats,
+            summary=summary,
+            txn_ts=txn_ts,
+        )
 
-        self._query_info = query_info
-        self._constraint_failures = constraint_failures
+        FaunaError.__init__(
+            self,
+            status_code=status_code,
+            code=code,
+            message=message,
+            abort=abort,
+            constraint_failures=constraint_failures,
+        )
 
     def __str__(self):
         constraint_str = "---"
         if self._constraint_failures:
             constraint_str = f"---\nconstraint failures: {self._constraint_failures}\n---"
 
-        summary = ""
-        if self._query_info is not None:
-            summary = self._query_info.summary
+        return f"{self._status_code}: {self.code}\n{self.message}\n{constraint_str}\n{self.summary or ''}"
 
-        return f"{self._status_code}: {self._code}\n{self._message}\n{constraint_str}\n{summary}"
+
+class AbortError(ServiceError):
+    pass
+
+
+class InvalidRequestError(ServiceError):
+    pass
 
 
 class QueryCheckError(ServiceError):
