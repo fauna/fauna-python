@@ -91,6 +91,8 @@ For FQL templates, denote variables with ``${}`` and pass variables as kwargs to
     from fauna import fql
     from fauna.client import Client
 
+    client = Client()
+ 
     def add_two(x):
         return fql("${x} + 2", x=x)
 
