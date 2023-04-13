@@ -2,7 +2,7 @@ from typing import Any, List
 
 from iso8601 import parse_date
 
-from fauna.query.models import Module, DocumentReference, Document, NamedDocument, NamedDocumentReference
+from fauna.query.models import Module, DocumentReference, Document, NamedDocument, NamedDocumentReference, Page
 
 
 class FaunaDecoder:
@@ -37,6 +37,9 @@ class FaunaDecoder:
      +-------------------+---------------+
      | Module            | @mod          |
      +-------------------+---------------+
+     | Page              | @set          |
+     +-------------------+---------------+
+
      """
 
     @staticmethod
@@ -49,9 +52,10 @@ class FaunaDecoder:
             - { "@long": "100" } decodes to 100 of type int
             - { "@time": "..." } decodes to a datetime
             - { "@date": "..." } decodes to a date
-            - { "@doc": "..." } decodes to a Document or NamedDocument
-            - { "@ref": "..." } decodes to a DocumentReference or NamedDocumentReference
-            - { "@mod": "..." } decodes to a Module
+            - { "@doc": ... } decodes to a Document or NamedDocument
+            - { "@ref": ... } decodes to a DocumentReference or NamedDocumentReference
+            - { "@mod": ... } decodes to a Module
+            - { "@set": ... } decodes to a Page
 
         :param obj: the object to decode
         """
@@ -140,6 +144,14 @@ class FaunaDecoder:
                     # Unsupported document reference. Return the unwrapped value to futureproof.
                     return value
             if "@set" in dct:
-                return FaunaDecoder._decode(dct["@set"])
+                value = dct["@set"]
+                if isinstance(value, str):
+                    return Page(after=value)
+
+                after = value["after"] if "after" in value else None
+                data = FaunaDecoder._decode(
+                    value["data"]) if "data" in value else None
+
+                return Page(data=data, after=after)
 
         return {k: FaunaDecoder._decode(v) for k, v in dct.items()}

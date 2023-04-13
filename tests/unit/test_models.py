@@ -1,8 +1,23 @@
 import datetime
 
-from fauna.query.models import Document, Module, NamedDocument, BaseReference, DocumentReference, NamedDocumentReference
+from fauna.query.models import Document, Module, NamedDocument, BaseReference, DocumentReference, \
+    NamedDocumentReference, Page
 
 fixed_datetime = datetime.datetime.fromisoformat("2023-03-17")
+
+
+def test_page_repr():
+    p = Page(data=[1, 2], after="feet")
+    assert repr(p) == "Page(data=[1, 2],after='feet')"
+    assert eval(repr(p)) == p
+
+
+def test_page_equality():
+    p1 = Page(data=[1, 2], after="feet")
+    p2 = Page(data=[1, 2], after="feet")
+    p3 = Page(data=[{"foo": "bar"}], after="feet")
+    assert p1 == p2
+    assert p1 != p3
 
 
 def test_module_repr():

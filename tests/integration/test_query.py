@@ -1,6 +1,6 @@
 import pytest
 
-from fauna import fql
+from fauna import fql, Page
 from fauna.client import Client, QueryOptions
 from fauna.errors import QueryCheckError, QueryRuntimeError
 from fauna.encoding import ConstraintFailure
@@ -49,6 +49,16 @@ def test_query_with_constraint_failure(client):
     assert e.value.message == "Failed to create document in collection Function."
     qi = e.value.query_info
     assert qi is not None and len(qi.summary) > 0
+
+
+def test_query_page(client, a_collection):
+    for n in range(100):
+        client.query(fql("${col}.create({ n: ${n} })", col=a_collection, n=n))
+
+    res = client.query(fql("${col}.all().map(x => x.n)", col=a_collection))
+    p: Page = res.data
+    assert p.data is not None and len(p.data) < 100
+    assert p.after is not None
 
 
 def test_bad_request(client):
