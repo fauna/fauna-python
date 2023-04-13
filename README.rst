@@ -67,12 +67,12 @@ Supported Environment Variables:
 
     try:
         # create a collection
-        create_col = fql('Collection.create({ name: "Dogs" })')
-        client.query(create_col)
+        q1 = fql('Collection.create({ name: "Dogs" })')
+        client.query(q1)
 
         # create a document
-        create_doc = fql('Dogs.create({ name: "Scout" })')
-        res: QuerySuccess = client.query(create_doc)
+        q2 = fql('Dogs.create({ name: "Scout" })')
+        res: QuerySuccess = client.query(q2)
         doc = res.data
         print(doc)
     except FaunaException as e:
@@ -91,19 +91,14 @@ For FQL templates, denote variables with ``${}`` and pass variables as kwargs to
     from fauna import fql
     from fauna.client import Client
 
-    def user_by_tin(tin: str):
-        return fql('Users.byTin(${tin})', tin=tin)
-
-    def render_user():
-        return fql('{ name, address }')
-
-    tin = "123"
-    q = fql("""let u = ${user}
-    u ${render}
-    """, user=user_by_tin(tin), render=render_user())
-
     client = Client()
+ 
+    def add_two(x):
+        return fql("${x} + 2", x=x)
+
+    q = fql("${y} + 4", y=add_two(2))
     res = client.query(q)
+    print(res.data) # 8
 
 Document Streaming
 ------------------
