@@ -47,6 +47,7 @@ groups:
   - name: standard-release
     jobs:
       - set-self
+      - test
       - release
 
 jobs:
@@ -61,6 +62,7 @@ jobs:
     serial: true
     plan:
       - get: fauna-python-repository
+        trigger: true
         passed:
           - set-self
       - get: testtools-repo
@@ -106,9 +108,7 @@ jobs:
     plan:
       - get: fauna-python-repository
         passed:
-          - unit-and-integration-tests
-          - aws-lambda-tests
-          - vercel-tests
+          - test
 
       - get: fauna-python-repository-docs
 
