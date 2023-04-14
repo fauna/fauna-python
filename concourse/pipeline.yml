@@ -83,8 +83,6 @@ jobs:
               image: testtools-image
               file: testtools-repo/fauna-driver-platform-tests/concourse/tasks/python-aws-lambda-tests.yml
               params:
-                RUNTIME: python
-                PLATFORM: aws-lambda
                 GIT_COMMIT: ((.:git-commit))
                 FAUNA_SECRET: ((drivers-platform-tests/fauna-secret))
                 AWS_LAMBDA_ROLE_ARN: ((drivers-platform-tests/aws-lambda-role-arn))
@@ -95,8 +93,6 @@ jobs:
               image: testtools-image
               file: testtools-repo/fauna-driver-platform-tests/concourse/tasks/python-vercel-tests.yml
               params:
-                RUNTIME: python
-                PLATFORM: vercel
                 GIT_COMMIT: ((.:git-commit))
                 FAUNA_SECRET: ((drivers-platform-tests/fauna-secret))
                 VERCEL_TOKEN: ((drivers-platform-tests/vercel-token))
