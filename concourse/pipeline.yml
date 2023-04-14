@@ -24,7 +24,7 @@ resources:
     source:
       uri: git@github.com:fauna/fauna-python.git
       branch: gh-pages
-      private_key: ((github_repo_key))
+      private_key: ((github-ssh-key))
 
   - name: testtools-repo
     type: git
@@ -32,7 +32,7 @@ resources:
     source:
       uri: git@github.com:fauna/testtools.git
       branch: main
-      private_key: ((github_repo_key))
+      private_key: ((github-ssh-key))
 
   - name: testtools-image
     type: registry-image
