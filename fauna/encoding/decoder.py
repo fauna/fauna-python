@@ -1,44 +1,47 @@
-from typing import Any, List
+from typing import Any, List, Union
 
 from iso8601 import parse_date
 
-from fauna.query.models import Module, DocumentReference, Document, NamedDocument, NamedDocumentReference, Page
+from fauna.query.models import Module, DocumentReference, Document, NamedDocument, NamedDocumentReference, Page, \
+    NullDocument
 
 
 class FaunaDecoder:
     """Supports the following types:
 
-     +-------------------+---------------+
-     | Python            | Fauna         |
-     +===================+===============+
-     | dict              | object        |
-     +-------------------+---------------+
-     | list, tuple       | array         |
-     +-------------------+---------------+
-     | str               | string        |
-     +-------------------+---------------+
-     | int               | @int          |
-     +-------------------+---------------+
-     | int               | @long         |
-     +-------------------+---------------+
-     | float             | @double       |
-     +-------------------+---------------+
-     | datetime.datetime | @time         |
-     +-------------------+---------------+
-     | datetime.date     | @date         |
-     +-------------------+---------------+
-     | True              | true          |
-     +-------------------+---------------+
-     | False             | false         |
-     +-------------------+---------------+
-     | None              | null          |
-     +-------------------+---------------+
-     | DocumentReference | @doc          |
-     +-------------------+---------------+
-     | Module            | @mod          |
-     +-------------------+---------------+
-     | Page              | @set          |
-     +-------------------+---------------+
+     +--------------------+---------------+
+     | Python             | Fauna         |
+     +====================+===============+
+     | dict               | object        |
+     +--------------------+---------------+
+     | list, tuple        | array         |
+     +--------------------+---------------+
+     | str                | string        |
+     +--------------------+---------------+
+     | int                | @int          |
+     +--------------------+---------------+
+     | int                | @long         |
+     +--------------------+---------------+
+     | float              | @double       |
+     +--------------------+---------------+
+     | datetime.datetime  | @time         |
+     +--------------------+---------------+
+     | datetime.date      | @date         |
+     +--------------------+---------------+
+     | True               | true          |
+     +--------------------+---------------+
+     | False              | false         |
+     +--------------------+---------------+
+     | None               | null          |
+     +--------------------+---------------+
+     | *DocumentReference | @ref          |
+     +--------------------+---------------+
+     | *Document          | @doc          |
+     +--------------------+---------------+
+     | Module             | @mod          |
+     +--------------------+---------------+
+     | Page               | @set          |
+     +--------------------+---------------+
 
      """
 
@@ -134,15 +137,24 @@ class FaunaDecoder:
 
             if "@ref" in dct:
                 value = dct["@ref"]
-                col = FaunaDecoder._decode(value["coll"])
-
-                if "id" in value:
-                    return DocumentReference(col, value["id"])
-                elif "name" in value:
-                    return NamedDocumentReference(col, value["name"])
-                else:
+                if "id" not in value and "name" not in value:
                     # Unsupported document reference. Return the unwrapped value to futureproof.
                     return value
+
+                col = FaunaDecoder._decode(value["coll"])
+                doc_ref: Union[DocumentReference, NamedDocumentReference]
+
+                if "id" in value:
+                    doc_ref = DocumentReference(col, value["id"])
+                else:
+                    doc_ref = NamedDocumentReference(col, value["name"])
+
+                if "exists" in value and not value["exists"]:
+                    cause = value["cause"] if "cause" in value else None
+                    return NullDocument(doc_ref, cause)
+
+                return doc_ref
+
             if "@set" in dct:
                 value = dct["@set"]
                 if isinstance(value, str):

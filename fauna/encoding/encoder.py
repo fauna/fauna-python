@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import Any, Optional, Set
 
-from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference
+from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, NullDocument
 from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [
@@ -194,6 +194,8 @@ class FaunaEncoder:
         elif isinstance(o, NamedDocument):
             return FaunaEncoder.from_named_doc_ref(
                 NamedDocumentReference(o.coll, o.name))
+        elif isinstance(o, NullDocument):
+            return FaunaEncoder.encode(o.ref)
         elif isinstance(o, (list, tuple)):
             return FaunaEncoder._encode_list(o, _markers)
         elif isinstance(o, dict):
