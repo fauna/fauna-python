@@ -207,7 +207,7 @@ class Client:
         try:
             encoded_query: Mapping[str, Any] = FaunaEncoder.encode(fql)
         except Exception as e:
-            raise ClientError("Failed to evaluate Query") from e
+            raise ClientError("Failed to encode Query") from e
 
         return self._query(
             "/query/1",
