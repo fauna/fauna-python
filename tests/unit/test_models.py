@@ -20,6 +20,15 @@ def test_page_equality():
     assert p1 != p3
 
 
+def test_page_iterator():
+    page = Page(data=[1, 2])
+    res = 0
+
+    for val in page:
+        res += val
+    assert res == 3
+
+
 def test_module_repr():
     m = Module("mod_name")
     assert repr(m) == "Module(name='mod_name')"

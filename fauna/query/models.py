@@ -22,6 +22,9 @@ class Page:
 
         return f"{self.__class__.__name__}({','.join(args)})"
 
+    def __iter__(self) -> Iterator[Any]:
+        return iter(self.data or [])
+
     def __eq__(self, other):
         return isinstance(
             other,
