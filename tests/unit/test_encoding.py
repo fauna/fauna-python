@@ -6,7 +6,8 @@ import pytest
 
 from fauna import fql
 from fauna.encoding import FaunaEncoder, FaunaDecoder
-from fauna.query.models import DocumentReference, NamedDocumentReference, Document, NamedDocument, Module, Page
+from fauna.query.models import DocumentReference, NamedDocumentReference, Document, NamedDocument, Module, Page, \
+    NullDocument
 
 fixed_datetime = datetime.fromisoformat("2023-03-17T00:00:00+00:00")
 
@@ -159,6 +160,52 @@ def test_encode_document_references(subtests):
         test = {"@ref": {"id": "123", "coll": {"@mod": "Col"}}}
         decoded = FaunaDecoder.decode(test)
         assert doc_ref == decoded
+
+
+def test_null_docments(subtests):
+    with subtests.test(msg="encode null doc"):
+        null_doc = NullDocument(DocumentReference("NDCol", "456"), "not found")
+        test = {"@ref": {"id": "456", "coll": {"@mod": "NDCol"}}}
+        encoded = FaunaEncoder.encode(null_doc)
+        assert encoded == test
+
+    with subtests.test(msg="decode null doc"):
+        null_doc = NullDocument(DocumentReference("NDCol", "456"), "not found")
+        test = {
+            "@ref": {
+                "id": "456",
+                "coll": {
+                    "@mod": "NDCol"
+                },
+                "exists": False,
+                "cause": "not found"
+            }
+        }
+        decoded = FaunaDecoder.decode(test)
+        assert null_doc == decoded
+
+    with subtests.test(msg="encode named null doc"):
+        null_doc = NullDocument(NamedDocumentReference("Collection", "Party"),
+                                "not found")
+        test = {"@ref": {"name": "Party", "coll": {"@mod": "Collection"}}}
+        encoded = FaunaEncoder.encode(null_doc)
+        assert encoded == test
+
+    with subtests.test(msg="decode named null doc"):
+        null_doc = NullDocument(NamedDocumentReference("Collection", "Party"),
+                                "not found")
+        test = {
+            "@ref": {
+                "name": "Party",
+                "coll": {
+                    "@mod": "Collection"
+                },
+                "exists": False,
+                "cause": "not found"
+            }
+        }
+        decoded = FaunaDecoder.decode(test)
+        assert null_doc == decoded
 
 
 def test_encode_named_document_references(subtests):

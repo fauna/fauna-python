@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from fauna import fql, Page
+from fauna import fql, Page, NullDocument
 from fauna.client import Client, QueryOptions
 from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError, ClientError
 from fauna.encoding import ConstraintFailure
@@ -114,9 +114,14 @@ if (true) {
     assert res.static_type == "42 | 41"
 
 
-def test_fails_on_encoding_error():
+def test_fails_on_encoding_error(client):
     body = '{"orderProducts": {}}'
     test = json.loads(body, object_hook=lambda d: SimpleNamespace(**d))
-    client = Client()
     with pytest.raises(ClientError, match="Failed to encode Query"):
         client.query(fql("${prods}", prods=test.orderProducts))
+
+
+def test_null_doc(client, a_collection):
+    r = client.query(fql("${coll}.byId('123')", coll=a_collection))
+    assert isinstance(r.data, NullDocument)
+    assert r.data.cause == "not found"

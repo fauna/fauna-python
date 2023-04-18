@@ -100,8 +100,7 @@ class DocumentReference(BaseReference):
         super().__init__(coll)
 
         if not isinstance(id, str):
-            raise TypeError(
-                f"'ref_id' should be of type str, but was {type(id)}")
+            raise TypeError(f"'id' should be of type str, but was {type(id)}")
         self._id = id
 
     def __hash__(self):
@@ -144,6 +143,37 @@ class NamedDocumentReference(BaseReference):
 
     def __repr__(self):
         return f"{self.__class__.__name__}(name={repr(self._name)},coll={repr(self._collection)})"
+
+
+class NullDocument:
+
+    @property
+    def cause(self) -> Optional[str]:
+        return self._cause
+
+    @property
+    def ref(self) -> Union[DocumentReference, NamedDocumentReference]:
+        return self._ref
+
+    def __init__(
+        self,
+        ref: Union[DocumentReference, NamedDocumentReference],
+        cause: Optional[str] = None,
+    ):
+        self._cause = cause
+        self._ref = ref
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}(ref={repr(self.ref)},cause={repr(self._cause)})"
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+
+        return self.ref == other.ref and self.cause == other.cause
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class BaseDocument(Mapping):
