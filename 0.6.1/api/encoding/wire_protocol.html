@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>fauna.encoding.wire_protocol API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>fauna.encoding.wire_protocol</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from dataclasses import dataclass
+from typing import Optional, Mapping, Any, List
+
+
+class QueryStats:
+    &#34;&#34;&#34;Query stats&#34;&#34;&#34;
+
+    @property
+    def compute_ops(self) -&gt; int:
+        &#34;&#34;&#34;The amount of Transactional Compute Ops consumed by the query.&#34;&#34;&#34;
+        return self._compute_ops
+
+    @property
+    def read_ops(self) -&gt; int:
+        &#34;&#34;&#34;The amount of Transactional Read Ops consumed by the query.&#34;&#34;&#34;
+        return self._read_ops
+
+    @property
+    def write_ops(self) -&gt; int:
+        &#34;&#34;&#34;The amount of Transactional Write Ops consumed by the query.&#34;&#34;&#34;
+        return self._write_ops
+
+    @property
+    def query_time_ms(self) -&gt; int:
+        &#34;&#34;&#34;The query run time in milliseconds.&#34;&#34;&#34;
+        return self._query_time_ms
+
+    @property
+    def storage_bytes_read(self) -&gt; int:
+        &#34;&#34;&#34;The amount of data read from storage, in bytes.&#34;&#34;&#34;
+        return self._storage_bytes_read
+
+    @property
+    def storage_bytes_write(self) -&gt; int:
+        &#34;&#34;&#34;The amount of data written to storage, in bytes.&#34;&#34;&#34;
+        return self._storage_bytes_write
+
+    @property
+    def contention_retries(self) -&gt; int:
+        &#34;&#34;&#34;The number of times the transaction was retried due to write contention.&#34;&#34;&#34;
+        return self._contention_retries
+
+    def __init__(self, stats: Mapping[str, Any]):
+        self._compute_ops = stats.get(&#34;compute_ops&#34;, 0)
+        self._read_ops = stats.get(&#34;read_ops&#34;, 0)
+        self._write_ops = stats.get(&#34;write_ops&#34;, 0)
+        self._query_time_ms = stats.get(&#34;query_time_ms&#34;, 0)
+        self._storage_bytes_read = stats.get(&#34;storage_bytes_read&#34;, 0)
+        self._storage_bytes_write = stats.get(&#34;storage_bytes_write&#34;, 0)
+        self._contention_retries = stats.get(&#34;contention_retries&#34;, 0)
+
+    def __repr__(self):
+        stats = {
+            &#34;compute_ops&#34;: self._compute_ops,
+            &#34;read_ops&#34;: self._read_ops,
+            &#34;write_ops&#34;: self._write_ops,
+            &#34;query_time_ms&#34;: self._query_time_ms,
+            &#34;storage_bytes_read&#34;: self._storage_bytes_read,
+            &#34;storage_bytes_write&#34;: self._storage_bytes_write,
+            &#34;contention_retries&#34;: self._contention_retries,
+        }
+
+        return f&#34;{self.__class__.__name__}(stats={repr(stats)})&#34;
+
+    def __eq__(self, other):
+        return type(self) == type(other) \
+            and self.compute_ops == other.compute_ops \
+            and self.read_ops == other.read_ops \
+            and self.write_ops == other.write_ops \
+            and self.query_time_ms == other.query_time_ms \
+            and self.storage_bytes_read == other.storage_bytes_read \
+            and self.storage_bytes_write == other.storage_bytes_write \
+            and self.contention_retries == other.contention_retries
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
+class QueryInfo:
+
+    @property
+    def query_tags(self) -&gt; Mapping[str, Any]:
+        &#34;&#34;&#34;The tags associated with the query.&#34;&#34;&#34;
+        return self._query_tags
+
+    @property
+    def summary(self) -&gt; str:
+        &#34;&#34;&#34;A comprehensive, human readable summary of any errors, warnings and/or logs returned from the query.&#34;&#34;&#34;
+        return self._summary
+
+    @property
+    def stats(self) -&gt; QueryStats:
+        &#34;&#34;&#34;Query stats associated with the query.&#34;&#34;&#34;
+        return self._stats
+
+    @property
+    def txn_ts(self) -&gt; int:
+        return self._txn_ts
+
+    def __init__(
+        self,
+        query_tags: Optional[Mapping[str, str]] = None,
+        stats: Optional[QueryStats] = None,
+        summary: Optional[str] = None,
+        txn_ts: Optional[int] = None,
+    ):
+        self._query_tags = query_tags or {}
+        self._stats = stats or QueryStats({})
+        self._summary = summary or &#34;&#34;
+        self._txn_ts = txn_ts or 0
+
+    def __repr__(self):
+        return f&#34;{self.__class__.__name__}(&#34; \
+               f&#34;query_tags={repr(self.query_tags)},&#34; \
+               f&#34;stats={repr(self.stats)},&#34; \
+               f&#34;summary={repr(self.summary)},&#34; \
+               f&#34;txn_ts={repr(self.txn_ts)})&#34;
+
+
+class QuerySuccess(QueryInfo):
+    &#34;&#34;&#34;The result of the query.&#34;&#34;&#34;
+
+    @property
+    def data(self) -&gt; Any:
+        &#34;&#34;&#34;The data returned by the query. This is the result of the FQL query.&#34;&#34;&#34;
+        return self._data
+
+    @property
+    def static_type(self) -&gt; Optional[str]:
+        &#34;&#34;&#34;If typechecked, the query&#39;s inferred static result type, if the query was typechecked.&#34;&#34;&#34;
+        return self._static_type
+
+    @property
+    def traceparent(self) -&gt; Optional[str]:
+        &#34;&#34;&#34;The traceparent for the query.&#34;&#34;&#34;
+        return self._traceparent
+
+    def __init__(
+        self,
+        data: Any,
+        query_tags: Optional[Mapping[str, str]],
+        static_type: Optional[str],
+        stats: Optional[QueryStats],
+        summary: Optional[str],
+        traceparent: Optional[str],
+        txn_ts: Optional[int],
+    ):
+
+        super().__init__(query_tags=query_tags,
+                         stats=stats,
+                         summary=summary,
+                         txn_ts=txn_ts)
+
+        self._traceparent = traceparent
+        self._static_type = static_type
+        self._data = data
+
+    def __repr__(self):
+        return f&#34;{self.__class__.__name__}(&#34; \
+               f&#34;query_tags={repr(self.query_tags)},&#34; \
+               f&#34;static_type={repr(self.static_type)},&#34; \
+               f&#34;stats={repr(self.stats)},&#34; \
+               f&#34;summary={repr(self.summary)},&#34; \
+               f&#34;traceparent={repr(self.traceparent)},&#34; \
+               f&#34;txn_ts={repr(self.txn_ts)},&#34; \
+               f&#34;data={repr(self.data)})&#34;
+
+
+@dataclass
+class ConstraintFailure:
+    message: str
+    name: Optional[str] = None
+    paths: Optional[List[Any]] = None
+
+
+class QueryTags:
+
+    @staticmethod
+    def encode(tags: Mapping[str, str]) -&gt; str:
+        return &#34;,&#34;.join([f&#34;{k}={v}&#34; for k, v in tags.items()])
+
+    @staticmethod
+    def decode(tag_str: str) -&gt; Mapping[str, str]:
+        res: dict[str, str] = {}
+        for pair in tag_str.split(&#34;,&#34;):
+            kv = pair.split(&#34;=&#34;)
+            res[kv[0]] = kv[1]
+        return res</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="fauna.encoding.wire_protocol.ConstraintFailure"><code class="flex name class">
+<span>class <span class="ident">ConstraintFailure</span></span>
+<span>(</span><span>message: str, name: Optional[str] = None, paths: Optional[List[Any]] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>ConstraintFailure(message: str, name: Optional[str] = None, paths: Optional[List[Any]] = None)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class ConstraintFailure:
+    message: str
+    name: Optional[str] = None
+    paths: Optional[List[Any]] = None</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="fauna.encoding.wire_protocol.ConstraintFailure.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.encoding.wire_protocol.ConstraintFailure.name"><code class="name">var <span class="ident">name</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fauna.encoding.wire_protocol.ConstraintFailure.paths"><code class="name">var <span class="ident">paths</span> : Optional[List[Any]]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryInfo"><code class="flex name class">
+<span>class <span class="ident">QueryInfo</span></span>
+<span>(</span><span>query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, summary: Optional[str] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QueryInfo:
+
+    @property
+    def query_tags(self) -&gt; Mapping[str, Any]:
+        &#34;&#34;&#34;The tags associated with the query.&#34;&#34;&#34;
+        return self._query_tags
+
+    @property
+    def summary(self) -&gt; str:
+        &#34;&#34;&#34;A comprehensive, human readable summary of any errors, warnings and/or logs returned from the query.&#34;&#34;&#34;
+        return self._summary
+
+    @property
+    def stats(self) -&gt; QueryStats:
+        &#34;&#34;&#34;Query stats associated with the query.&#34;&#34;&#34;
+        return self._stats
+
+    @property
+    def txn_ts(self) -&gt; int:
+        return self._txn_ts
+
+    def __init__(
+        self,
+        query_tags: Optional[Mapping[str, str]] = None,
+        stats: Optional[QueryStats] = None,
+        summary: Optional[str] = None,
+        txn_ts: Optional[int] = None,
+    ):
+        self._query_tags = query_tags or {}
+        self._stats = stats or QueryStats({})
+        self._summary = summary or &#34;&#34;
+        self._txn_ts = txn_ts or 0
+
+    def __repr__(self):
+        return f&#34;{self.__class__.__name__}(&#34; \
+               f&#34;query_tags={repr(self.query_tags)},&#34; \
+               f&#34;stats={repr(self.stats)},&#34; \
+               f&#34;summary={repr(self.summary)},&#34; \
+               f&#34;txn_ts={repr(self.txn_ts)})&#34;</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fauna.encoding.wire_protocol.QuerySuccess" href="#fauna.encoding.wire_protocol.QuerySuccess">QuerySuccess</a></li>
+<li><a title="fauna.errors.errors.ServiceError" href="../errors/errors.html#fauna.errors.errors.ServiceError">ServiceError</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fauna.encoding.wire_protocol.QueryInfo.query_tags"><code class="name">var <span class="ident">query_tags</span> : Mapping[str, Any]</code></dt>
+<dd>
+<div class="desc"><p>The tags associated with the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def query_tags(self) -&gt; Mapping[str, Any]:
+    &#34;&#34;&#34;The tags associated with the query.&#34;&#34;&#34;
+    return self._query_tags</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryInfo.stats"><code class="name">var <span class="ident">stats</span> : <a title="fauna.encoding.wire_protocol.QueryStats" href="#fauna.encoding.wire_protocol.QueryStats">QueryStats</a></code></dt>
+<dd>
+<div class="desc"><p>Query stats associated with the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def stats(self) -&gt; QueryStats:
+    &#34;&#34;&#34;Query stats associated with the query.&#34;&#34;&#34;
+    return self._stats</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryInfo.summary"><code class="name">var <span class="ident">summary</span> : str</code></dt>
+<dd>
+<div class="desc"><p>A comprehensive, human readable summary of any errors, warnings and/or logs returned from the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def summary(self) -&gt; str:
+    &#34;&#34;&#34;A comprehensive, human readable summary of any errors, warnings and/or logs returned from the query.&#34;&#34;&#34;
+    return self._summary</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryInfo.txn_ts"><code class="name">var <span class="ident">txn_ts</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def txn_ts(self) -&gt; int:
+    return self._txn_ts</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryStats"><code class="flex name class">
+<span>class <span class="ident">QueryStats</span></span>
+<span>(</span><span>stats: Mapping[str, Any])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Query stats</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QueryStats:
+    &#34;&#34;&#34;Query stats&#34;&#34;&#34;
+
+    @property
+    def compute_ops(self) -&gt; int:
+        &#34;&#34;&#34;The amount of Transactional Compute Ops consumed by the query.&#34;&#34;&#34;
+        return self._compute_ops
+
+    @property
+    def read_ops(self) -&gt; int:
+        &#34;&#34;&#34;The amount of Transactional Read Ops consumed by the query.&#34;&#34;&#34;
+        return self._read_ops
+
+    @property
+    def write_ops(self) -&gt; int:
+        &#34;&#34;&#34;The amount of Transactional Write Ops consumed by the query.&#34;&#34;&#34;
+        return self._write_ops
+
+    @property
+    def query_time_ms(self) -&gt; int:
+        &#34;&#34;&#34;The query run time in milliseconds.&#34;&#34;&#34;
+        return self._query_time_ms
+
+    @property
+    def storage_bytes_read(self) -&gt; int:
+        &#34;&#34;&#34;The amount of data read from storage, in bytes.&#34;&#34;&#34;
+        return self._storage_bytes_read
+
+    @property
+    def storage_bytes_write(self) -&gt; int:
+        &#34;&#34;&#34;The amount of data written to storage, in bytes.&#34;&#34;&#34;
+        return self._storage_bytes_write
+
+    @property
+    def contention_retries(self) -&gt; int:
+        &#34;&#34;&#34;The number of times the transaction was retried due to write contention.&#34;&#34;&#34;
+        return self._contention_retries
+
+    def __init__(self, stats: Mapping[str, Any]):
+        self._compute_ops = stats.get(&#34;compute_ops&#34;, 0)
+        self._read_ops = stats.get(&#34;read_ops&#34;, 0)
+        self._write_ops = stats.get(&#34;write_ops&#34;, 0)
+        self._query_time_ms = stats.get(&#34;query_time_ms&#34;, 0)
+        self._storage_bytes_read = stats.get(&#34;storage_bytes_read&#34;, 0)
+        self._storage_bytes_write = stats.get(&#34;storage_bytes_write&#34;, 0)
+        self._contention_retries = stats.get(&#34;contention_retries&#34;, 0)
+
+    def __repr__(self):
+        stats = {
+            &#34;compute_ops&#34;: self._compute_ops,
+            &#34;read_ops&#34;: self._read_ops,
+            &#34;write_ops&#34;: self._write_ops,
+            &#34;query_time_ms&#34;: self._query_time_ms,
+            &#34;storage_bytes_read&#34;: self._storage_bytes_read,
+            &#34;storage_bytes_write&#34;: self._storage_bytes_write,
+            &#34;contention_retries&#34;: self._contention_retries,
+        }
+
+        return f&#34;{self.__class__.__name__}(stats={repr(stats)})&#34;
+
+    def __eq__(self, other):
+        return type(self) == type(other) \
+            and self.compute_ops == other.compute_ops \
+            and self.read_ops == other.read_ops \
+            and self.write_ops == other.write_ops \
+            and self.query_time_ms == other.query_time_ms \
+            and self.storage_bytes_read == other.storage_bytes_read \
+            and self.storage_bytes_write == other.storage_bytes_write \
+            and self.contention_retries == other.contention_retries
+
+    def __ne__(self, other):
+        return not self.__eq__(other)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fauna.encoding.wire_protocol.QueryStats.compute_ops"><code class="name">var <span class="ident">compute_ops</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The amount of Transactional Compute Ops consumed by the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def compute_ops(self) -&gt; int:
+    &#34;&#34;&#34;The amount of Transactional Compute Ops consumed by the query.&#34;&#34;&#34;
+    return self._compute_ops</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryStats.contention_retries"><code class="name">var <span class="ident">contention_retries</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The number of times the transaction was retried due to write contention.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def contention_retries(self) -&gt; int:
+    &#34;&#34;&#34;The number of times the transaction was retried due to write contention.&#34;&#34;&#34;
+    return self._contention_retries</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryStats.query_time_ms"><code class="name">var <span class="ident">query_time_ms</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The query run time in milliseconds.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def query_time_ms(self) -&gt; int:
+    &#34;&#34;&#34;The query run time in milliseconds.&#34;&#34;&#34;
+    return self._query_time_ms</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryStats.read_ops"><code class="name">var <span class="ident">read_ops</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The amount of Transactional Read Ops consumed by the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def read_ops(self) -&gt; int:
+    &#34;&#34;&#34;The amount of Transactional Read Ops consumed by the query.&#34;&#34;&#34;
+    return self._read_ops</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryStats.storage_bytes_read"><code class="name">var <span class="ident">storage_bytes_read</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The amount of data read from storage, in bytes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def storage_bytes_read(self) -&gt; int:
+    &#34;&#34;&#34;The amount of data read from storage, in bytes.&#34;&#34;&#34;
+    return self._storage_bytes_read</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryStats.storage_bytes_write"><code class="name">var <span class="ident">storage_bytes_write</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The amount of data written to storage, in bytes.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def storage_bytes_write(self) -&gt; int:
+    &#34;&#34;&#34;The amount of data written to storage, in bytes.&#34;&#34;&#34;
+    return self._storage_bytes_write</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryStats.write_ops"><code class="name">var <span class="ident">write_ops</span> : int</code></dt>
+<dd>
+<div class="desc"><p>The amount of Transactional Write Ops consumed by the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def write_ops(self) -&gt; int:
+    &#34;&#34;&#34;The amount of Transactional Write Ops consumed by the query.&#34;&#34;&#34;
+    return self._write_ops</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QuerySuccess"><code class="flex name class">
+<span>class <span class="ident">QuerySuccess</span></span>
+<span>(</span><span>data: Any, query_tags: Optional[Mapping[str, str]], static_type: Optional[str], stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>], summary: Optional[str], traceparent: Optional[str], txn_ts: Optional[int])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The result of the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QuerySuccess(QueryInfo):
+    &#34;&#34;&#34;The result of the query.&#34;&#34;&#34;
+
+    @property
+    def data(self) -&gt; Any:
+        &#34;&#34;&#34;The data returned by the query. This is the result of the FQL query.&#34;&#34;&#34;
+        return self._data
+
+    @property
+    def static_type(self) -&gt; Optional[str]:
+        &#34;&#34;&#34;If typechecked, the query&#39;s inferred static result type, if the query was typechecked.&#34;&#34;&#34;
+        return self._static_type
+
+    @property
+    def traceparent(self) -&gt; Optional[str]:
+        &#34;&#34;&#34;The traceparent for the query.&#34;&#34;&#34;
+        return self._traceparent
+
+    def __init__(
+        self,
+        data: Any,
+        query_tags: Optional[Mapping[str, str]],
+        static_type: Optional[str],
+        stats: Optional[QueryStats],
+        summary: Optional[str],
+        traceparent: Optional[str],
+        txn_ts: Optional[int],
+    ):
+
+        super().__init__(query_tags=query_tags,
+                         stats=stats,
+                         summary=summary,
+                         txn_ts=txn_ts)
+
+        self._traceparent = traceparent
+        self._static_type = static_type
+        self._data = data
+
+    def __repr__(self):
+        return f&#34;{self.__class__.__name__}(&#34; \
+               f&#34;query_tags={repr(self.query_tags)},&#34; \
+               f&#34;static_type={repr(self.static_type)},&#34; \
+               f&#34;stats={repr(self.stats)},&#34; \
+               f&#34;summary={repr(self.summary)},&#34; \
+               f&#34;traceparent={repr(self.traceparent)},&#34; \
+               f&#34;txn_ts={repr(self.txn_ts)},&#34; \
+               f&#34;data={repr(self.data)})&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fauna.encoding.wire_protocol.QuerySuccess.data"><code class="name">var <span class="ident">data</span> : Any</code></dt>
+<dd>
+<div class="desc"><p>The data returned by the query. This is the result of the FQL query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def data(self) -&gt; Any:
+    &#34;&#34;&#34;The data returned by the query. This is the result of the FQL query.&#34;&#34;&#34;
+    return self._data</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QuerySuccess.static_type"><code class="name">var <span class="ident">static_type</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"><p>If typechecked, the query's inferred static result type, if the query was typechecked.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def static_type(self) -&gt; Optional[str]:
+    &#34;&#34;&#34;If typechecked, the query&#39;s inferred static result type, if the query was typechecked.&#34;&#34;&#34;
+    return self._static_type</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QuerySuccess.traceparent"><code class="name">var <span class="ident">traceparent</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"><p>The traceparent for the query.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def traceparent(self) -&gt; Optional[str]:
+    &#34;&#34;&#34;The traceparent for the query.&#34;&#34;&#34;
+    return self._traceparent</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.encoding.wire_protocol.QueryInfo" href="#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.query_tags" href="#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.stats" href="#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.summary" href="#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryTags"><code class="flex name class">
+<span>class <span class="ident">QueryTags</span></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QueryTags:
+
+    @staticmethod
+    def encode(tags: Mapping[str, str]) -&gt; str:
+        return &#34;,&#34;.join([f&#34;{k}={v}&#34; for k, v in tags.items()])
+
+    @staticmethod
+    def decode(tag_str: str) -&gt; Mapping[str, str]:
+        res: dict[str, str] = {}
+        for pair in tag_str.split(&#34;,&#34;):
+            kv = pair.split(&#34;=&#34;)
+            res[kv[0]] = kv[1]
+        return res</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="fauna.encoding.wire_protocol.QueryTags.decode"><code class="name flex">
+<span>def <span class="ident">decode</span></span>(<span>tag_str: str) ‑> Mapping[str, str]</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def decode(tag_str: str) -&gt; Mapping[str, str]:
+    res: dict[str, str] = {}
+    for pair in tag_str.split(&#34;,&#34;):
+        kv = pair.split(&#34;=&#34;)
+        res[kv[0]] = kv[1]
+    return res</code></pre>
+</details>
+</dd>
+<dt id="fauna.encoding.wire_protocol.QueryTags.encode"><code class="name flex">
+<span>def <span class="ident">encode</span></span>(<span>tags: Mapping[str, str]) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def encode(tags: Mapping[str, str]) -&gt; str:
+    return &#34;,&#34;.join([f&#34;{k}={v}&#34; for k, v in tags.items()])</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="fauna.encoding" href="index.html">fauna.encoding</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="fauna.encoding.wire_protocol.ConstraintFailure" href="#fauna.encoding.wire_protocol.ConstraintFailure">ConstraintFailure</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.encoding.wire_protocol.ConstraintFailure.message" href="#fauna.encoding.wire_protocol.ConstraintFailure.message">message</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.ConstraintFailure.name" href="#fauna.encoding.wire_protocol.ConstraintFailure.name">name</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.ConstraintFailure.paths" href="#fauna.encoding.wire_protocol.ConstraintFailure.paths">paths</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fauna.encoding.wire_protocol.QueryInfo" href="#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.query_tags" href="#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.stats" href="#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.summary" href="#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.txn_ts" href="#fauna.encoding.wire_protocol.QueryInfo.txn_ts">txn_ts</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fauna.encoding.wire_protocol.QueryStats" href="#fauna.encoding.wire_protocol.QueryStats">QueryStats</a></code></h4>
+<ul class="two-column">
+<li><code><a title="fauna.encoding.wire_protocol.QueryStats.compute_ops" href="#fauna.encoding.wire_protocol.QueryStats.compute_ops">compute_ops</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryStats.contention_retries" href="#fauna.encoding.wire_protocol.QueryStats.contention_retries">contention_retries</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryStats.query_time_ms" href="#fauna.encoding.wire_protocol.QueryStats.query_time_ms">query_time_ms</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryStats.read_ops" href="#fauna.encoding.wire_protocol.QueryStats.read_ops">read_ops</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryStats.storage_bytes_read" href="#fauna.encoding.wire_protocol.QueryStats.storage_bytes_read">storage_bytes_read</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryStats.storage_bytes_write" href="#fauna.encoding.wire_protocol.QueryStats.storage_bytes_write">storage_bytes_write</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryStats.write_ops" href="#fauna.encoding.wire_protocol.QueryStats.write_ops">write_ops</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fauna.encoding.wire_protocol.QuerySuccess" href="#fauna.encoding.wire_protocol.QuerySuccess">QuerySuccess</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.encoding.wire_protocol.QuerySuccess.data" href="#fauna.encoding.wire_protocol.QuerySuccess.data">data</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QuerySuccess.static_type" href="#fauna.encoding.wire_protocol.QuerySuccess.static_type">static_type</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QuerySuccess.traceparent" href="#fauna.encoding.wire_protocol.QuerySuccess.traceparent">traceparent</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fauna.encoding.wire_protocol.QueryTags" href="#fauna.encoding.wire_protocol.QueryTags">QueryTags</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.encoding.wire_protocol.QueryTags.decode" href="#fauna.encoding.wire_protocol.QueryTags.decode">decode</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryTags.encode" href="#fauna.encoding.wire_protocol.QueryTags.encode">encode</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
