@@ -223,9 +223,10 @@ class FaunaEncoder:
         markers.add(id(dct))
         if any(i in _RESERVED_TAGS for i in dct.keys()):
             return {
-                "@object":
-                {k: FaunaEncoder._encode(v, markers)
-                 for k, v in dct.items()}
+                "@object": {
+                    k: FaunaEncoder._encode(v, markers)
+                    for k, v in dct.items()
+                }
             }
         else:
             return {
