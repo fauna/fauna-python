@@ -105,7 +105,7 @@ Serialization / Deserialization
 
 Serialization and deserialization with user-defined classes is not yet supported.
 
-When building queries, adapt your classes into dicts or lists prior to using it in composition. When classes from the query result data, build an instance from the expected result.
+When building queries, adapt your classes into dicts or lists prior to using them in composition. When instantiating classes from the query result data, build them from the expected result.
 
 .. code-block:: python
 
