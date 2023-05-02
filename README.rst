@@ -82,7 +82,7 @@ Supported Environment Variables:
 Query Composition
 -----------------
 
-This driver supports query composition with Python primitives, lists, dicts, and other FQL queries. Serialization to and from user-defined classes is not yet supported—for now, adapt your classes into a dict or list prior to using it in composition.
+This driver supports query composition with Python primitives, lists, dicts, and other FQL queries.
 
 For FQL templates, denote variables with ``${}`` and pass variables as kwargs to ``fql()``. You can escape a variable by prepending an additional ``$``.
 
@@ -100,13 +100,28 @@ For FQL templates, denote variables with ``${}`` and pass variables as kwargs to
     res = client.query(q)
     print(res.data) # 8
 
-Document Streaming
-------------------
+Serialization / Deserialization
+-------------------------------
 
-Not implemented
+Serialization and deserialization with user-defined classes is not yet supported.
+
+When building queries, adapt your classes into dicts or lists prior to using them in composition. When instantiating classes from the query result data, build them from the expected result.
+
+.. code-block:: python
+
+    class MyClass:
+        def __init__ (self, my_prop):
+            self.my_prop = my_prop
+
+        def to_dict(self):
+            return { 'my_prop': self.my_prop }
+
+        @static_method
+        def from_result(obj):
+            return MyClass(obj['my_prop'])
 
 Query Stats
-------------------
+-----------
 
 Stats are returned on query responses and ServiceErrors.
 
@@ -133,6 +148,10 @@ Stats are returned on query responses and ServiceErrors.
             emit_stats(e.stats)
         # more error handling...
 
+Document Streaming
+------------------
+
+Not implemented
 
 Setup
 -----
