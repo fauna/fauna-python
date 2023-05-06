@@ -848,3 +848,17 @@ def test_encode_list_of_list():
             }, ']']
         }, ']']
     }
+
+
+def test_query_inside_object_raises_type_error():
+    obj = {"q": fql("1")}
+    with pytest.raises(TypeError,
+                       match="Queries aren't supported inside objects"):
+        FaunaEncoder.encode(obj)
+
+
+def test_query_inside_array_embedded_in_object_raises_type_error():
+    obj = {"q": [fql("1")]}
+    with pytest.raises(TypeError,
+                       match="Queries aren't supported inside objects"):
+        FaunaEncoder.encode(obj)

@@ -224,9 +224,12 @@ class FaunaEncoder:
         if in_obj:
             # If we're in an object, it's going to be wrapped in { "value": ... }, so we
             # must encode it as a simple list.
-            return [
-                FaunaEncoder._encode(elem, markers, in_obj) for elem in lst
-            ]
+            enc_list = []
+            for elem in lst:
+                if isinstance(elem, Query):
+                    raise TypeError("Queries aren't supported inside objects")
+                enc_list.append(FaunaEncoder._encode(elem, markers, in_obj))
+            return enc_list
         else:
             # If we're not in an object, we want to encode it as an FQL query.
             q: List[Any] = ["["]
@@ -245,15 +248,14 @@ class FaunaEncoder:
             raise ValueError("Circular reference detected")
 
         markers.add(id(dct))
+
+        res = {}
+        for k, v in dct.items():
+            if isinstance(v, Query):
+                raise TypeError("Queries aren't supported inside objects")
+            res[k] = FaunaEncoder._encode(v, markers, True)
+
         if any(i in _RESERVED_TAGS for i in dct.keys()):
-            return {
-                "@object": {
-                    k: FaunaEncoder._encode(v, markers, True)
-                    for k, v in dct.items()
-                }
-            }
+            return {"@object": res}
         else:
-            return {
-                k: FaunaEncoder._encode(v, markers, True)
-                for k, v in dct.items()
-            }
+            return res
