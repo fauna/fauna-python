@@ -375,6 +375,42 @@ def test_encode_collections(subtests):
         },
     }
 
+    test_list = [*test_dict.values()]
+
+    encoded_list = {
+        'fql': [
+            '[', {
+                'value': {
+                    '@int': '10'
+                }
+            }, ',', {
+                'value': {
+                    '@double': '10.0'
+                }
+            }, ',', {
+                'value': {
+                    '@long': '2147483649'
+                }
+            }, ',', {
+                'value': 'foo'
+            }, ',', {
+                'value': True
+            }, ',', {
+                'value': False
+            }, ',', {
+                'value': None
+            }, ',', {
+                'value': {
+                    '@date': '2023-02-28'
+                }
+            }, ',', {
+                'value': {
+                    '@time': '2023-02-28T10:10:10.000010+00:00'
+                }
+            }, ']'
+        ]
+    }
+
     with subtests.test(msg="encode dict into dict"):
         encoded = FaunaEncoder.encode(test_dict)
         assert encoded_dict == encoded
@@ -382,20 +418,18 @@ def test_encode_collections(subtests):
         assert test_dict == decoded
 
     with subtests.test(msg="encode list into list"):
-        test = list(test_dict.values())
-        expected = list(encoded_dict.values())
+        test = test_list
         encoded = FaunaEncoder.encode(test)
-        assert expected == encoded
-        decoded = FaunaDecoder.decode(encoded)
-        assert test == decoded
+        assert encoded == encoded_list
+        decoded = FaunaDecoder.decode(list(encoded_dict.values()))
+        assert decoded == test
 
     with subtests.test(msg="encode tuple into list"):
-        test = tuple(test_dict.values())
-        expected = list(encoded_dict.values())
+        test = tuple(test_list)
         encoded = FaunaEncoder.encode(test)
-        assert expected == encoded
-        decoded = FaunaDecoder.decode(encoded)
-        assert list(test_dict.values()) == decoded
+        assert encoded == encoded_list
+        decoded = FaunaDecoder.decode(list(encoded_dict.values()))
+        assert decoded == test_list
 
 
 def test_encode_with_circular_references(subtests):
@@ -666,10 +700,10 @@ def test_encode_complex_objects(subtests, complex_untyped_object,
 
     with subtests.test(msg="large list"):
         test: Any = [10] * 10000
-        expected = [{"@int": "10"}] * 10000
         encoded = FaunaEncoder.encode(test)
-        assert encoded == expected
-        decoded = FaunaDecoder.decode(encoded)
+        # The pytest diff was hanging, so just check the length
+        assert len(encoded["fql"]) == 10000 * 2 + 1
+        decoded = FaunaDecoder.decode([{"@int": "10"}] * 10000)
         assert test == decoded
 
     with subtests.test(msg="large dict"):
@@ -773,3 +807,44 @@ def test_encode_query_builder_sub_queries(subtests):
         }
 
         assert expected == actual
+
+
+def test_encode_queries_in_list():
+    arr: Any = [fql("${n}", n=str(n)) for n in range(2)]
+    arr.append("1 + 1")
+    actual = FaunaEncoder.encode(fql("${arr}", arr=arr))
+    expected = {
+        "fql": [{
+            "fql": [
+                "[", {
+                    "fql": [{
+                        'value': '0'
+                    }]
+                }, ",", {
+                    "fql": [{
+                        'value': '1'
+                    }]
+                }, ",", {
+                    "value": "1 + 1"
+                }, "]"
+            ]
+        }]
+    }
+
+    assert actual == expected
+
+
+def test_encode_list_of_list():
+    inner = [fql("1"), fql("2")]
+    outer = [inner]
+    actual = FaunaEncoder.encode(outer)
+    assert actual == {
+        'fql':
+        ['[', {
+            'fql': ['[', {
+                'fql': ['1']
+            }, ',', {
+                'fql': ['2']
+            }, ']']
+        }, ']']
+    }

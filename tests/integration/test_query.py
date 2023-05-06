@@ -1,5 +1,6 @@
 import json
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -125,3 +126,17 @@ def test_null_doc(client, a_collection):
     r = client.query(fql("${coll}.byId('123')", coll=a_collection))
     assert isinstance(r.data, NullDocument)
     assert r.data.cause == "not found"
+
+
+def test_list_of_queries_is_injection_safe(client):
+    arr: Any = [fql("${n}", n=n) for n in range(2)]
+
+    r = client.query(fql("${arr}", arr=[*arr, "1 + 1"]))
+    assert r.data == [0, 1, "1 + 1"]
+
+
+def test_list_of_lists(client):
+    inner = [fql("1"), fql("2")]
+    outer = [inner]
+    r = client.query(fql("${arr}", arr=outer))
+    assert r.data == [[1, 2]]

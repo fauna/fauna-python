@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import Any, Optional, Set
+from typing import Any, Optional, Set, List
 
 from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, NullDocument
 from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
@@ -44,7 +44,7 @@ class FaunaEncoder:
     +-------------------------------+---------------+
     | False                         | False         |
     +-------------------------------+---------------+
-    | None                          | None          |
+    | None                          | null          |
     +-------------------------------+---------------+
     | *Document                     | @ref          |
     +-------------------------------+---------------+
@@ -146,24 +146,30 @@ class FaunaEncoder:
         return None
 
     @staticmethod
+    def as_value(obj: Any, markers=None):
+        if isinstance(obj, Query):
+            return FaunaEncoder.from_query(obj)
+        elif isinstance(obj, (list, tuple)):
+            return FaunaEncoder._encode(obj, markers)
+        else:
+            return {"value": FaunaEncoder._encode(obj)}
+
+    @staticmethod
     def from_fragment(obj: Fragment):
         if isinstance(obj, LiteralFragment):
             return obj.get()
         elif isinstance(obj, ValueFragment):
             v = obj.get()
-            if isinstance(v, Query):
-                return FaunaEncoder.from_query_interpolation_builder(v)
-            else:
-                return {"value": FaunaEncoder.encode(v)}
+            return FaunaEncoder.as_value(v)
         else:
             raise ValueError(f"Unknown fragment type: {type(obj)}")
 
     @staticmethod
-    def from_query_interpolation_builder(obj: Query):
+    def from_query(obj: Query):
         return {"fql": [FaunaEncoder.from_fragment(f) for f in obj.fragments]}
 
     @staticmethod
-    def _encode(o: Any, _markers: Optional[Set] = None):
+    def _encode(o: Any, _markers: Optional[Set] = None, in_obj=False):
         if _markers is None:
             _markers = set()
 
@@ -197,22 +203,40 @@ class FaunaEncoder:
         elif isinstance(o, NullDocument):
             return FaunaEncoder.encode(o.ref)
         elif isinstance(o, (list, tuple)):
-            return FaunaEncoder._encode_list(o, _markers)
+            return FaunaEncoder._encode_list(o, _markers, in_obj)
         elif isinstance(o, dict):
             return FaunaEncoder._encode_dict(o, _markers)
         elif isinstance(o, Query):
-            return FaunaEncoder.from_query_interpolation_builder(o)
+            return FaunaEncoder.from_query(o)
+        elif isinstance(o, Fragment):
+            return FaunaEncoder.from_fragment(o)
         else:
             raise ValueError(f"Object {o} of type {type(o)} cannot be encoded")
 
     @staticmethod
-    def _encode_list(lst, markers):
+    def _encode_list(lst, markers, in_obj=False):
         _id = id(lst)
         if _id in markers:
             raise ValueError("Circular reference detected")
 
         markers.add(id(lst))
-        return [FaunaEncoder._encode(elem, markers) for elem in lst]
+
+        if in_obj:
+            # If we're in an object, it's going to be wrapped in { "value": ... }, so we
+            # must encode it as a simple list.
+            return [
+                FaunaEncoder._encode(elem, markers, in_obj) for elem in lst
+            ]
+        else:
+            # If we're not in an object, we want to encode it as an FQL query.
+            q: List[Any] = ["["]
+            for elem in lst:
+                q.append(FaunaEncoder.as_value(elem, markers))
+                q.append(",")
+            q.pop()
+            q.append("]")
+
+            return {"fql": q}
 
     @staticmethod
     def _encode_dict(dct, markers):
@@ -224,12 +248,12 @@ class FaunaEncoder:
         if any(i in _RESERVED_TAGS for i in dct.keys()):
             return {
                 "@object": {
-                    k: FaunaEncoder._encode(v, markers)
+                    k: FaunaEncoder._encode(v, markers, True)
                     for k, v in dct.items()
                 }
             }
         else:
             return {
-                k: FaunaEncoder._encode(v, markers)
+                k: FaunaEncoder._encode(v, markers, True)
                 for k, v in dct.items()
             }
