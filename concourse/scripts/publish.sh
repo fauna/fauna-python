@@ -14,4 +14,4 @@ pip install twine
 twine check dist/*
 twine upload dist/*
 
-echo "fauna-python@$PACKAGE_VERSION has been released @driver-release-watchers" > ../slack-message/publish
+echo "fauna-python@$PACKAGE_VERSION has been released <!subteam^S0562QFL21M>" > ../slack-message/publish
