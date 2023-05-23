@@ -10,7 +10,7 @@ from fauna import __version__ as pkg_version
 # Load the README file for use in the long description
 local_dir = path.abspath(path.dirname(__file__))
 with open(path.join(local_dir, "README.rst"), encoding="utf-8") as f:
-  long_description = f.read()
+    long_description = f.read()
 
 requires = [
     "iso8601==1.1.0",
