@@ -1,6 +1,6 @@
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional, List
+from typing import Any, Dict, Generator, Mapping, Optional, List
 
 import fauna
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
@@ -8,6 +8,7 @@ from fauna.errors import AuthenticationError, ClientError, ProtocolError, Servic
     QueryCheckError, AbortError, InvalidRequestError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
+from fauna.query.models import Page
 from fauna.query.query_builder import Query
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
@@ -178,6 +179,35 @@ class Client:
             return timedelta(milliseconds=self._query_timeout_ms)
         else:
             return None
+
+    def paginate(
+        self,
+        fql: Query,
+        opts: Optional[QueryOptions] = None,
+    ) -> Generator[Page, None, None]:
+        """
+        Run a query on Fauna and returning an iterator of results. If the query
+        returns a Page, the iterator will fetch additional Pages, until 
+
+        :param fql: A string, but will eventually be a query expression.
+        :param opts: (Optional) Query Options
+
+        :return: a :class:`QueryResponse`
+
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
+        :raises TypeError: Invalid param types
+        """
+
+        if not isinstance(fql, Query):
+            err_msg = f"'fql' must be a Query but was a {type(fql)}. You can build a " \
+                       f"Query by calling fauna.fql()"
+            raise TypeError(err_msg)
+        
+        from fauna.query.iterator import QueryIterator
+        return QueryIterator(self, fql, opts)
 
     def query(
         self,
