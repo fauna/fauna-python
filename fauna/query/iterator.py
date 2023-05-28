@@ -7,12 +7,10 @@ from fauna.query import Query, fql, Page
 class QueryIterator:
     """A class to provider an iterator on top of Fauna queries."""
 
-    def __init__(
-        self, 
-        client: Client, 
-        fql: Query, 
-        opts: Optional[QueryOptions] = None
-    ):
+    def __init__(self,
+                 client: Client,
+                 fql: Query,
+                 opts: Optional[QueryOptions] = None):
         """Initializes the QueryIterator
 
         :param fql: A string, but will eventually be a query expression.
@@ -34,13 +32,13 @@ class QueryIterator:
         self.fql = fql
         self.opts = opts
         self.cursor = None
-        
+
     def __iter__(self) -> Iterator:
         return self.iter()
-    
+
     def iter(self) -> Iterator:
         initialResponse = self.client.query(self.fql, self.opts)
-        
+
         if isinstance(initialResponse.data, Page):
             self.cursor = initialResponse.data.after
             yield initialResponse.data.data
@@ -51,6 +49,6 @@ class QueryIterator:
                     self.opts)
                 self.cursor = nextResponse.data.after
                 yield nextResponse.data.data
-                
+
         else:
             yield initialResponse.data

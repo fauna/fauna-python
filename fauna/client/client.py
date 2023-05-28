@@ -205,7 +205,7 @@ class Client:
             err_msg = f"'fql' must be a Query but was a {type(fql)}. You can build a " \
                        f"Query by calling fauna.fql()"
             raise TypeError(err_msg)
-        
+
         from fauna.query.iterator import QueryIterator
         return QueryIterator(self, fql, opts)
 
