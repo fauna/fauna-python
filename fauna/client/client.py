@@ -1,6 +1,6 @@
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Dict, Generator, Mapping, Optional, List
+from typing import Any, Dict, Iterator, Mapping, Optional, List
 
 import fauna
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
@@ -8,7 +8,6 @@ from fauna.errors import AuthenticationError, ClientError, ProtocolError, Servic
     QueryCheckError, AbortError, InvalidRequestError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
-from fauna.query.models import Page
 from fauna.query.query_builder import Query
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
@@ -184,7 +183,7 @@ class Client:
         self,
         fql: Query,
         opts: Optional[QueryOptions] = None,
-    ) -> Generator[Page, None, None]:
+    ) -> Iterator:
         """
         Run a query on Fauna and returning an iterator of results. If the query
         returns a Page, the iterator will fetch additional Pages, until 

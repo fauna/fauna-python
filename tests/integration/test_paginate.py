@@ -24,3 +24,15 @@ def test_multiple_pages_with_big_collection(client, pagination_collections):
         page_count += 1
 
     assert page_count == 2
+
+
+def test_iterator_can_be_flattened(client, pagination_collections):
+    _, big_coll = pagination_collections
+
+    query_iterator = client.paginate(fql("${mod}.all()", mod=big_coll))
+
+    page_count = 0
+    for _ in query_iterator.flatten():
+        page_count += 1
+
+    assert page_count == 20

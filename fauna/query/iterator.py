@@ -47,8 +47,21 @@ class QueryIterator:
                 nextResponse = self.client.query(
                     fql("Set.paginate(${after})", after=self.cursor),
                     self.opts)
-                self.cursor = nextResponse.data.after
-                yield nextResponse.data.data
+                # TODO: `Set.paginate` does not yet return a `@set` tagged value
+                #       so we will get back a plain object that might not have
+                #       an after property.
+                self.cursor = nextResponse.data.get("after")
+                yield nextResponse.data.get("data")
 
         else:
             yield initialResponse.data
+
+    def flatten(self) -> Iterator:
+        for page in self.iter():
+            try:
+                items = iter(page)
+                for item in items:
+                    yield item
+
+            except Exception as _:
+                yield page
