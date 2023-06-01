@@ -8,7 +8,7 @@ from fauna.errors import AuthenticationError, ClientError, ProtocolError, Servic
     QueryCheckError, AbortError, InvalidRequestError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
-from fauna.query.query_builder import Query
+from fauna.query import Query, Page, fql
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
 from fauna.encoding import QuerySuccess, ConstraintFailure, QueryTags, QueryStats
@@ -205,7 +205,6 @@ class Client:
                        f"Query by calling fauna.fql()"
             raise TypeError(err_msg)
 
-        from fauna.query.iterator import QueryIterator
         return QueryIterator(self, fql, opts)
 
     def query(
@@ -507,3 +506,77 @@ class Client:
             endpoint = endpoint[:-1]
 
         self._endpoint = endpoint
+
+
+class QueryIterator:
+    """A class to provider an iterator on top of Fauna queries."""
+
+    def __init__(self,
+                 client: Client,
+                 fql: Query,
+                 opts: Optional[QueryOptions] = None):
+        """Initializes the QueryIterator
+
+        :param fql: A string, but will eventually be a query expression.
+        :param opts: (Optional) Query Options
+
+        :raises TypeError: Invalid param types
+        """
+        if not isinstance(client, Client):
+            err_msg = f"'client' must be a Client but was a {type(client)}. You can build a " \
+                        f"Client by calling fauna.client.Client()"
+            raise TypeError(err_msg)
+
+        if not isinstance(fql, Query):
+            err_msg = f"'fql' must be a Query but was a {type(fql)}. You can build a " \
+                       f"Query by calling fauna.fql()"
+            raise TypeError(err_msg)
+
+        self.client = client
+        self.fql = fql
+        self.opts = opts
+
+    def __iter__(self) -> Iterator:
+        return self.iter()
+
+    def iter(self) -> Iterator:
+        """
+        A generator function that immediately fetches and yields the results of
+        the stored query. Yields additional pages on subsequent iterations if
+        they exist
+        """
+
+        cursor = None
+        initial_response = self.client.query(self.fql, self.opts)
+
+        if isinstance(initial_response.data, Page):
+            cursor = initial_response.data.after
+            yield initial_response.data.data
+
+            while cursor is not None:
+                next_response = self.client.query(
+                    fql("Set.paginate(${after})", after=cursor), self.opts)
+                # TODO: `Set.paginate` does not yet return a `@set` tagged value
+                #       so we will get back a plain object that might not have
+                #       an after property.
+                cursor = next_response.data.get("after")
+                yield next_response.data.get("data")
+
+        else:
+            yield initial_response.data
+
+    def flatten(self) -> Iterator:
+        """
+        A generator function that immediately fetches and yields the results of
+        the stored query. Yields each item individually, rather than a whole
+        Page at a time. Fetches additional pages as required if they exist.
+        """
+
+        for page in self.iter():
+            try:
+                items = iter(page)
+                for item in items:
+                    yield item
+
+            except Exception as _:
+                yield page
