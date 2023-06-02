@@ -257,7 +257,7 @@ class Client:
         headers[_Header.Authorization] = self._auth.bearer()
 
         if self._query_timeout_ms is not None:
-            headers[Header.TimeoutMs] = str(self._query_timeout_ms)
+            headers[Header.QueryTimeoutMs] = str(self._query_timeout_ms)
 
         headers.update(self._last_txn_ts.request_header)
 
@@ -275,7 +275,7 @@ class Client:
                 headers[Header.Traceparent] = opts.traceparent
             if opts.query_timeout is not None:
                 timeout_ms = f"{int(opts.query_timeout.total_seconds() * 1000)}"
-                headers[Header.TimeoutMs] = timeout_ms
+                headers[Header.QueryTimeoutMs] = timeout_ms
             if opts.query_tags is not None:
                 query_tags.update(opts.query_tags)
             if opts.typecheck is not None:
