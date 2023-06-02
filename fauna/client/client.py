@@ -186,9 +186,10 @@ class Client:
     ) -> "QueryIterator":
         """
         Run a query on Fauna and returning an iterator of results. If the query
-        returns a Page, the iterator will fetch additional Pages, until 
+        returns a Page, the iterator will fetch additional Pages until the
+        after token is null.
 
-        :param fql: A string, but will eventually be a query expression.
+        :param fql: A Query
         :param opts: (Optional) Query Options
 
         :return: a :class:`QueryResponse`
@@ -215,7 +216,7 @@ class Client:
         """
         Run a query on Fauna.
 
-        :param fql: A string, but will eventually be a query expression.
+        :param fql: A Query
         :param opts: (Optional) Query Options
 
         :return: a :class:`QueryResponse`
@@ -517,7 +518,7 @@ class QueryIterator:
                  opts: Optional[QueryOptions] = None):
         """Initializes the QueryIterator
 
-        :param fql: A string, but will eventually be a query expression.
+        :param fql: A Query
         :param opts: (Optional) Query Options
 
         :raises TypeError: Invalid param types
