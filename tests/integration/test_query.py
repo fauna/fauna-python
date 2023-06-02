@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 from types import SimpleNamespace
 
@@ -5,7 +6,7 @@ import pytest
 
 from fauna import fql, Page, NullDocument
 from fauna.client import Client, QueryOptions
-from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError, ClientError
+from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError, ClientError, QueryTimeoutError
 from fauna.encoding import ConstraintFailure
 
 
@@ -125,3 +126,14 @@ def test_null_doc(client, a_collection):
     r = client.query(fql("${coll}.byId('123')", coll=a_collection))
     assert isinstance(r.data, NullDocument)
     assert r.data.cause == "not found"
+
+
+@pytest.mark.skip(reason="query_timeout not properly handled yet")
+def test_query_timeout(client, a_collection):
+    try:
+        client.query(fql("${coll}.byId('123')", coll=a_collection),
+                     QueryOptions(query_timeout=timedelta(milliseconds=1)))
+    except QueryTimeoutError:
+        assert True
+
+    assert False
