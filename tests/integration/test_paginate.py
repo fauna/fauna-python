@@ -52,17 +52,18 @@ def test_iterator_can_paginate_non_page(client):
         # If the query response is not a page, then the whole thing gets
         # stuffed into the result. That is, array responses are not treated like
         # pages.
-        assert page == [[0,1,2,3,4]]
+        assert page == [[0, 1, 2, 3, 4]]
         page_count += 1
 
     assert page_count == 1
+
 
 def test_iterator_can_flatten_non_page(client):
     query_iterator = client.paginate(fql("[0,1,2,3,4]"))
 
     page_count = 0
     for item in query_iterator.flatten():
-        assert item == [0,1,2,3,4]
+        assert item == [0, 1, 2, 3, 4]
         page_count += 1
 
     assert page_count == 1
