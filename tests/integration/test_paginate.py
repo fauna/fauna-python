@@ -44,13 +44,26 @@ def test_iterator_can_be_flattened(client, pagination_collections):
     assert page_count == 20
 
 
-def test_can_paginate_query_not_returning_set(client):
-    query_iterator = client.paginate(fql("42"))
+def test_iterator_can_paginate_non_page(client):
+    query_iterator = client.paginate(fql("[0,1,2,3,4]"))
 
     page_count = 0
     for page in query_iterator:
+        # If the query response is not a page, then the whole thing gets
+        # stuffed into the result. That is, array responses are not treated like
+        # pages.
+        assert page == [[0,1,2,3,4]]
         page_count += 1
-        assert page == [42]
+
+    assert page_count == 1
+
+def test_iterator_can_flatten_non_page(client):
+    query_iterator = client.paginate(fql("[0,1,2,3,4]"))
+
+    page_count = 0
+    for item in query_iterator.flatten():
+        assert item == [0,1,2,3,4]
+        page_count += 1
 
     assert page_count == 1
 

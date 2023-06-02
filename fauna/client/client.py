@@ -574,10 +574,5 @@ class QueryIterator:
         """
 
         for page in self.iter():
-            try:
-                items = iter(page)
-                for item in items:
-                    yield item
-
-            except Exception as _:
-                yield page
+            for item in page:
+                yield item
