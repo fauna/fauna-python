@@ -1,4 +1,10 @@
+from datetime import timedelta
+
+import pytest
+
 from fauna import fql
+from fauna.client.client import QueryOptions
+from fauna.errors.errors import QueryTimeoutError
 
 
 def test_single_page_with_small_collection(client, pagination_collections):
@@ -36,3 +42,62 @@ def test_iterator_can_be_flattened(client, pagination_collections):
         page_count += 1
 
     assert page_count == 20
+
+
+def test_can_paginate_query_not_returning_set(client):
+    query_iterator = client.paginate(fql("42"))
+
+    page_count = 0
+    for page in query_iterator:
+        page_count += 1
+        assert page == [42]
+
+    assert page_count == 1
+
+
+def test_can_get_pages_using_next(client, pagination_collections):
+    _, big_coll = pagination_collections
+
+    query_iterator = client.paginate(fql("${mod}.all()", mod=big_coll))
+
+    my_iter = query_iterator.iter()
+
+    first = next(my_iter)
+    assert len(first) == 16
+
+    second = next(my_iter)
+    assert len(second) == 4
+
+
+def test_can_get_pages_using_a_loop_with_next(client, pagination_collections):
+    _, big_coll = pagination_collections
+
+    query_iterator = client.paginate(fql("${mod}.all()", mod=big_coll))
+
+    my_iter = query_iterator.iter()
+
+    page_count = 0
+    try:
+        while True:
+            _ = next(my_iter)
+            page_count += 1
+    except StopIteration:
+        pass  # Iterator exhausted, exit the loop
+
+    assert page_count == 2
+
+
+@pytest.mark.skip(reason="query_timeout not properly handled yet")
+def test_respects_query_options(client, pagination_collections):
+    _, big_coll = pagination_collections
+
+    query_iterator = client.paginate(
+        fql("${mod}.create({ name: 'Wah' })", mod=big_coll),
+        QueryOptions(query_timeout=timedelta(milliseconds=1)))
+
+    try:
+        next(query_iterator.iter())
+    except QueryTimeoutError:
+        assert True
+
+    assert False

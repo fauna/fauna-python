@@ -563,7 +563,7 @@ class QueryIterator:
                 yield next_response.data.get("data")
 
         else:
-            yield initial_response.data
+            yield [initial_response.data]
 
     def flatten(self) -> Iterator:
         """
