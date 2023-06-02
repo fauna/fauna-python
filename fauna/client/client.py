@@ -183,7 +183,7 @@ class Client:
         self,
         fql: Query,
         opts: Optional[QueryOptions] = None,
-    ) -> Iterator:
+    ) -> "QueryIterator":
         """
         Run a query on Fauna and returning an iterator of results. If the query
         returns a Page, the iterator will fetch additional Pages, until 
