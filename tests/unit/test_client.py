@@ -121,7 +121,7 @@ def test_query_options_set(httpx_mock: HTTPXMock):
 
     typecheck = True
     linearized = True
-    query_timeout_ms = 5000.0
+    query_timeout_ms = 5000
     traceparent = "happy-little-fox"
     max_contention_retries = 5
     tags = {
