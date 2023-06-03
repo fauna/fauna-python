@@ -128,12 +128,7 @@ def test_null_doc(client, a_collection):
     assert r.data.cause == "not found"
 
 
-@pytest.mark.skip(reason="query_timeout not properly handled yet")
 def test_query_timeout(client, a_collection):
-    try:
+    with pytest.raises(QueryTimeoutError):
         client.query(fql("${coll}.byId('123')", coll=a_collection),
                      QueryOptions(query_timeout=timedelta(milliseconds=1)))
-    except QueryTimeoutError:
-        assert True
-
-    assert False

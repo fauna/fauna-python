@@ -101,7 +101,6 @@ def test_can_get_pages_using_a_loop_with_next(client, pagination_collections):
     assert page_count == 2
 
 
-@pytest.mark.skip(reason="query_timeout not properly handled yet")
 def test_respects_query_options(client, pagination_collections):
     _, big_coll = pagination_collections
 
@@ -109,9 +108,5 @@ def test_respects_query_options(client, pagination_collections):
         fql("${mod}.create({ name: 'Wah' })", mod=big_coll),
         QueryOptions(query_timeout=timedelta(milliseconds=1)))
 
-    try:
+    with pytest.raises(QueryTimeoutError):
         next(query_iterator.iter())
-    except QueryTimeoutError:
-        assert True
-
-    assert False

@@ -121,7 +121,7 @@ def test_query_options_set(httpx_mock: HTTPXMock):
 
     typecheck = True
     linearized = True
-    query_timeout_ms = 5000.0
+    query_timeout_ms = 5000
     traceparent = "happy-little-fox"
     max_contention_retries = 5
     tags = {
@@ -135,7 +135,7 @@ def test_query_options_set(httpx_mock: HTTPXMock):
         Validate each of the associated Headers are set on the request
         """
         assert request.headers[Header.Linearized] == str(linearized).lower()
-        assert request.headers[Header.TimeoutMs] == f"{query_timeout_ms}"
+        assert request.headers[Header.QueryTimeoutMs] == f"{query_timeout_ms}"
         assert request.headers[Header.Traceparent] == traceparent
         assert request.headers[Header.Typecheck] == str(typecheck).lower()
         assert request.headers[Header.MaxContentionRetries] == f"{max_contention_retries}"  # yapf: disable

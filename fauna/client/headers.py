@@ -11,7 +11,7 @@ class Header:
     LastTxnTs = "X-Last-Txn-Ts"
     Linearized = "X-Linearized"
     MaxContentionRetries = "X-Max-Contention-Retries"
-    TimeoutMs = "X-Timeout-Ms"
+    QueryTimeoutMs = "X-Query-Timeout-Ms"
     Typecheck = "X-Typecheck"
     Tags = "X-Query-Tags"
     Traceparent = "Traceparent"
