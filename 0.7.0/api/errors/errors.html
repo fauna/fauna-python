@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>fauna.errors.errors API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>fauna.errors.errors</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">from typing import Optional, List, Any, Mapping
+
+from fauna.encoding import ConstraintFailure, QueryStats, QueryInfo
+
+
+class FaunaException(Exception):
+    &#34;&#34;&#34;Base class Fauna Exceptions&#34;&#34;&#34;
+    pass
+
+
+class ClientError(FaunaException):
+    &#34;&#34;&#34;An error representing a failure internal to the client, itself.
+    This indicates Fauna was never called - the client failed internally
+    prior to sending the request.&#34;&#34;&#34;
+    pass
+
+
+class NetworkError(FaunaException):
+    &#34;&#34;&#34;An error representing a failure due to the network.
+    This indicates Fauna was never reached.&#34;&#34;&#34;
+    pass
+
+
+class ProtocolError(FaunaException):
+    &#34;&#34;&#34;An error representing a HTTP failure - but one not directly emitted by Fauna.&#34;&#34;&#34;
+
+    @property
+    def status_code(self) -&gt; int:
+        return self._status_code
+
+    @property
+    def message(self) -&gt; str:
+        return self._message
+
+    def __init__(self, status_code: int, message: str):
+        self._status_code = status_code
+        self._message = message
+
+    def __str__(self):
+        return f&#34;{self.status_code}: {self.message}&#34;
+
+
+class FaunaError(FaunaException):
+    &#34;&#34;&#34;Base class Fauna Errors&#34;&#34;&#34;
+
+    @property
+    def status_code(self) -&gt; int:
+        return self._status_code
+
+    @property
+    def code(self) -&gt; str:
+        return self._code
+
+    @property
+    def message(self) -&gt; str:
+        return self._message
+
+    @property
+    def abort(self) -&gt; Optional[Any]:
+        return self._abort
+
+    @property
+    def constraint_failures(self) -&gt; Optional[List[&#39;ConstraintFailure&#39;]]:
+        return self._constraint_failures
+
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str,
+        abort: Optional[Any] = None,
+        constraint_failures: Optional[List[&#39;ConstraintFailure&#39;]] = None,
+    ):
+        self._status_code = status_code
+        self._code = code
+        self._message = message
+        self._abort = abort
+        self._constraint_failures = constraint_failures
+
+    def __str__(self):
+        return f&#34;{self.status_code}: {self.code}\n{self.message}&#34;
+
+
+class ServiceError(FaunaError, QueryInfo):
+    &#34;&#34;&#34;An error representing a query failure returned by Fauna.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str,
+        summary: Optional[str] = None,
+        abort: Optional[Any] = None,
+        constraint_failures: Optional[List[&#39;ConstraintFailure&#39;]] = None,
+        query_tags: Optional[Mapping[str, str]] = None,
+        stats: Optional[QueryStats] = None,
+        txn_ts: Optional[int] = None,
+    ):
+        QueryInfo.__init__(
+            self,
+            query_tags=query_tags,
+            stats=stats,
+            summary=summary,
+            txn_ts=txn_ts,
+        )
+
+        FaunaError.__init__(
+            self,
+            status_code=status_code,
+            code=code,
+            message=message,
+            abort=abort,
+            constraint_failures=constraint_failures,
+        )
+
+    def __str__(self):
+        constraint_str = &#34;---&#34;
+        if self._constraint_failures:
+            constraint_str = f&#34;---\nconstraint failures: {self._constraint_failures}\n---&#34;
+
+        return f&#34;{self._status_code}: {self.code}\n{self.message}\n{constraint_str}\n{self.summary or &#39;&#39;}&#34;
+
+
+class AbortError(ServiceError):
+    pass
+
+
+class InvalidRequestError(ServiceError):
+    pass
+
+
+class QueryCheckError(ServiceError):
+    &#34;&#34;&#34;An error due to a &#34;compile-time&#34; check of the query failing.&#34;&#34;&#34;
+    pass
+
+
+class QueryRuntimeError(ServiceError):
+    &#34;&#34;&#34;An error response that is the result of the query failing during execution.
+    QueryRuntimeError&#39;s occur when a bug in your query causes an invalid execution
+    to be requested.
+    The &#39;code&#39; field will vary based on the specific error cause.&#34;&#34;&#34;
+    pass
+
+
+class AuthenticationError(ServiceError):
+    &#34;&#34;&#34;AuthenticationError indicates invalid credentials were used.&#34;&#34;&#34;
+    pass
+
+
+class AuthorizationError(ServiceError):
+    &#34;&#34;&#34;AuthorizationError indicates the credentials used do not have
+    permission to perform the requested action.&#34;&#34;&#34;
+    pass
+
+
+class ThrottlingError(ServiceError):
+    &#34;&#34;&#34;ThrottlingError indicates some capacity limit was exceeded
+    and thus the request could not be served.&#34;&#34;&#34;
+    pass
+
+
+class QueryTimeoutError(ServiceError):
+    &#34;&#34;&#34;A failure due to the timeout being exceeded, but the timeout
+    was set lower than the query&#39;s expected processing time.
+    This response is distinguished from a ServiceTimeoutException
+    in that a QueryTimeoutError shows Fauna behaving in an expected manner.&#34;&#34;&#34;
+    pass
+
+
+class ServiceInternalError(ServiceError):
+    &#34;&#34;&#34;ServiceInternalError indicates Fauna failed unexpectedly.&#34;&#34;&#34;
+    pass
+
+
+class ServiceTimeoutError(ServiceError):
+    &#34;&#34;&#34;ServiceTimeoutError indicates Fauna was not available to service
+    the request before the timeout was reached.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="fauna.errors.errors.AbortError"><code class="flex name class">
+<span>class <span class="ident">AbortError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error representing a query failure returned by Fauna.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AbortError(ServiceError):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.AuthenticationError"><code class="flex name class">
+<span>class <span class="ident">AuthenticationError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>AuthenticationError indicates invalid credentials were used.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AuthenticationError(ServiceError):
+    &#34;&#34;&#34;AuthenticationError indicates invalid credentials were used.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.AuthorizationError"><code class="flex name class">
+<span>class <span class="ident">AuthorizationError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>AuthorizationError indicates the credentials used do not have
+permission to perform the requested action.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AuthorizationError(ServiceError):
+    &#34;&#34;&#34;AuthorizationError indicates the credentials used do not have
+    permission to perform the requested action.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.ClientError"><code class="flex name class">
+<span>class <span class="ident">ClientError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error representing a failure internal to the client, itself.
+This indicates Fauna was never called - the client failed internally
+prior to sending the request.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ClientError(FaunaException):
+    &#34;&#34;&#34;An error representing a failure internal to the client, itself.
+    This indicates Fauna was never called - the client failed internally
+    prior to sending the request.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.FaunaError"><code class="flex name class">
+<span>class <span class="ident">FaunaError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class Fauna Errors</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FaunaError(FaunaException):
+    &#34;&#34;&#34;Base class Fauna Errors&#34;&#34;&#34;
+
+    @property
+    def status_code(self) -&gt; int:
+        return self._status_code
+
+    @property
+    def code(self) -&gt; str:
+        return self._code
+
+    @property
+    def message(self) -&gt; str:
+        return self._message
+
+    @property
+    def abort(self) -&gt; Optional[Any]:
+        return self._abort
+
+    @property
+    def constraint_failures(self) -&gt; Optional[List[&#39;ConstraintFailure&#39;]]:
+        return self._constraint_failures
+
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str,
+        abort: Optional[Any] = None,
+        constraint_failures: Optional[List[&#39;ConstraintFailure&#39;]] = None,
+    ):
+        self._status_code = status_code
+        self._code = code
+        self._message = message
+        self._abort = abort
+        self._constraint_failures = constraint_failures
+
+    def __str__(self):
+        return f&#34;{self.status_code}: {self.code}\n{self.message}&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fauna.errors.errors.FaunaError.abort"><code class="name">var <span class="ident">abort</span> : Optional[Any]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def abort(self) -&gt; Optional[Any]:
+    return self._abort</code></pre>
+</details>
+</dd>
+<dt id="fauna.errors.errors.FaunaError.code"><code class="name">var <span class="ident">code</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def code(self) -&gt; str:
+    return self._code</code></pre>
+</details>
+</dd>
+<dt id="fauna.errors.errors.FaunaError.constraint_failures"><code class="name">var <span class="ident">constraint_failures</span> : Optional[List[<a title="fauna.encoding.wire_protocol.ConstraintFailure" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.ConstraintFailure">ConstraintFailure</a>]]</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def constraint_failures(self) -&gt; Optional[List[&#39;ConstraintFailure&#39;]]:
+    return self._constraint_failures</code></pre>
+</details>
+</dd>
+<dt id="fauna.errors.errors.FaunaError.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def message(self) -&gt; str:
+    return self._message</code></pre>
+</details>
+</dd>
+<dt id="fauna.errors.errors.FaunaError.status_code"><code class="name">var <span class="ident">status_code</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def status_code(self) -&gt; int:
+    return self._status_code</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fauna.errors.errors.FaunaException"><code class="flex name class">
+<span>class <span class="ident">FaunaException</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Base class Fauna Exceptions</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FaunaException(Exception):
+    &#34;&#34;&#34;Base class Fauna Exceptions&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ClientError" href="#fauna.errors.errors.ClientError">ClientError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.NetworkError" href="#fauna.errors.errors.NetworkError">NetworkError</a></li>
+<li><a title="fauna.errors.errors.ProtocolError" href="#fauna.errors.errors.ProtocolError">ProtocolError</a></li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.InvalidRequestError"><code class="flex name class">
+<span>class <span class="ident">InvalidRequestError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error representing a query failure returned by Fauna.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InvalidRequestError(ServiceError):
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.NetworkError"><code class="flex name class">
+<span>class <span class="ident">NetworkError</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error representing a failure due to the network.
+This indicates Fauna was never reached.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class NetworkError(FaunaException):
+    &#34;&#34;&#34;An error representing a failure due to the network.
+    This indicates Fauna was never reached.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.ProtocolError"><code class="flex name class">
+<span>class <span class="ident">ProtocolError</span></span>
+<span>(</span><span>status_code: int, message: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error representing a HTTP failure - but one not directly emitted by Fauna.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ProtocolError(FaunaException):
+    &#34;&#34;&#34;An error representing a HTTP failure - but one not directly emitted by Fauna.&#34;&#34;&#34;
+
+    @property
+    def status_code(self) -&gt; int:
+        return self._status_code
+
+    @property
+    def message(self) -&gt; str:
+        return self._message
+
+    def __init__(self, status_code: int, message: str):
+        self._status_code = status_code
+        self._message = message
+
+    def __str__(self):
+        return f&#34;{self.status_code}: {self.message}&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fauna.errors.errors.ProtocolError.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def message(self) -&gt; str:
+    return self._message</code></pre>
+</details>
+</dd>
+<dt id="fauna.errors.errors.ProtocolError.status_code"><code class="name">var <span class="ident">status_code</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def status_code(self) -&gt; int:
+    return self._status_code</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fauna.errors.errors.QueryCheckError"><code class="flex name class">
+<span>class <span class="ident">QueryCheckError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error due to a "compile-time" check of the query failing.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QueryCheckError(ServiceError):
+    &#34;&#34;&#34;An error due to a &#34;compile-time&#34; check of the query failing.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.QueryRuntimeError"><code class="flex name class">
+<span>class <span class="ident">QueryRuntimeError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error response that is the result of the query failing during execution.
+QueryRuntimeError's occur when a bug in your query causes an invalid execution
+to be requested.
+The 'code' field will vary based on the specific error cause.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QueryRuntimeError(ServiceError):
+    &#34;&#34;&#34;An error response that is the result of the query failing during execution.
+    QueryRuntimeError&#39;s occur when a bug in your query causes an invalid execution
+    to be requested.
+    The &#39;code&#39; field will vary based on the specific error cause.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.QueryTimeoutError"><code class="flex name class">
+<span>class <span class="ident">QueryTimeoutError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A failure due to the timeout being exceeded, but the timeout
+was set lower than the query's expected processing time.
+This response is distinguished from a ServiceTimeoutException
+in that a QueryTimeoutError shows Fauna behaving in an expected manner.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class QueryTimeoutError(ServiceError):
+    &#34;&#34;&#34;A failure due to the timeout being exceeded, but the timeout
+    was set lower than the query&#39;s expected processing time.
+    This response is distinguished from a ServiceTimeoutException
+    in that a QueryTimeoutError shows Fauna behaving in an expected manner.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.ServiceError"><code class="flex name class">
+<span>class <span class="ident">ServiceError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An error representing a query failure returned by Fauna.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ServiceError(FaunaError, QueryInfo):
+    &#34;&#34;&#34;An error representing a query failure returned by Fauna.&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        status_code: int,
+        code: str,
+        message: str,
+        summary: Optional[str] = None,
+        abort: Optional[Any] = None,
+        constraint_failures: Optional[List[&#39;ConstraintFailure&#39;]] = None,
+        query_tags: Optional[Mapping[str, str]] = None,
+        stats: Optional[QueryStats] = None,
+        txn_ts: Optional[int] = None,
+    ):
+        QueryInfo.__init__(
+            self,
+            query_tags=query_tags,
+            stats=stats,
+            summary=summary,
+            txn_ts=txn_ts,
+        )
+
+        FaunaError.__init__(
+            self,
+            status_code=status_code,
+            code=code,
+            message=message,
+            abort=abort,
+            constraint_failures=constraint_failures,
+        )
+
+    def __str__(self):
+        constraint_str = &#34;---&#34;
+        if self._constraint_failures:
+            constraint_str = f&#34;---\nconstraint failures: {self._constraint_failures}\n---&#34;
+
+        return f&#34;{self._status_code}: {self.code}\n{self.message}\n{constraint_str}\n{self.summary or &#39;&#39;}&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.AbortError" href="#fauna.errors.errors.AbortError">AbortError</a></li>
+<li><a title="fauna.errors.errors.AuthenticationError" href="#fauna.errors.errors.AuthenticationError">AuthenticationError</a></li>
+<li><a title="fauna.errors.errors.AuthorizationError" href="#fauna.errors.errors.AuthorizationError">AuthorizationError</a></li>
+<li><a title="fauna.errors.errors.InvalidRequestError" href="#fauna.errors.errors.InvalidRequestError">InvalidRequestError</a></li>
+<li><a title="fauna.errors.errors.QueryCheckError" href="#fauna.errors.errors.QueryCheckError">QueryCheckError</a></li>
+<li><a title="fauna.errors.errors.QueryRuntimeError" href="#fauna.errors.errors.QueryRuntimeError">QueryRuntimeError</a></li>
+<li><a title="fauna.errors.errors.QueryTimeoutError" href="#fauna.errors.errors.QueryTimeoutError">QueryTimeoutError</a></li>
+<li><a title="fauna.errors.errors.ServiceInternalError" href="#fauna.errors.errors.ServiceInternalError">ServiceInternalError</a></li>
+<li><a title="fauna.errors.errors.ServiceTimeoutError" href="#fauna.errors.errors.ServiceTimeoutError">ServiceTimeoutError</a></li>
+<li><a title="fauna.errors.errors.ThrottlingError" href="#fauna.errors.errors.ThrottlingError">ThrottlingError</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.encoding.wire_protocol.QueryInfo.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.ServiceInternalError"><code class="flex name class">
+<span>class <span class="ident">ServiceInternalError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>ServiceInternalError indicates Fauna failed unexpectedly.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ServiceInternalError(ServiceError):
+    &#34;&#34;&#34;ServiceInternalError indicates Fauna failed unexpectedly.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.ServiceTimeoutError"><code class="flex name class">
+<span>class <span class="ident">ServiceTimeoutError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>ServiceTimeoutError indicates Fauna was not available to service
+the request before the timeout was reached.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ServiceTimeoutError(ServiceError):
+    &#34;&#34;&#34;ServiceTimeoutError indicates Fauna was not available to service
+    the request before the timeout was reached.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fauna.errors.errors.ThrottlingError"><code class="flex name class">
+<span>class <span class="ident">ThrottlingError</span></span>
+<span>(</span><span>status_code: int, code: str, message: str, summary: Optional[str] = None, abort: Optional[Any] = None, constraint_failures: Optional[List[ForwardRef('ConstraintFailure')]] = None, query_tags: Optional[Mapping[str, str]] = None, stats: Optional[<a title="fauna.encoding.wire_protocol.QueryStats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryStats">QueryStats</a>] = None, txn_ts: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>ThrottlingError indicates some capacity limit was exceeded
+and thus the request could not be served.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ThrottlingError(ServiceError):
+    &#34;&#34;&#34;ThrottlingError indicates some capacity limit was exceeded
+    and thus the request could not be served.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></li>
+<li><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></li>
+<li><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+<li><a title="fauna.encoding.wire_protocol.QueryInfo" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo">QueryInfo</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fauna.errors.errors.ServiceError.query_tags" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.query_tags">query_tags</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.stats" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.stats">stats</a></code></li>
+<li><code><a title="fauna.errors.errors.ServiceError.summary" href="../encoding/wire_protocol.html#fauna.encoding.wire_protocol.QueryInfo.summary">summary</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="fauna.errors" href="index.html">fauna.errors</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="fauna.errors.errors.AbortError" href="#fauna.errors.errors.AbortError">AbortError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.AuthenticationError" href="#fauna.errors.errors.AuthenticationError">AuthenticationError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.AuthorizationError" href="#fauna.errors.errors.AuthorizationError">AuthorizationError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.ClientError" href="#fauna.errors.errors.ClientError">ClientError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.FaunaError" href="#fauna.errors.errors.FaunaError">FaunaError</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.errors.errors.FaunaError.abort" href="#fauna.errors.errors.FaunaError.abort">abort</a></code></li>
+<li><code><a title="fauna.errors.errors.FaunaError.code" href="#fauna.errors.errors.FaunaError.code">code</a></code></li>
+<li><code><a title="fauna.errors.errors.FaunaError.constraint_failures" href="#fauna.errors.errors.FaunaError.constraint_failures">constraint_failures</a></code></li>
+<li><code><a title="fauna.errors.errors.FaunaError.message" href="#fauna.errors.errors.FaunaError.message">message</a></code></li>
+<li><code><a title="fauna.errors.errors.FaunaError.status_code" href="#fauna.errors.errors.FaunaError.status_code">status_code</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.FaunaException" href="#fauna.errors.errors.FaunaException">FaunaException</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.InvalidRequestError" href="#fauna.errors.errors.InvalidRequestError">InvalidRequestError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.NetworkError" href="#fauna.errors.errors.NetworkError">NetworkError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.ProtocolError" href="#fauna.errors.errors.ProtocolError">ProtocolError</a></code></h4>
+<ul class="">
+<li><code><a title="fauna.errors.errors.ProtocolError.message" href="#fauna.errors.errors.ProtocolError.message">message</a></code></li>
+<li><code><a title="fauna.errors.errors.ProtocolError.status_code" href="#fauna.errors.errors.ProtocolError.status_code">status_code</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.QueryCheckError" href="#fauna.errors.errors.QueryCheckError">QueryCheckError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.QueryRuntimeError" href="#fauna.errors.errors.QueryRuntimeError">QueryRuntimeError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.QueryTimeoutError" href="#fauna.errors.errors.QueryTimeoutError">QueryTimeoutError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.ServiceError" href="#fauna.errors.errors.ServiceError">ServiceError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.ServiceInternalError" href="#fauna.errors.errors.ServiceInternalError">ServiceInternalError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.ServiceTimeoutError" href="#fauna.errors.errors.ServiceTimeoutError">ServiceTimeoutError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fauna.errors.errors.ThrottlingError" href="#fauna.errors.errors.ThrottlingError">ThrottlingError</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
