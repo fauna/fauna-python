@@ -86,7 +86,7 @@ class Client:
             self._query_tags.update(query_tags)
 
         if query_timeout is not None:
-            self._query_timeout_ms = query_timeout.total_seconds() * 1000
+            self._query_timeout_ms = int(query_timeout.total_seconds() * 1000)
         else:
             self._query_timeout_ms = None
 
