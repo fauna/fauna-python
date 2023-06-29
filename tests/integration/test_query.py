@@ -27,23 +27,28 @@ def test_query_smoke_test(subtests, client):
 
 def test_query_with_all_stats(client, a_collection):
     res = client.query(fql("${col}.create({})", col=a_collection))
+    doc_id = res.data.id
+    res = client.query(
+        fql("${col}.create({})\n${col}.byId(${id})",
+            col=a_collection,
+            id=doc_id))
     assert res.stats.compute_ops > 0
     assert res.stats.read_ops > 0
     assert res.stats.write_ops > 0
     assert res.stats.storage_bytes_read > 0
     assert res.stats.storage_bytes_write > 0
     assert res.stats.query_time_ms > 0
-    assert res.stats.contention_retries >= 0
+    assert res.stats.contention_retries == 0
 
 
 def test_query_with_constraint_failure(client):
     with pytest.raises(QueryRuntimeError) as e:
         client.query(
-            fql('Function.create({"name": "double", "body": "x => x * 2"})'))
+            fql('Function.create({"name": "false", "body": "_ => false"})'))
 
     assert e.value.constraint_failures == [
         ConstraintFailure(
-            message="The identifier `double` is reserved.",
+            message="The identifier `false` is reserved.",
             name=None,
             paths=[["name"]],
         ),

@@ -19,7 +19,7 @@ requires = [
 ]
 
 extras_require = {
-    "lint": ["yapf==0.32.0"],
+    "lint": ["yapf==0.40.1"],
     "test": [
         "pytest==7.3.0", "pytest-env==0.8.1", "pytest-cov==4.0.0",
         "pytest-httpx==0.21.3", "pytest-subtests==0.10.0"

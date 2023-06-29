@@ -22,7 +22,7 @@ jobs:
           cache: pip
 
       - name: Install yapf
-        run: pip install yapf
+        run: pip install yapf==0.40.1
 
       - name: Check Format
         run: |

@@ -172,7 +172,7 @@ If you want to run fauna, then run integration tests separately:
 
 .. code-block:: bash
 
-    $ make docker-fauna
+    $ make run-fauna
     $ source venv/bin/activate
     $ make install
     $ make integration-test
