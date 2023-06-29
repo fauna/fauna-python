@@ -1,4 +1,6 @@
+from datetime import timedelta
 import pytest
+from fauna.client.client import QueryOptions
 
 from fauna.errors import ClientError
 
@@ -27,3 +29,11 @@ def test_handle_invalid_json_response():
     with pytest.raises(ClientError, match=err_msg):
         c = Client(endpoint="https://dashboard.fauna.com/")
         c.query(fql("'foolery'"))
+
+
+def test_fauna_accepts_query_timeout_header():
+    c1 = Client(query_timeout=timedelta(seconds=5))
+    c1.query(fql('"hello"'))
+
+    c2 = Client()
+    c2.query(fql('"hello"'), QueryOptions(query_timeout=timedelta(seconds=5)))
