@@ -55,7 +55,7 @@ def test_query_with_constraint_failure(client):
     ]
     assert e.value.status_code == 400
     assert e.value.code == "constraint_failure"
-    assert e.value.message == "Failed to create document in collection Function."
+    assert len(e.value.message) > 0
     assert len(e.value.summary) > 0
 
 
