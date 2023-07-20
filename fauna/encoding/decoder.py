@@ -7,7 +7,7 @@ from fauna.query.models import Module, DocumentReference, Document, NamedDocumen
 
 
 class FaunaDecoder:
-    """Supports the following types:
+  """Supports the following types:
 
      +--------------------+---------------+
      | Python             | Fauna         |
@@ -45,9 +45,9 @@ class FaunaDecoder:
 
      """
 
-    @staticmethod
-    def decode(obj: Any):
-        """Decodes supported objects from the tagged typed into untagged.
+  @staticmethod
+  def decode(obj: Any):
+    """Decodes supported objects from the tagged typed into untagged.
 
         Examples:
             - { "@int": "100" } decodes to 100 of type int
@@ -62,108 +62,107 @@ class FaunaDecoder:
 
         :param obj: the object to decode
         """
-        return FaunaDecoder._decode(obj)
+    return FaunaDecoder._decode(obj)
 
-    @staticmethod
-    def _decode(o: Any, escaped: bool = False):
-        if isinstance(o, (str, bool, int, float)):
-            return o
-        elif isinstance(o, list):
-            return FaunaDecoder._decode_list(o)
-        elif isinstance(o, dict):
-            return FaunaDecoder._decode_dict(o, escaped)
+  @staticmethod
+  def _decode(o: Any, escaped: bool = False):
+    if isinstance(o, (str, bool, int, float)):
+      return o
+    elif isinstance(o, list):
+      return FaunaDecoder._decode_list(o)
+    elif isinstance(o, dict):
+      return FaunaDecoder._decode_dict(o, escaped)
 
-    @staticmethod
-    def _decode_list(lst: List):
-        return [FaunaDecoder._decode(i) for i in lst]
+  @staticmethod
+  def _decode_list(lst: List):
+    return [FaunaDecoder._decode(i) for i in lst]
 
-    @staticmethod
-    def _decode_dict(dct: dict, escaped: bool):
-        keys = dct.keys()
+  @staticmethod
+  def _decode_dict(dct: dict, escaped: bool):
+    keys = dct.keys()
 
-        # If escaped, everything is user-specified
-        if escaped:
-            return {k: FaunaDecoder._decode(v) for k, v in dct.items()}
+    # If escaped, everything is user-specified
+    if escaped:
+      return {k: FaunaDecoder._decode(v) for k, v in dct.items()}
 
-        if len(keys) == 1:
-            if "@int" in keys:
-                return int(dct["@int"])
-            if "@long" in keys:
-                return int(dct["@long"])
-            if "@double" in dct:
-                return float(dct["@double"])
-            if "@object" in dct:
-                return FaunaDecoder._decode(dct["@object"], True)
-            if "@mod" in dct:
-                return Module(dct["@mod"])
-            if "@time" in dct:
-                return parse_date(dct["@time"])
-            if "@date" in dct:
-                return parse_date(dct["@date"]).date()
-            if "@doc" in dct:
-                value = dct["@doc"]
-                if isinstance(value, str):
-                    # Not distinguishing between DocumentReference and NamedDocumentReference because this shouldn't
-                    # be an issue much longer
-                    return DocumentReference.from_string(value)
+    if len(keys) == 1:
+      if "@int" in keys:
+        return int(dct["@int"])
+      if "@long" in keys:
+        return int(dct["@long"])
+      if "@double" in dct:
+        return float(dct["@double"])
+      if "@object" in dct:
+        return FaunaDecoder._decode(dct["@object"], True)
+      if "@mod" in dct:
+        return Module(dct["@mod"])
+      if "@time" in dct:
+        return parse_date(dct["@time"])
+      if "@date" in dct:
+        return parse_date(dct["@date"]).date()
+      if "@doc" in dct:
+        value = dct["@doc"]
+        if isinstance(value, str):
+          # Not distinguishing between DocumentReference and NamedDocumentReference because this shouldn't
+          # be an issue much longer
+          return DocumentReference.from_string(value)
 
-                contents = FaunaDecoder._decode(value)
+        contents = FaunaDecoder._decode(value)
 
-                if "id" in contents and "coll" in contents and "ts" in contents:
-                    doc_id = contents.pop("id")
-                    doc_coll = contents.pop("coll")
-                    doc_ts = contents.pop("ts")
+        if "id" in contents and "coll" in contents and "ts" in contents:
+          doc_id = contents.pop("id")
+          doc_coll = contents.pop("coll")
+          doc_ts = contents.pop("ts")
 
-                    return Document(
-                        id=doc_id,
-                        coll=doc_coll,
-                        ts=doc_ts,
-                        data=contents,
-                    )
-                elif "name" in contents and "coll" in contents and "ts" in contents:
-                    doc_name = contents.pop("name")
-                    doc_coll = contents.pop("coll")
-                    doc_ts = contents.pop("ts")
+          return Document(
+              id=doc_id,
+              coll=doc_coll,
+              ts=doc_ts,
+              data=contents,
+          )
+        elif "name" in contents and "coll" in contents and "ts" in contents:
+          doc_name = contents.pop("name")
+          doc_coll = contents.pop("coll")
+          doc_ts = contents.pop("ts")
 
-                    return NamedDocument(
-                        name=doc_name,
-                        coll=doc_coll,
-                        ts=doc_ts,
-                        data=contents,
-                    )
-                else:
-                    # Unsupported document reference. Return the unwrapped value to futureproof.
-                    return contents
+          return NamedDocument(
+              name=doc_name,
+              coll=doc_coll,
+              ts=doc_ts,
+              data=contents,
+          )
+        else:
+          # Unsupported document reference. Return the unwrapped value to futureproof.
+          return contents
 
-            if "@ref" in dct:
-                value = dct["@ref"]
-                if "id" not in value and "name" not in value:
-                    # Unsupported document reference. Return the unwrapped value to futureproof.
-                    return value
+      if "@ref" in dct:
+        value = dct["@ref"]
+        if "id" not in value and "name" not in value:
+          # Unsupported document reference. Return the unwrapped value to futureproof.
+          return value
 
-                col = FaunaDecoder._decode(value["coll"])
-                doc_ref: Union[DocumentReference, NamedDocumentReference]
+        col = FaunaDecoder._decode(value["coll"])
+        doc_ref: Union[DocumentReference, NamedDocumentReference]
 
-                if "id" in value:
-                    doc_ref = DocumentReference(col, value["id"])
-                else:
-                    doc_ref = NamedDocumentReference(col, value["name"])
+        if "id" in value:
+          doc_ref = DocumentReference(col, value["id"])
+        else:
+          doc_ref = NamedDocumentReference(col, value["name"])
 
-                if "exists" in value and not value["exists"]:
-                    cause = value["cause"] if "cause" in value else None
-                    return NullDocument(doc_ref, cause)
+        if "exists" in value and not value["exists"]:
+          cause = value["cause"] if "cause" in value else None
+          return NullDocument(doc_ref, cause)
 
-                return doc_ref
+        return doc_ref
 
-            if "@set" in dct:
-                value = dct["@set"]
-                if isinstance(value, str):
-                    return Page(after=value)
+      if "@set" in dct:
+        value = dct["@set"]
+        if isinstance(value, str):
+          return Page(after=value)
 
-                after = value["after"] if "after" in value else None
-                data = FaunaDecoder._decode(
-                    value["data"]) if "data" in value else None
+        after = value["after"] if "after" in value else None
+        data = FaunaDecoder._decode(value["data"]) if "data" in value else None
 
-                return Page(data=data, after=after)
+        return Page(data=data, after=after)
 
-        return {k: FaunaDecoder._decode(v) for k, v in dct.items()}
+    return {k: FaunaDecoder._decode(v) for k, v in dct.items()}
