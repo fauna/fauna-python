@@ -4,8 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-import fauna
-from fauna import fql, Page, NullDocument
+from fauna import fql, Page, NullDocument, Module
 from fauna.client import Client, QueryOptions
 from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError, ClientError, QueryTimeoutError
 from fauna.encoding import ConstraintFailure
@@ -147,5 +146,5 @@ def test_query_schema_version(client):
   r = client.query(fql("Collection.create({ name: ${name} })", name=coll_name))
   expected_schema_version = r.txn_ts
 
-  r = client.query(fql("${mod}.all()", mod=fauna.Module(coll_name)))
+  r = client.query(fql("${mod}.all()", mod=Module(coll_name)))
   assert expected_schema_version == r.schema_version
