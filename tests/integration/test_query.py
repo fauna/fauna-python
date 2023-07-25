@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+import fauna
 from fauna import fql, Page, NullDocument
 from fauna.client import Client, QueryOptions
 from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError, ClientError, QueryTimeoutError
@@ -137,3 +138,14 @@ def test_query_timeout(client, a_collection):
     client.query(
         fql("${coll}.byId('123')", coll=a_collection),
         QueryOptions(query_timeout=timedelta(milliseconds=1)))
+
+
+def test_query_schema_version(client):
+  coll_name = "schemaVersionTestColl"
+
+  _ = client.query(fql("Collection.byName(${coll})?.delete()", coll=coll_name))
+  r = client.query(fql("Collection.create({ name: ${name} })", name=coll_name))
+  expected_schema_version = r.txn_ts
+
+  r = client.query(fql("${mod}.all()", mod=fauna.Module(coll_name)))
+  assert expected_schema_version == r.schema_version
