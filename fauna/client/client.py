@@ -316,6 +316,7 @@ class Client:
       query_tags = QueryTags.decode(
           dec["query_tags"]) if "query_tags" in dec else None
       txn_ts = dec["txn_ts"] if "txn_ts" in dec else None
+      schema_version = dec["schema_version"] if "schema_version" in dec else None
       traceparent = headers.get("traceparent", None)
       static_type = dec["static_type"] if "static_type" in dec else None
 
@@ -327,6 +328,7 @@ class Client:
           summary=summary,
           traceparent=traceparent,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
 
   def _check_protocol(self, response_json: Any, status_code):

@@ -95,7 +95,13 @@ class QueryInfo:
 
   @property
   def txn_ts(self) -> int:
+    """The last transaction timestamp of the query. A Unix epoch in microseconds."""
     return self._txn_ts
+
+  @property
+  def schema_version(self) -> int:
+    """The schema version that was used for the query execution."""
+    return self._schema_version
 
   def __init__(
       self,
@@ -103,18 +109,21 @@ class QueryInfo:
       stats: Optional[QueryStats] = None,
       summary: Optional[str] = None,
       txn_ts: Optional[int] = None,
+      schema_version: Optional[int] = None,
   ):
     self._query_tags = query_tags or {}
     self._stats = stats or QueryStats({})
     self._summary = summary or ""
     self._txn_ts = txn_ts or 0
+    self._schema_version = schema_version or 0
 
   def __repr__(self):
     return f"{self.__class__.__name__}(" \
            f"query_tags={repr(self.query_tags)}," \
            f"stats={repr(self.stats)}," \
            f"summary={repr(self.summary)}," \
-           f"txn_ts={repr(self.txn_ts)})"
+           f"txn_ts={repr(self.txn_ts)}," \
+           f"schema_version={repr(self.schema_version)})"
 
 
 class QuerySuccess(QueryInfo):
@@ -144,10 +153,16 @@ class QuerySuccess(QueryInfo):
       summary: Optional[str],
       traceparent: Optional[str],
       txn_ts: Optional[int],
+      schema_version: Optional[int],
   ):
 
     super().__init__(
-        query_tags=query_tags, stats=stats, summary=summary, txn_ts=txn_ts)
+        query_tags=query_tags,
+        stats=stats,
+        summary=summary,
+        txn_ts=txn_ts,
+        schema_version=schema_version,
+    )
 
     self._traceparent = traceparent
     self._static_type = static_type
@@ -161,6 +176,7 @@ class QuerySuccess(QueryInfo):
            f"summary={repr(self.summary)}," \
            f"traceparent={repr(self.traceparent)}," \
            f"txn_ts={repr(self.txn_ts)}," \
+           f"schema_version={repr(self.schema_version)}," \
            f"data={repr(self.data)})"
 
 

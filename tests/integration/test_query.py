@@ -18,6 +18,7 @@ def test_query_smoke_test(subtests, client):
     assert res.stats.compute_ops > 0
     assert res.traceparent != ""
     assert res.summary == ""
+    assert res.schema_version > 0
 
   with subtests.test(msg="with debug"):
     res = client.query(fql('dbg("Hello, World")'))

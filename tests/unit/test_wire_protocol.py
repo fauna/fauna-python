@@ -10,6 +10,7 @@ def test_query_success_repr():
       summary="human readable",
       traceparent=None,
       txn_ts=123,
+      schema_version=123,
   )
   stats = "{'compute_ops': 1, 'read_ops': 0, 'write_ops': 0, " \
           "'query_time_ms': 0, 'storage_bytes_read': 0, 'storage_bytes_write': 0, " \
@@ -20,10 +21,12 @@ def test_query_success_repr():
                      "summary='human readable'," \
                      "traceparent=None," \
                      "txn_ts=123," \
+                     "schema_version=123," \
                      "data={'foo': 'bar'})"
 
   evaluated: QuerySuccess = eval(repr(qs))
   assert evaluated.txn_ts == qs.txn_ts
+  assert evaluated.schema_version == qs.schema_version
   assert evaluated.traceparent == qs.traceparent
   assert evaluated.query_tags == qs.query_tags
   assert evaluated.data == qs.data
@@ -38,6 +41,7 @@ def test_query_info_repr():
       stats=QueryStats({'compute_ops': 1}),
       summary="human readable",
       txn_ts=123,
+      schema_version=123,
   )
   stats = "{'compute_ops': 1, 'read_ops': 0, 'write_ops': 0, " \
           "'query_time_ms': 0, 'storage_bytes_read': 0, 'storage_bytes_write': 0, " \
@@ -45,13 +49,15 @@ def test_query_info_repr():
   assert repr(qi) == "QueryInfo(query_tags={'tag': 'value'}," \
                      f"stats=QueryStats(stats={stats})," \
                      "summary='human readable'," \
-                     "txn_ts=123)"
+                     "txn_ts=123," \
+                     "schema_version=123)"
 
   evaluated: QueryInfo = eval(repr(qi))
   assert evaluated.txn_ts == qi.txn_ts
   assert evaluated.query_tags == qi.query_tags
   assert evaluated.summary == qi.summary
   assert evaluated.stats == qi.stats
+  assert evaluated.schema_version == qi.schema_version
 
 
 def test_query_stats_repr():
