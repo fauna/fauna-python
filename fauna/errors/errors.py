@@ -95,6 +95,7 @@ class ServiceError(FaunaError, QueryInfo):
       query_tags: Optional[Mapping[str, str]] = None,
       stats: Optional[QueryStats] = None,
       txn_ts: Optional[int] = None,
+      schema_version: Optional[int] = None,
   ):
     QueryInfo.__init__(
         self,
@@ -102,6 +103,7 @@ class ServiceError(FaunaError, QueryInfo):
         stats=stats,
         summary=summary,
         txn_ts=txn_ts,
+        schema_version=schema_version,
     )
 
     FaunaError.__init__(
