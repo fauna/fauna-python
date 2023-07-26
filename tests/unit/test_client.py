@@ -20,7 +20,7 @@ def test_client_defaults(monkeypatch):
 
   assert client._endpoint == "https://db.fauna.com"
   assert client._auth.secret == ""
-  assert client._query_timeout_ms is None
+  assert client._query_timeout_ms is not None
   assert client._session == fauna.global_http_client
 
 
@@ -110,7 +110,7 @@ def test_get_set_transaction_time():
 
 
 def test_get_query_timeout():
-  c = Client()
+  c = Client(query_timeout=None)
   assert c.get_query_timeout() is None
 
   c = Client(query_timeout=timedelta(minutes=1))
