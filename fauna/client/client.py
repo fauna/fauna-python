@@ -18,6 +18,8 @@ DefaultHttpReadTimeout: Optional[timedelta] = None
 DefaultHttpWriteTimeout = timedelta(seconds=5)
 DefaultHttpPoolTimeout = timedelta(seconds=5)
 DefaultIdleConnectionTimeout = timedelta(seconds=5)
+DefaultQueryTimeout = timedelta(seconds=5)
+DefaultClientBufferTimeout = timedelta(seconds=5)
 DefaultMaxConnections = 20
 DefaultMaxIdleConnections = 20
 
@@ -38,7 +40,7 @@ class QueryOptions:
 
   linearized: Optional[bool] = None
   max_contention_retries: Optional[int] = None
-  query_timeout: Optional[timedelta] = None
+  query_timeout: Optional[timedelta] = DefaultQueryTimeout
   query_tags: Optional[Mapping[str, str]] = None
   traceparent: Optional[str] = None
   typecheck: Optional[bool] = None
@@ -55,21 +57,33 @@ class Client:
       query_tags: Optional[Mapping[str, str]] = None,
       linearized: Optional[bool] = None,
       max_contention_retries: Optional[int] = None,
-      query_timeout: Optional[timedelta] = None,
       typecheck: Optional[bool] = None,
       additional_headers: Optional[Dict[str, str]] = None,
+      query_timeout: Optional[timedelta] = DefaultQueryTimeout,
+      client_buffer_timeout: Optional[timedelta] = DefaultClientBufferTimeout,
+      http_read_timeout: Optional[timedelta] = DefaultHttpReadTimeout,
+      http_write_timeout: Optional[timedelta] = DefaultHttpWriteTimeout,
+      http_connect_timeout: Optional[timedelta] = DefaultHttpConnectTimeout,
+      http_pool_timeout: Optional[timedelta] = DefaultHttpPoolTimeout,
+      http_idle_timeout: Optional[timedelta] = DefaultIdleConnectionTimeout,
   ):
     """Initializes a Client.
 
-        :param endpoint: The Fauna Endpoint to use. Defaults to https://db.fauna.com, or the FAUNA_ENDPOINT env variable.
-        :param secret: The Fauna Secret to use. Defaults to empty, or the FAUNA_SECRET env variable.
+        :param endpoint: The Fauna Endpoint to use. Defaults to https://db.fauna.com, or the `FAUNA_ENDPOINT` env variable.
+        :param secret: The Fauna Secret to use. Defaults to empty, or the `FAUNA_SECRET` env variable.
         :param http_client: An :class:`HTTPClient` implementation. Defaults to a global :class:`HTTPXClient`.
         :param query_tags: Tags to associate with the query. See `logging <https://docs.fauna.com/fauna/current/build/logs/query_log/>`_
         :param linearized: If true, unconditionally run the query as strictly serialized. This affects read-only transactions. Transactions which write will always be strictly serialized.
         :param max_contention_retries: The max number of times to retry the query if contention is encountered.
-        :param query_timeout: Controls the maximum amount of time (in milliseconds) Fauna will execute your query before marking it failed.
         :param typecheck: Enable or disable typechecking of the query before evaluation. If not set, Fauna will use the value of the "typechecked" flag on the database configuration.
         :param additional_headers: Add/update HTTP request headers for the query. In general, this should not be necessary.
+        :param query_timeout: Controls the maximum amount of time Fauna will execute your query before marking it failed, default is :py:data:`DefaultQueryTimeout`.
+        :param client_buffer_timeout: Time in milliseconds beyond query_timeout at which the client will abort a request if it has not received a response. The default is :py:data:`DefaultClientBufferTimeout`, which should account for network latency for most clients. The value must be greater than zero. The closer to zero the value is, the more likely the client is to abort the request before the server can report a legitimate response or error.
+        :param http_read_timeout: Set HTTP Read timeout, default is :py:data:`DefaultHttpReadTimeout`.
+        :param http_write_timeout: Set HTTP Write timeout, default is :py:data:`DefaultHttpWriteTimeout`.
+        :param http_connect_timeout: Set HTTP Connect timeout, default is :py:data:`DefaultHttpConnectTimeout`.
+        :param http_pool_timeout: Set HTTP Pool timeout, default is :py:data:`DefaultHttpPoolTimeout`.
+        :param http_idle_timeout: Set HTTP Idle timeout, default is :py:data:`DefaultIdleConnectionTimeout`.
         """
 
     self._set_endpoint(endpoint)
@@ -119,14 +133,21 @@ class Client:
       self._session = http_client
     else:
       if fauna.global_http_client is None:
-        read_timeout: Optional[timedelta] = DefaultHttpReadTimeout
+        timeout_s: Optional[float] = None
+        if query_timeout is not None and client_buffer_timeout is not None:
+          timeout_s = (query_timeout + client_buffer_timeout).total_seconds()
         read_timeout_s: Optional[float] = None
-        if read_timeout is not None:
-          read_timeout_s = read_timeout.total_seconds()
+        if http_read_timeout is not None:
+          read_timeout_s = http_read_timeout.total_seconds()
 
-        write_timeout_s = DefaultHttpWriteTimeout.total_seconds()
-        pool_timeout_s = DefaultHttpPoolTimeout.total_seconds()
-        idle_timeout_s = DefaultIdleConnectionTimeout.total_seconds()
+        write_timeout_s: Optional[float] = http_write_timeout.total_seconds(
+        ) if http_write_timeout is not None else None
+        connect_timeout_s: Optional[float] = http_connect_timeout.total_seconds(
+        ) if http_connect_timeout is not None else None
+        pool_timeout_s: Optional[float] = http_pool_timeout.total_seconds(
+        ) if http_pool_timeout is not None else None
+        idle_timeout_s: Optional[float] = http_idle_timeout.total_seconds(
+        ) if http_idle_timeout is not None else None
 
         import httpx
         from fauna.http.httpx_client import HTTPXClient
@@ -135,7 +156,8 @@ class Client:
                 http1=False,
                 http2=True,
                 timeout=httpx.Timeout(
-                    connect=DefaultMaxConnections,
+                    timeout=timeout_s,
+                    connect=connect_timeout_s,
                     read=read_timeout_s,
                     write=write_timeout_s,
                     pool=pool_timeout_s,
