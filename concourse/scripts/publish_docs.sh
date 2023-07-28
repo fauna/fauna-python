@@ -6,13 +6,13 @@ apk add --no-progress --no-cache sed git
 cd fauna-python-repository
 
 pip install -r requirements.txt
-pip install pdoc3
+pip install pdoc
 
 PACKAGE_VERSION=$(python setup.py --version)
 
 echo "Current docs version: ${PACKAGE_VERSION}"
 
-python -m pdoc ./fauna --html -o docs
+python -m pdoc ./fauna --output-directory docs
 
 # use a new directory to add GTM to docs
 cd ../
@@ -40,4 +40,3 @@ git config --global user.name "Fauna, Inc"
 git add --all
 # only commit if we have new files
 git diff --staged --exit-code || git commit -m "Update docs to version: ${PACKAGE_VERSION}"
-
