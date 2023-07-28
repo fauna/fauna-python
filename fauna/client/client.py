@@ -338,6 +338,7 @@ class Client:
       query_tags = QueryTags.decode(
           dec["query_tags"]) if "query_tags" in dec else None
       txn_ts = dec["txn_ts"] if "txn_ts" in dec else None
+      schema_version = dec["schema_version"] if "schema_version" in dec else None
       traceparent = headers.get("traceparent", None)
       static_type = dec["static_type"] if "static_type" in dec else None
 
@@ -349,6 +350,7 @@ class Client:
           summary=summary,
           traceparent=traceparent,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
 
   def _check_protocol(self, response_json: Any, status_code):
@@ -383,6 +385,7 @@ class Client:
         body["query_tags"]) if "query_tags" in body else None
     stats = QueryStats(body["stats"]) if "stats" in body else None
     txn_ts = body["txn_ts"] if "txn_ts" in body else None
+    schema_version = body["schema_version"] if "schema_version" in body else None
     summary = body["summary"] if "summary" in body else None
 
     constraint_failures: Optional[List[ConstraintFailure]] = None
@@ -406,6 +409,7 @@ class Client:
             query_tags=query_tags,
             stats=stats,
             txn_ts=txn_ts,
+            schema_version=schema_version,
         )
       elif code == "invalid_request":
         raise InvalidRequestError(
@@ -417,6 +421,7 @@ class Client:
             query_tags=query_tags,
             stats=stats,
             txn_ts=txn_ts,
+            schema_version=schema_version,
         )
       elif code == "abort":
         abort = err["abort"] if "abort" in err else None
@@ -430,6 +435,7 @@ class Client:
             query_tags=query_tags,
             stats=stats,
             txn_ts=txn_ts,
+            schema_version=schema_version,
         )
 
       else:
@@ -442,6 +448,7 @@ class Client:
             query_tags=query_tags,
             stats=stats,
             txn_ts=txn_ts,
+            schema_version=schema_version,
         )
     elif status_code == 401:
       raise AuthenticationError(
@@ -453,6 +460,7 @@ class Client:
           query_tags=query_tags,
           stats=stats,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
     elif status_code == 403:
       raise AuthorizationError(
@@ -464,6 +472,7 @@ class Client:
           query_tags=query_tags,
           stats=stats,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
     elif status_code == 429:
       raise ThrottlingError(
@@ -475,6 +484,7 @@ class Client:
           query_tags=query_tags,
           stats=stats,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
     elif status_code == 440:
       raise QueryTimeoutError(
@@ -486,6 +496,7 @@ class Client:
           query_tags=query_tags,
           stats=stats,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
     elif status_code == 500:
       raise ServiceInternalError(
@@ -497,6 +508,7 @@ class Client:
           query_tags=query_tags,
           stats=stats,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
     elif status_code == 503:
       raise ServiceTimeoutError(
@@ -508,6 +520,7 @@ class Client:
           query_tags=query_tags,
           stats=stats,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
     else:
       raise ServiceError(
@@ -519,6 +532,7 @@ class Client:
           query_tags=query_tags,
           stats=stats,
           txn_ts=txn_ts,
+          schema_version=schema_version,
       )
 
   def _set_endpoint(self, endpoint):
