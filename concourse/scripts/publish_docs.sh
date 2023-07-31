@@ -17,7 +17,7 @@ python -m pdoc ./fauna --output-directory docs
 # use a new directory to add GTM to docs
 cd ../
 mkdir docs
-cp -R ./fauna-python-repository/docs/fauna/* ./docs/
+cp -R ./fauna-python-repository/docs/* ./docs/
 
 HEAD_GTM=$(cat ./fauna-python-repository/concourse/scripts/head_gtm.dat)
 sed -i.bak "0,/<\/title>/{s/<\/title>/<\/title>${HEAD_GTM}/}" ./docs/index.html
