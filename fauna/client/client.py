@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterator, Mapping, Optional, List
 import fauna
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
-    QueryCheckError, AbortError, InvalidRequestError
+    QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
@@ -464,6 +464,18 @@ class Client:
       )
     elif status_code == 403:
       raise AuthorizationError(
+          status_code=status_code,
+          code=code,
+          message=message,
+          summary=summary,
+          constraint_failures=constraint_failures,
+          query_tags=query_tags,
+          stats=stats,
+          txn_ts=txn_ts,
+          schema_version=schema_version,
+      )
+    elif status_code == 409:
+      raise ContendedTransactionError(
           status_code=status_code,
           code=code,
           message=message,
