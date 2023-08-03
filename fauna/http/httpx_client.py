@@ -85,3 +85,6 @@ class HTTPXClient(HTTPClient):
       data: Mapping[str, Any],
   ) -> Iterator[HTTPResponse]:
     raise NotImplementedError()
+
+  def close(self):
+    self._c.close()
