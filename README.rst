@@ -120,6 +120,127 @@ When building queries, adapt your classes into dicts or lists prior to using the
         def from_result(obj):
             return MyClass(obj['my_prop'])
 
+Client Configuration
+--------------------
+
+Timeouts
+--------
+
+There are a few different timeout settings that can be configured; each comes with a default setting. We recommend that most applications simply stick to the defaults.
+
+Query Timeout
+-------------
+
+The query timeout is the time, as datetime.timedelta, that Fauna will spend executing your query before aborting with a 503 Timeout error. If a query timeout occurs, the driver will throw an instance of `ServiceTimeoutError`.
+
+The query timeout can be set using the ``query_timeout`` option. The default value if you do not provide one is ``DefaultClientBufferTimeout`` (5 seconds).
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client
+
+    client = Client(query_timeout=timedelta(seconds=20))
+
+The query timeout can also be set to a different value for each query using the ``QueryOptions.query_timeout`` option. Doing so overrides the client configuration when performing this query.
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client, QueryOptions
+
+    response = client.query(myQuery, QueryOptions(query_timeout=timedelta(seconds=20)))
+
+Client Timeout
+--------------
+
+The client timeout is the time, as datetime.timedelta, that the client will wait for a network response before canceling the request. If a client timeout occurs, the driver will throw an instance of ``NetworkError``.
+
+The client timeout is always the query timeout plus an additional buffer. This ensures that the client always waits for at least as long Fauna could work on your query and account for network latency. 
+
+The client timeout buffer is configured by setting the ``client_buffer_timeout`` option. The default value for the buffer if you do not provide on is ``DefaultClientBufferTimeout`` (5 seconds), therefore the default client timeout is 10 seconds when considering the default query timeout.
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client
+
+    client = Client(client_buffer_timeout=timedelta(seconds=20))
+
+
+Idle Timeout
+------------
+
+The idle timeout is the time, as datetime.timedelta, that a session will remain open after there is no more pending communication. Once the session idle time has elapsed the session is considered idle and the session is closed. Subsequent requests will create a new session; the session idle timeout does not result in an error.
+
+Configure the idle timeout using the ``http_idle_timeout`` option. The default value if you do not provide one is ``DefaultIdleConnectionTimeout`` (5 seconds).
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client
+
+    client = Client(http_idle_timeout=timedelta(seconds=6))
+
+> **Note**
+> Your application process may continue executing after all requests are completed for the duration of the session idle timeout. To prevent this, it is recommended to call ``Client.close()`` once all requests are complete. It is not recommended to set ``http_idle_timeout`` to small values.
+
+Connect Timeout
+---------------
+
+The connect timeout is the maximum amount of time, as datetime.timedelta, to wait until a connection to Fauna is established. If the client is unable to connect within this time frame, a ``ConnectTimeout`` exception is raised.
+
+Configure the connect timeout using the ``http_connect_timeout`` option. The default value if you do not provide one is ``DefaultHttpConnectTimeout`` (5 seconds).
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client
+
+    client = Client(http_connect_timeout=timedelta(seconds=6))
+
+Pool Timeout
+------------
+
+The pool timeout specifies the maximum amount of time, in datetime.timedelta, to wait for acquiring a connection from the connection pool. If the client is unable to acquire a connection within this time frame, a ``PoolTimeout`` exception is raised. This timeout may fire if 20 connections are currently in use and one isn't released before the timeout is up.
+
+Configure the pool timeout using the ``http_pool_timeout`` option. The default value if you do not provide one is ``DefaultHttpPoolTimeout`` (5 seconds).
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client
+
+    client = Client(http_pool_timeout=timedelta(seconds=6))
+
+Read Timeout
+------------
+
+The read timeout specifies the maximum amount of time, in datetime.timedelta, to wait for a chunk of data to be received (for example, a chunk of the response body). If the client is unable to receive data within this time frame, a ``ReadTimeout`` exception is raised.
+
+Configure the read timeout using the ``http_read_timeout`` option. The default value if you do not provide one is ``DefaultHttpReadTimeout`` (None).
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client
+
+    client = Client(http_read_timeout=timedelta(seconds=6))
+
+Write Timeout
+------------
+
+The write timeout specifies the maximum amount of time, in datetime.timedelta, to wait for a chunk of data to be sent (for example, a chunk of the request body). If the client is unable to send data within this time frame, a ``WriteTimeout`` exception is raised.
+
+Configure the write timeout using the ``http_write_timeout`` option. The default value if you do not provide one is ``DefaultHttpWriteTimeout`` (5 seconds).
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna.client import Client
+
+    client = Client(http_write_timeout=timedelta(seconds=6))
+
 Query Stats
 -----------
 
