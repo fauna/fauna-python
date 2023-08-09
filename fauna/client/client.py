@@ -172,6 +172,11 @@ class Client:
 
       self._session = fauna.global_http_client
 
+  def close(self):
+    self._session.close()
+    if self._session == fauna.global_http_client:
+      fauna.global_http_client = None
+
   def set_last_txn_ts(self, txn_ts: int):
     """
         Set the last timestamp seen by this client.

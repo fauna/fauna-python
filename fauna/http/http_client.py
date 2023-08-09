@@ -65,3 +65,7 @@ class HTTPClient(abc.ABC):
       data: Mapping[str, Any],
   ) -> HTTPResponse:
     pass
+
+  @abc.abstractmethod
+  def close(self):
+    pass
