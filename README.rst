@@ -16,7 +16,7 @@ A Python driver for `Fauna <https://fauna.com>`_.
 .. image:: https://img.shields.io/badge/license-MPL_2.0-blue.svg?maxAge=2592000
   :target: https://raw.githubusercontent.com/fauna/fauna-python/main/LICENSE
 
-See the `Fauna Documentation <https://fqlx-beta--fauna-docs.netlify.app/fqlx/beta/>`_ 
+See the `Fauna Documentation <https://fqlx-beta--fauna-docs.netlify.app/fqlx/beta/>`_
 for additional information how to configure and query your databases.
 
 This driver can only be used with FQL v10, and is not compatible with earlier versions
@@ -92,7 +92,7 @@ For FQL templates, denote variables with ``${}`` and pass variables as kwargs to
     from fauna.client import Client
 
     client = Client()
- 
+
     def add_two(x):
         return fql("${x} + 2", x=x)
 
@@ -131,7 +131,7 @@ There are a few different timeout settings that can be configured; each comes wi
 Query Timeout
 -------------
 
-The query timeout is the time, as ``datetime.timedelta``, that Fauna will spend executing your query before aborting with a ``QueryTimeoutError``. 
+The query timeout is the time, as ``datetime.timedelta``, that Fauna will spend executing your query before aborting with a ``QueryTimeoutError``.
 
 The query timeout can be set using the ``query_timeout`` option. The default value if you do not provide one is ``DefaultClientBufferTimeout`` (5 seconds).
 
@@ -156,7 +156,7 @@ Client Timeout
 
 The client timeout is the time, as ``datetime.timedelta``, that the client will wait for a network response before canceling the request. If a client timeout occurs, the driver will throw an instance of ``NetworkError``.
 
-The client timeout is always the query timeout plus an additional buffer. This ensures that the client always waits for at least as long Fauna could work on your query and account for network latency. 
+The client timeout is always the query timeout plus an additional buffer. This ensures that the client always waits for at least as long Fauna could work on your query and account for network latency.
 
 The client timeout buffer is configured by setting the ``client_buffer_timeout`` option. The default value for the buffer if you do not provide on is ``DefaultClientBufferTimeout`` (5 seconds), therefore the default client timeout is 10 seconds when considering the default query timeout.
 
@@ -228,7 +228,7 @@ Configure the read timeout using the ``http_read_timeout`` option. The default v
     client = Client(http_read_timeout=timedelta(seconds=6))
 
 Write Timeout
-------------
+-------------
 
 The write timeout specifies the maximum amount of time, as ``datetime.timedelta``, to wait for a chunk of data to be sent (for example, a chunk of the request body). If the client is unable to send data within this time frame, a ``WriteTimeout`` exception is raised.
 
