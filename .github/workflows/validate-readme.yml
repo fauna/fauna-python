@@ -1,0 +1,23 @@
+name: Validate README
+on:
+  push:
+    paths:
+      - 'readme.rst'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install readme_renderer 'readme_renderer[md]'
+
+      - name: Validate readme.rst
+        run: python -m readme_renderer readme.rst
