@@ -25,7 +25,7 @@ sed -i.bak "0,/<\/title>/{s/<\/title>/<\/title>${HEAD_GTM}/}" ./docs/fauna.html
 BODY_GTM=$(cat ./fauna-python-repository/concourse/scripts/body_gtm.dat)
 sed -i.bak "0,/<body>/{s/<body>/<body>${BODY_GTM}/}" ./docs/fauna.html
 
-rm ./docs/index.html.bak
+rm ./docs/fauna.html.bak
 
 git clone fauna-python-repository-docs fauna-python-repository-updated-docs
 cd fauna-python-repository-updated-docs
