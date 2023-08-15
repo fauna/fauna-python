@@ -1,5 +1,5 @@
 The Official Python Driver for `Fauna <https://fauna.com>`_.
-=================================================
+============================================================
 
 .. image:: https://img.shields.io/pypi/v/fauna.svg?maxAge=21600
   :target: https://pypi.python.org/pypi/fauna
