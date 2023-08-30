@@ -12,7 +12,7 @@ class Tester:
     self.errors = errors
     self.calls = 0
 
-  def f(self, _ = ""):
+  def f(self, _=""):
     v = self.errors[self.calls]
     self.calls += 1
 
