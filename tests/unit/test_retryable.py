@@ -37,7 +37,7 @@ def test_retryable_throws_on_non_throttling_error():
   with pytest.raises(ServiceError) as e:
     retryable.run()
 
-  assert e.value.attempts == 1
+  assert e.value.stats.attempts == 1
 
 
 def test_retryable_retries_on_throttling_error():
