@@ -86,7 +86,7 @@ class Client:
         :param http_connect_timeout: Set HTTP Connect timeout, default is :py:data:`DefaultHttpConnectTimeout`.
         :param http_pool_timeout: Set HTTP Pool timeout, default is :py:data:`DefaultHttpPoolTimeout`.
         :param http_idle_timeout: Set HTTP Idle timeout, default is :py:data:`DefaultIdleConnectionTimeout`.
-        :param retry_policy: A retry policy
+        :param retry_policy: A retry policy. The default policy sets max_attempts to 3 and max_backoff to 20.
         """
 
     self._set_endpoint(endpoint)
@@ -218,7 +218,9 @@ class Client:
     """
         Run a query on Fauna and returning an iterator of results. If the query
         returns a Page, the iterator will fetch additional Pages until the
-        after token is null.
+        after token is null. Each call for a page will be retried with exponential
+        backoff up to the max_attempts set in the client's retry policy in the
+        event of a ThrottlingError.
 
         :param fql: A Query
         :param opts: (Optional) Query Options
@@ -245,7 +247,9 @@ class Client:
       opts: Optional[QueryOptions] = None,
   ) -> QuerySuccess:
     """
-        Run a query on Fauna.
+        Run a query on Fauna. A query will be retried with exponential backoff
+        up to the max_attempts set in the client's retry policy in the event
+        of a ThrottlingError.
 
         :param fql: A Query
         :param opts: (Optional) Query Options
