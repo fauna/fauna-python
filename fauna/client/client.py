@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Mapping, Optional, List
 
 import fauna
+from fauna.client.retryable import RetryPolicy, Retryable
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
     QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError
@@ -66,6 +67,7 @@ class Client:
       http_connect_timeout: Optional[timedelta] = DefaultHttpConnectTimeout,
       http_pool_timeout: Optional[timedelta] = DefaultHttpPoolTimeout,
       http_idle_timeout: Optional[timedelta] = DefaultIdleConnectionTimeout,
+      retry_policy: RetryPolicy = RetryPolicy(),
   ):
     """Initializes a Client.
 
@@ -84,9 +86,11 @@ class Client:
         :param http_connect_timeout: Set HTTP Connect timeout, default is :py:data:`DefaultHttpConnectTimeout`.
         :param http_pool_timeout: Set HTTP Pool timeout, default is :py:data:`DefaultHttpPoolTimeout`.
         :param http_idle_timeout: Set HTTP Idle timeout, default is :py:data:`DefaultIdleConnectionTimeout`.
+        :param retry_policy: A retry policy
         """
 
     self._set_endpoint(endpoint)
+    self._retry_policy = retry_policy
 
     if secret is None:
       self._auth = _Auth(_Environment.EnvFaunaSecret())
@@ -265,11 +269,13 @@ class Client:
     except Exception as e:
       raise ClientError("Failed to encode Query") from e
 
-    return self._query(
+    retryable = Retryable(
+        self._retry_policy,
+        self._query,
         "/query/1",
         fql=encoded_query,
-        opts=opts,
-    )
+        opts=opts)
+    return retryable.run()
 
   def _query(
       self,

@@ -14,7 +14,7 @@ def test_query_success_repr():
   )
   stats = "{'compute_ops': 1, 'read_ops': 0, 'write_ops': 0, " \
           "'query_time_ms': 0, 'storage_bytes_read': 0, 'storage_bytes_write': 0, " \
-          "'contention_retries': 0}"
+          "'contention_retries': 0, 'attempts': 0}"
   assert repr(qs) == "QuerySuccess(query_tags={'tag': 'value'}," \
                      "static_type=None," \
                      f"stats=QueryStats(stats={stats})," \
@@ -45,7 +45,7 @@ def test_query_info_repr():
   )
   stats = "{'compute_ops': 1, 'read_ops': 0, 'write_ops': 0, " \
           "'query_time_ms': 0, 'storage_bytes_read': 0, 'storage_bytes_write': 0, " \
-          "'contention_retries': 0}"
+          "'contention_retries': 0, 'attempts': 0}"
   assert repr(qi) == "QueryInfo(query_tags={'tag': 'value'}," \
                      f"stats=QueryStats(stats={stats})," \
                      "summary='human readable'," \
@@ -68,12 +68,13 @@ def test_query_stats_repr():
       'query_time_ms': 4,
       'storage_bytes_read': 5,
       'storage_bytes_write': 6,
-      'contention_retries': 7
+      'contention_retries': 7,
+      'attempts': 0,
   })
 
   stats = "{'compute_ops': 1, 'read_ops': 2, 'write_ops': 3, " \
           "'query_time_ms': 4, 'storage_bytes_read': 5, 'storage_bytes_write': 6, " \
-          "'contention_retries': 7}"
+          "'contention_retries': 7, 'attempts': 0}"
 
   assert repr(qs) == f"QueryStats(stats={stats})"
 

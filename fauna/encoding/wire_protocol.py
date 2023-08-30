@@ -40,6 +40,15 @@ class QueryStats:
     """The number of times the transaction was retried due to write contention."""
     return self._contention_retries
 
+  @property
+  def attempts(self) -> int:
+    """The number of attempts made by the client to run the query."""
+    return self._attempts
+
+  @attempts.setter
+  def attempts(self, value):
+    self._attempts = value
+
   def __init__(self, stats: Mapping[str, Any]):
     self._compute_ops = stats.get("compute_ops", 0)
     self._read_ops = stats.get("read_ops", 0)
@@ -48,6 +57,7 @@ class QueryStats:
     self._storage_bytes_read = stats.get("storage_bytes_read", 0)
     self._storage_bytes_write = stats.get("storage_bytes_write", 0)
     self._contention_retries = stats.get("contention_retries", 0)
+    self._attempts = 0
 
   def __repr__(self):
     stats = {
@@ -58,6 +68,7 @@ class QueryStats:
         "storage_bytes_read": self._storage_bytes_read,
         "storage_bytes_write": self._storage_bytes_write,
         "contention_retries": self._contention_retries,
+        "attempts": self._attempts,
     }
 
     return f"{self.__class__.__name__}(stats={repr(stats)})"
@@ -70,7 +81,8 @@ class QueryStats:
         and self.query_time_ms == other.query_time_ms \
         and self.storage_bytes_read == other.storage_bytes_read \
         and self.storage_bytes_write == other.storage_bytes_write \
-        and self.contention_retries == other.contention_retries
+        and self.contention_retries == other.contention_retries \
+        and self.attempts == other.attempts
 
   def __ne__(self, other):
     return not self.__eq__(other)
