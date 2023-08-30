@@ -5,7 +5,7 @@ from time import sleep
 from typing import Callable, Any, Optional, Union
 
 from fauna.encoding import QuerySuccess
-from fauna.errors import ThrottlingError, ServiceError
+from fauna.errors import ThrottlingError, ServiceError, ClientError
 
 
 @dataclass
@@ -44,9 +44,13 @@ class Retryable:
   _strategy: RetryStrategy
   _error: Optional[Exception]
 
-  def __init__(self, policy: RetryPolicy,
-               func: Union[Callable[[Any], QuerySuccess],
-                           Callable[[], QuerySuccess]], *args, **kwargs):
+  def __init__(
+      self,
+      policy: RetryPolicy,
+      func: Callable[..., QuerySuccess],
+      *args,
+      **kwargs,
+  ):
     self._max_attempts = policy.max_attempts
     self._strategy = ExponentialBackoffStrategy(policy.max_backoff)
     self._func = func
@@ -77,4 +81,7 @@ class Retryable:
         e.stats.attempts = attempt
         raise e
 
-    raise error
+    if error is not None:
+      raise error
+
+    raise ClientError("Unexpected end of retryable. This is probably a bug.")
