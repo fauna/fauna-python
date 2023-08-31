@@ -220,7 +220,7 @@ class Client:
         returns a Page, the iterator will fetch additional Pages until the
         after token is null. Each call for a page will be retried with exponential
         backoff up to the max_attempts set in the client's retry policy in the
-        event of a ThrottlingError.
+        event of a 429 or 502.
 
         :param fql: A Query
         :param opts: (Optional) Query Options
@@ -249,7 +249,7 @@ class Client:
     """
         Run a query on Fauna. A query will be retried with exponential backoff
         up to the max_attempts set in the client's retry policy in the event
-        of a ThrottlingError.
+        of a 429 or 502.
 
         :param fql: A Query
         :param opts: (Optional) Query Options

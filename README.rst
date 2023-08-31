@@ -115,7 +115,7 @@ Client Configuration
 
 Retry Policy
 ------------
-A retry policy can be set on the client. By default, this is configured with `max_attempts` of 3, inclusive of the initial call, and `max_backoff` of 20 seconds. The retry strategy implemented is a simple exponential backoff and will retry only on a ThrottlingError.
+A retry policy can be set on the client. By default, this is configured with `max_attempts` of 3, inclusive of the initial call, and `max_backoff` of 20 seconds. The retry strategy implemented is a simple exponential backoff and will retry on 429s and 502s.
 
 To disable retries, pass a RetryPolicy with max_attempts set to 1.
 
