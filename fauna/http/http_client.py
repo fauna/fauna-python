@@ -27,6 +27,10 @@ class HTTPResponse(abc.ABC):
     pass
 
   @abc.abstractmethod
+  def text(self) -> str:
+    pass
+
+  @abc.abstractmethod
   def read(self) -> bytes:
     pass
 

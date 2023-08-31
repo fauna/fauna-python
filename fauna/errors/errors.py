@@ -8,6 +8,10 @@ class FaunaException(Exception):
   pass
 
 
+class RetryableFaunaException(FaunaException):
+  pass
+
+
 class ClientError(FaunaException):
   """An error representing a failure internal to the client, itself.
     This indicates Fauna was never called - the client failed internally
@@ -19,6 +23,24 @@ class NetworkError(FaunaException):
   """An error representing a failure due to the network.
     This indicates Fauna was never reached."""
   pass
+
+
+class RetryableNetworkError(RetryableFaunaException):
+
+  @property
+  def status_code(self) -> int:
+    return self._status_code
+
+  @property
+  def message(self) -> str:
+    return self._message
+
+  def __init__(self, status_code: int, message: str):
+    self._status_code = status_code
+    self._message = message
+
+  def __str__(self):
+    return f"{self.status_code}: {self.message}"
 
 
 class ProtocolError(FaunaException):
@@ -160,7 +182,7 @@ class AuthorizationError(ServiceError):
   pass
 
 
-class ThrottlingError(ServiceError):
+class ThrottlingError(ServiceError, RetryableFaunaException):
   """ThrottlingError indicates some capacity limit was exceeded
     and thus the request could not be served."""
   pass

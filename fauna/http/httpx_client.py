@@ -28,6 +28,9 @@ class HTTPXResponse(HTTPResponse):
           f"Unable to decode response from endpoint {self._r.request.url}. Check that your endpoint is valid."
       ) from e
 
+  def text(self) -> str:
+    return str(self.read(), encoding='utf-8')
+
   def status_code(self) -> int:
     return self._r.status_code
 
