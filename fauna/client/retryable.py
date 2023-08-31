@@ -5,7 +5,7 @@ from time import sleep
 from typing import Callable, Optional
 
 from fauna.encoding import QuerySuccess
-from fauna.errors import RetryableFaunaException
+from fauna.errors import RetryableFaunaException, ClientError
 
 
 @dataclass
@@ -70,10 +70,9 @@ class Retryable:
 
         Returns the number of attempts and the response
         """
-
+    err: Optional[RetryableFaunaException] = None
     attempt = 0
-    for i in range(self._max_attempts):
-
+    while True:
       sleep_time = 0.0 if attempt == 0 else self._strategy.wait()
       sleep(sleep_time)
 
@@ -82,5 +81,5 @@ class Retryable:
         qs = self._func(*self._args, **self._kwargs)
         return RetryableResponse(attempt, qs)
       except RetryableFaunaException as e:
-        if i == self._max_attempts:
+        if attempt >= self._max_attempts:
           raise e

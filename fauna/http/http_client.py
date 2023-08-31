@@ -27,7 +27,7 @@ class HTTPResponse(abc.ABC):
     pass
 
   @abc.abstractmethod
-  def text(self) -> Any:
+  def text(self) -> str:
     pass
 
   @abc.abstractmethod
