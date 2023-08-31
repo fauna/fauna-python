@@ -42,10 +42,6 @@ class HTTPResponse(abc.ABC):
   def close(self):
     pass
 
-  @abc.abstractmethod
-  def attempts(self) -> int:
-    pass
-
   def __enter__(self):
     return self
 
