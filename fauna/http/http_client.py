@@ -27,6 +27,10 @@ class HTTPResponse(abc.ABC):
     pass
 
   @abc.abstractmethod
+  def text(self) -> Any:
+    pass
+
+  @abc.abstractmethod
   def read(self) -> bytes:
     pass
 
@@ -36,6 +40,10 @@ class HTTPResponse(abc.ABC):
 
   @abc.abstractmethod
   def close(self):
+    pass
+
+  @abc.abstractmethod
+  def attempts(self) -> int:
     pass
 
   def __enter__(self):

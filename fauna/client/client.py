@@ -6,7 +6,7 @@ import fauna
 from fauna.client.retryable import RetryPolicy, Retryable
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
-    QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError
+    QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError, RetryableNetworkError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
@@ -279,7 +279,10 @@ class Client:
         "/query/1",
         fql=encoded_query,
         opts=opts)
-    return retryable.run()
+
+    r = retryable.run()
+    r.response.stats.attempts = r.attempts
+    return r.response
 
   def _query(
       self,
@@ -334,9 +337,12 @@ class Client:
         headers=headers,
         data=data,
     ) as response:
+      status_code = response.status_code()
+      if status_code == 502:
+        raise RetryableNetworkError(502, response.text())
+
       response_json = response.json()
       headers = response.headers()
-      status_code = response.status_code()
 
       self._check_protocol(response_json, status_code)
 

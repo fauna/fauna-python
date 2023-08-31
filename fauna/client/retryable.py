@@ -2,10 +2,10 @@ import abc
 from dataclasses import dataclass
 from random import random
 from time import sleep
-from typing import Callable, Any, Optional, Union
+from typing import Callable, Optional
 
 from fauna.encoding import QuerySuccess
-from fauna.errors import ThrottlingError, ServiceError, ClientError
+from fauna.errors import RetryableFaunaException
 
 
 @dataclass
@@ -37,6 +37,12 @@ class ExponentialBackoffStrategy(RetryStrategy):
     return min(backoff, self._max_backoff)
 
 
+@dataclass
+class RetryableResponse:
+  attempts: int
+  response: QuerySuccess
+
+
 class Retryable:
   """
     Retryable is a wrapper class that acts on a Callable that returns a QuerySuccess.
@@ -58,30 +64,23 @@ class Retryable:
     self._kwargs = kwargs
     self._error = None
 
-  def run(self) -> QuerySuccess:
-    """Runs the wrapped function. Retries up to max_attempts if the function throws a ThrottlingError. It propagates
-        the thrown exception if max_attempts is reached or if a non-ThrottlingError is thrown.
+  def run(self) -> RetryableResponse:
+    """Runs the wrapped function. Retries up to max_attempts if the function throws a RetryableFaunaException. It propagates
+        the thrown exception if max_attempts is reached or if a non-retryable is thrown.
 
-        Assigns attempts to QuerySuccess.stats.attempts and ServiceError.stats.attempts
+        Returns the number of attempts and the response
         """
-    error: Optional[Exception] = None
+
     attempt = 0
     for i in range(self._max_attempts):
+
       sleep_time = 0.0 if attempt == 0 else self._strategy.wait()
       sleep(sleep_time)
+
       try:
         attempt += 1
         qs = self._func(*self._args, **self._kwargs)
-        qs.stats.attempts = attempt
-        return qs
-      except ThrottlingError as e:
-        e.stats.attempts = attempt
-        error = e
-      except ServiceError as e:
-        e.stats.attempts = attempt
-        raise e
-
-    if error is not None:
-      raise error
-
-    raise ClientError("Unexpected end of retryable. This is probably a bug.")
+        return RetryableResponse(attempt, qs)
+      except RetryableFaunaException as e:
+        if i == self._max_attempts:
+          raise e
