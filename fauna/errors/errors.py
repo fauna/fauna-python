@@ -25,24 +25,6 @@ class NetworkError(FaunaException):
   pass
 
 
-class RetryableNetworkError(RetryableFaunaException):
-
-  @property
-  def status_code(self) -> int:
-    return self._status_code
-
-  @property
-  def message(self) -> str:
-    return self._message
-
-  def __init__(self, status_code: int, message: str):
-    self._status_code = status_code
-    self._message = message
-
-  def __str__(self):
-    return f"{self.status_code}: {self.message}"
-
-
 class ProtocolError(FaunaException):
   """An error representing a HTTP failure - but one not directly emitted by Fauna."""
 

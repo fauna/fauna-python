@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from fauna.client.retryable import Retryable, RetryPolicy, ExponentialBackoffStrategy
 from fauna.encoding import QuerySuccess, QueryStats
-from fauna.errors import ThrottlingError, ServiceError, RetryableNetworkError
+from fauna.errors import ThrottlingError, ServiceError
 
 
 class Tester:
@@ -40,14 +40,6 @@ def test_retryable_throws_on_non_throttling_error():
 
 def test_retryable_retries_on_throttling_error():
   tester = Tester([ThrottlingError(429, "oops", "throttled"), None])
-  policy = RetryPolicy()
-  retryable = Retryable(policy, tester.f)
-  r = retryable.run()
-  assert r.attempts == 2
-
-
-def test_retryable_retries_on_502():
-  tester = Tester([RetryableNetworkError(502, "bad gateway"), None])
   policy = RetryPolicy()
   retryable = Retryable(policy, tester.f)
   r = retryable.run()
