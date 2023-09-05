@@ -250,9 +250,8 @@ class Client:
       opts: Optional[QueryOptions] = None,
   ) -> QuerySuccess:
     """
-        Run a query on Fauna. A query will be retried with exponential backoff
-        up to the max_attempts set in the client's retry policy in the event
-        of a 429 or 502.
+        Run a query on Fauna. A query will be retried max_attempt times with exponential backoff
+        up to the max_backoff in the event of a 429.
 
         :param fql: A Query
         :param opts: (Optional) Query Options
