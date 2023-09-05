@@ -8,15 +8,6 @@ from fauna.encoding import QuerySuccess
 from fauna.errors import RetryableFaunaException, ClientError
 
 
-@dataclass
-class RetryPolicy:
-  max_attempts: int = 3
-  """An int. The maximum number of attempts."""
-
-  max_backoff: int = 20
-  """An int. The maximum backoff in seconds."""
-
-
 class RetryStrategy:
 
   @abc.abstractmethod
@@ -52,13 +43,14 @@ class Retryable:
 
   def __init__(
       self,
-      policy: RetryPolicy,
+      max_attempts: int,
+      max_backoff: int,
       func: Callable[..., QuerySuccess],
       *args,
       **kwargs,
   ):
-    self._max_attempts = policy.max_attempts
-    self._strategy = ExponentialBackoffStrategy(policy.max_backoff)
+    self._max_attempts = max_attempts
+    self._strategy = ExponentialBackoffStrategy(max_backoff)
     self._func = func
     self._args = args
     self._kwargs = kwargs
