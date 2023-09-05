@@ -113,11 +113,15 @@ When building queries, adapt your classes into dicts or lists prior to using the
 Client Configuration
 --------------------
 
-Retry Policy
+Max Attempts
 ------------
-A retry policy can be set on the client. By default, this is configured with `max_attempts` of 3, inclusive of the initial call, and `max_backoff` of 20 seconds. The retry strategy implemented is a simple exponential backoff and will retry on 429s and 502s.
+The maximum number of times a query will be attempted if a retryable exception is thrown (ThrottlingError). Default 3, inclusive of the initial call.  The retry strategy implemented is a simple exponential backoff.
 
-To disable retries, pass a RetryPolicy with max_attempts set to 1.
+To disable retries, pass max_attempts less than or equal to 1.
+
+Max Backoff
+------------
+The maximum backoff in seconds to be observed between each retry. Default 20 seconds.
 
 Timeouts
 --------
