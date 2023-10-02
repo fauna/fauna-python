@@ -12,6 +12,20 @@ services:
       timeout: 3s
       retries: 30
 
+  python-312:
+    environment:
+      FAUNA_SECRET: "secret"
+      FAUNA_ENDPOINT: http://faunadb:8443
+    image: python:3.12.0-alpine3.17
+    container_name: python-312
+    depends_on:
+      - faunadb
+    volumes:
+      - "../:/tmp/app"
+    working_dir: "/tmp/app"
+    command:
+      - tests/run-tests.sh
+
   python-311:
     environment:
       FAUNA_SECRET: "secret"
