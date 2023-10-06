@@ -97,6 +97,13 @@ jobs:
                 FAUNA_SECRET: ((drivers-platform-tests/fauna-secret))
                 VERCEL_TOKEN: ((drivers-platform-tests/vercel-token))
 
+            - task: query-limits-tests
+              privileged: true
+              file: fauna-python-repository/concourse/tasks/query-limits-tests.yml
+              params:
+                QUERY_LIMITS_DB: limited
+                QUERY_LIMITS_COLL: limitCollection
+
 
   - name: release
     serial: true
