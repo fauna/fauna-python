@@ -13,19 +13,24 @@ def query_collection(client: Client) -> QuerySuccess:
   return client.query(fql("${coll}.all().paginate(50)", coll=fql(coll_name)))
 
 
-@pytest.mark.skipif("QUERY_LIMITS_DB" not in os.environ or "QUERY_LIMITS_COLL" not in os.environ,
-                    reason="QUERY_LIMITS_DB and QUERY_LIMITS_COLL must both be set to run this test")
+@pytest.mark.skipif(
+    "QUERY_LIMITS_DB" not in os.environ or
+    "QUERY_LIMITS_COLL" not in os.environ,
+    reason="QUERY_LIMITS_DB and QUERY_LIMITS_COLL must both be set to run this test"
+)
 def test_client_retries_throttled_query():
   db_name = os.environ.get("QUERY_LIMITS_DB")
   rootClient = Client()
-  res = rootClient.query(fql("""
+  res = rootClient.query(
+      fql("""
 if (Database.byName(${db}).exists()) {
   Key.create({ role: "admin", database: ${db} }) { secret }
 } else {
   abort("Database not found.")
-}""", db=db_name))
+}""",
+          db=db_name))
   secret = res.data["secret"]
-  clients = [ Client(secret=secret) for _ in range(5) ]
+  clients = [Client(secret=secret) for _ in range(5)]
   throttled = False
 
   with ThreadPool() as pool:
