@@ -143,7 +143,16 @@ def test_encode_document_references(subtests):
   doc_ref = DocumentReference.from_string("Col:123")
   with subtests.test(msg="encode/decode with @doc"):
     encoded = FaunaEncoder.encode(doc_ref)
-    assert {'value': {'@ref': {'coll': {'@mod': 'Col'}, 'id': "123"}}} == encoded
+    assert {
+        'value': {
+            '@ref': {
+                'coll': {
+                    '@mod': 'Col'
+                },
+                'id': "123"
+            }
+        }
+    } == encoded
     decoded = FaunaDecoder.decode(encoded['value'])
     assert doc_ref == decoded
 
@@ -178,7 +187,16 @@ def test_null_docments(subtests):
   with subtests.test(msg="encode named null doc"):
     null_doc = NullDocument(
         NamedDocumentReference("Collection", "Party"), "not found")
-    expected = {"value": {"@ref": {"name": "Party", "coll": {"@mod": "Collection"}}}}
+    expected = {
+        "value": {
+            "@ref": {
+                "name": "Party",
+                "coll": {
+                    "@mod": "Collection"
+                }
+            }
+        }
+    }
     encoded = FaunaEncoder.encode(null_doc)
     assert expected == encoded
 
@@ -203,7 +221,16 @@ def test_encode_named_document_references(subtests):
   doc_ref = NamedDocumentReference("Col", "Hi")
   with subtests.test(msg="encode/decode with @doc"):
     encoded = FaunaEncoder.encode(doc_ref)
-    assert {"value": {"@ref": {"name": "Hi", "coll": {"@mod": "Col"}}}} == encoded
+    assert {
+        "value": {
+            "@ref": {
+                "name": "Hi",
+                "coll": {
+                    "@mod": "Col"
+                }
+            }
+        }
+    } == encoded
     decoded = FaunaDecoder.decode(encoded["value"])
     assert doc_ref == decoded
 
@@ -219,7 +246,16 @@ def test_encode_documents(subtests):
         id="123", coll="Dogs", ts=fixed_datetime, data={"name": "Scout"})
     encoded = FaunaEncoder.encode(test)
     # should encode to a ref!
-    assert {"value": {"@ref": {"id": "123", "coll": {"@mod": "Dogs"}}}} == encoded
+    assert {
+        "value": {
+            "@ref": {
+                "id": "123",
+                "coll": {
+                    "@mod": "Dogs"
+                }
+            }
+        }
+    } == encoded
     decoded = FaunaDecoder.decode(encoded["value"])
     # refs will decode into references, not Documents
     assert DocumentReference("Dogs", "123") == decoded
@@ -248,7 +284,16 @@ def test_encode_named_documents(subtests):
     test = NamedDocument(name="DogSchema", coll="Dogs", ts=fixed_datetime)
     encoded = FaunaEncoder.encode(test)
     # should encode to a ref!
-    assert {"value": {"@ref": {"name": "DogSchema", "coll": {"@mod": "Dogs"}}}} == encoded
+    assert {
+        "value": {
+            "@ref": {
+                "name": "DogSchema",
+                "coll": {
+                    "@mod": "Dogs"
+                }
+            }
+        }
+    } == encoded
     decoded = FaunaDecoder.decode(encoded["value"])
     # refs will decode into references, not Documents
     assert NamedDocumentReference("Dogs", "DogSchema") == decoded
@@ -360,7 +405,6 @@ def test_encode_long_conflicts(subtests):
     encoded = FaunaEncoder.encode(test)
     assert encoded == expected
 
-
   with subtests.test(msg="decode @long conflict with long type"):
     expected = {"@long": 2147483649}
     test = {"@object": {"@long": {"@long": "2147483649"}}}
@@ -421,7 +465,7 @@ def test_encode_date_time_conflicts(subtests):
     assert {"@date": date(2023, 2, 28)} == decoded
 
   with subtests.test(msg="decode @date conflict with other type"):
-    test =  {"@object": {"@date": "bar"}}
+    test = {"@object": {"@date": "bar"}}
     decoded = FaunaDecoder.decode(test)
     assert {"@date": "bar"} == decoded
 
@@ -441,7 +485,9 @@ def test_encode_date_time_conflicts(subtests):
     expected = {
         "object": {
             "@time": {
-                "value": {"@time": "2023-02-28T10:10:10.000010+00:00"}
+                "value": {
+                    "@time": "2023-02-28T10:10:10.000010+00:00"
+                }
             }
         }
     }
@@ -451,7 +497,7 @@ def test_encode_date_time_conflicts(subtests):
 
   with subtests.test(msg="encode @time conflict with other type"):
     test = {"@time": "bar"}
-    expected = {"object": {"@time": {"value":"bar"}}}
+    expected = {"object": {"@time": {"value": "bar"}}}
     encoded = FaunaEncoder.encode(test)
     assert encoded == expected
 
@@ -468,13 +514,7 @@ def test_encode_date_time_conflicts(subtests):
                 10,
                 tzinfo=timezone(timedelta(0), '+00:00'))
     }
-    test = {
-        "@object": {
-            "@time": {
-                "@time": "2023-02-28T10:10:10.000010+00:00"
-            }
-        }
-    }
+    test = {"@object": {"@time": {"@time": "2023-02-28T10:10:10.000010+00:00"}}}
     decoded = FaunaDecoder.decode(test)
     assert expected == decoded
 
@@ -571,7 +611,9 @@ def test_encode_nested_conflict(subtests):
                             "@time": {
                                 "object": {
                                     "@long": {
-                                        "value": {"@int": "10"}
+                                        "value": {
+                                            "@int": "10"
+                                        }
                                     }
                                 }
                             }
@@ -608,15 +650,12 @@ def test_encode_nested_conflict(subtests):
     decoded = FaunaDecoder.decode(test)
     assert expected == decoded
 
+
 def test_encode_non_conflicting_at_prefix(subtests):
 
   with subtests.test(msg="encode non-conflicting @ prefix"):
     test = {"@foo": 10}
-    expected = {
-        "object": {
-            "@foo": {"value": {"@int": "10"}}
-        }
-    }
+    expected = {"object": {"@foo": {"value": {"@int": "10"}}}}
     encoded = FaunaEncoder.encode(test)
     assert encoded == expected
 
@@ -628,22 +667,68 @@ def test_encode_non_conflicting_at_prefix(subtests):
 
 
 def test_encode_complex_objects(
-        subtests,
-        complex_untyped_object,
-        complex_typed_object,
-        complex_wire_encoded_object,
+    subtests,
+    complex_untyped_object,
+    complex_typed_object,
+    complex_wire_encoded_object,
 ):
   with subtests.test(msg="encode array with nesting"):
     doc_ref = DocumentReference.from_string("Array:123")
-    test = [1, ["hi"], doc_ref, fql("let d = ${foo}", foo=[{'inner': 3.1}]), {"foo": {"bar": 123}}]
+    test = [
+        1, ["hi"], doc_ref,
+        fql("let d = ${foo}", foo=[{
+            'inner': 3.1
+        }]), {
+            "foo": {
+                "bar": 123
+            }
+        }
+    ]
     expected = {
-      'array': [
-          {'value': {'@int': '1'}},
-          {'array': [{'value': 'hi'}]},
-          {'value': {'@ref': {'coll': {'@mod': 'Array'}, 'id': '123'}}},
-          {'fql': ['let d = ', {'array': [{'object': {'inner': {'value': {'@double': '3.1'}}}}]}]},
-          {'object': {'foo': {'object': {'bar': {'value': {'@int': '123'}}}}}}
-        ]
+        'array': [{
+            'value': {
+                '@int': '1'
+            }
+        }, {
+            'array': [{
+                'value': 'hi'
+            }]
+        }, {
+            'value': {
+                '@ref': {
+                    'coll': {
+                        '@mod': 'Array'
+                    },
+                    'id': '123'
+                }
+            }
+        }, {
+            'fql': [
+                'let d = ', {
+                    'array': [{
+                        'object': {
+                            'inner': {
+                                'value': {
+                                    '@double': '3.1'
+                                }
+                            }
+                        }
+                    }]
+                }
+            ]
+        }, {
+            'object': {
+                'foo': {
+                    'object': {
+                        'bar': {
+                            'value': {
+                                '@int': '123'
+                            }
+                        }
+                    }
+                }
+            }
+        }]
     }
     encoded = FaunaEncoder.encode(test)
     assert expected == encoded
@@ -694,6 +779,7 @@ def test_encode_complex_objects(
 
     FaunaDecoder.decode(test)
 
+
 def test_encode_query_builder_strings(subtests):
   with subtests.test(msg="pure string query"):
     actual = FaunaEncoder.encode(fql("let x = 11"))
@@ -732,12 +818,18 @@ def test_encode_query_builder_with_value(subtests):
         "fql": [
             "let x = ", {
                 'object': {
-                    'name': {'value': 'Dino'},
+                    'name': {
+                        'value': 'Dino'
+                    },
                     'age': {
-                      'value': {'@int': '0'}
+                        'value': {
+                            '@int': '0'
+                        }
                     },
                     'birthdate': {
-                      'value': {'@date': '2023-02-24'}
+                        'value': {
+                            '@date': '2023-02-24'
+                        }
                     }
                 }
             }
@@ -758,13 +850,19 @@ def test_encode_query_builder_sub_queries(subtests):
             "fql": [
                 "let x = ", {
                     'object': {
-                      'name': {'value': 'Dino'},
-                      'age': {
-                        'value': {'@int': '0'}
-                      },
-                      'birthdate': {
-                        'value': {'@date': '2023-02-24'}
-                      }
+                        'name': {
+                            'value': 'Dino'
+                        },
+                        'age': {
+                            'value': {
+                                '@int': '0'
+                            }
+                        },
+                        'birthdate': {
+                            'value': {
+                                '@date': '2023-02-24'
+                            }
+                        }
                     }
                 }
             ]

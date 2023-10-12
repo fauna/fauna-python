@@ -165,10 +165,15 @@ class FaunaEncoder:
     elif isinstance(o, date):
       return {"value": FaunaEncoder.from_date(o)}
     elif isinstance(o, Document):
-      return {"value": FaunaEncoder.from_doc_ref(DocumentReference(o.coll, o.id))}
+      return {
+          "value": FaunaEncoder.from_doc_ref(DocumentReference(o.coll, o.id))
+      }
     elif isinstance(o, NamedDocument):
-      return {"value": FaunaEncoder.from_named_doc_ref(
-          NamedDocumentReference(o.coll, o.name))}
+      return {
+          "value":
+              FaunaEncoder.from_named_doc_ref(
+                  NamedDocumentReference(o.coll, o.name))
+      }
     elif isinstance(o, NullDocument):
       return FaunaEncoder.encode(o.ref)
     elif isinstance(o, (list, tuple)):
@@ -196,4 +201,8 @@ class FaunaEncoder:
       raise ValueError("Circular reference detected")
 
     markers.add(id(dct))
-    return {"object": {k: FaunaEncoder._encode(v, markers) for k, v in dct.items()}}
+    return {
+        "object": {
+            k: FaunaEncoder._encode(v, markers) for k, v in dct.items()
+        }
+    }
