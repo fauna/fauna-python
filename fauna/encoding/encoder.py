@@ -24,29 +24,29 @@ class FaunaEncoder:
     +-------------------------------+---------------+
     | Python                        | Fauna Tags    |
     +===============================+===============+
-    | dict                          | @object       |
+    | dict                          | object        |
     +-------------------------------+---------------+
     | list, tuple                   | array         |
     +-------------------------------+---------------+
-    | str                           | string        |
+    | str                           | value, N/A    |
     +-------------------------------+---------------+
-    | int 32-bit signed             | @int          |
+    | int 32-bit signed             | value, @int   |
     +-------------------------------+---------------+
-    | int 64-bit signed             | @long         |
+    | int 64-bit signed             | value, @long  |
     +-------------------------------+---------------+
-    | float                         | @double       |
+    | float                         | value, @double|
     +-------------------------------+---------------+
-    | datetime.datetime             | @time         |
+    | datetime.datetime             | value, @time  |
     +-------------------------------+---------------+
-    | datetime.date                 | @date         |
+    | datetime.date                 | value, @date  |
     +-------------------------------+---------------+
-    | True                          | True          |
+    | True                          | value, N/A    |
     +-------------------------------+---------------+
-    | False                         | False         |
+    | False                         | value, N/A    |
     +-------------------------------+---------------+
-    | None                          | None          |
+    | None                          | value, N/A    |
     +-------------------------------+---------------+
-    | *Document                     | @ref          |
+    | *Document                     | value, @ref   |
     +-------------------------------+---------------+
     | *DocumentReference            | @ref          |
     +-------------------------------+---------------+
@@ -54,28 +54,22 @@ class FaunaEncoder:
     +-------------------------------+---------------+
     | Query                         | fql           |
     +-------------------------------+---------------+
-    | ValueFragment                 | value         |
-    +-------------------------------+---------------+
-    | TemplateFragment              | string        |
-    +-------------------------------+---------------+
 
     """
 
   @staticmethod
   def encode(obj: Any) -> Any:
-    """Encodes supported objects into the tagged format.
+    """Encodes supported objects into the wire protocol.
 
         Examples:
-            - Up to 32-bit ints encode to { "@int": "..." }
-            - Up to 64-bit ints encode to { "@long": "..." }
-            - Floats encode to { "@double": "..." }
-            - datetime encodes to { "@time": "..." }
-            - date encodes to { "@date": "..." }
-            - DocumentReference encodes to { "@doc": "..." }
-            - Module encodes to { "@mod": "..." }
+            - Up to 32-bit ints encode to {"value": { "@int": "..." }}
+            - Up to 64-bit ints encode to {"value": { "@long": "..." }}
+            - Floats encode to {"value": { "@double": "..." }}
+            - datetime encodes to {"value": { "@time": "..." }}
+            - date encodes to {"value": { "@date": "..." }}
+            - Objects encode to {"object": { ... }}, and its values are recursively encoded
+            - Lists and Tuples encode to {"array": [...]}, and its values are recursively encoded
             - Query encodes to { "fql": [...] }
-            - ValueFragment encodes to { "value": <encoded_val> }
-            - LiteralFragment encodes to a string
 
         :raises ValueError: If value cannot be encoded, cannot be encoded safely, or there's a circular reference.
         :param obj: the object to decode
@@ -127,10 +121,6 @@ class FaunaEncoder:
     return {"@mod": obj.name}
 
   @staticmethod
-  def from_dict(obj: Any):
-    return {"@object": obj}
-
-  @staticmethod
   def from_none():
     return None
 
@@ -139,11 +129,7 @@ class FaunaEncoder:
     if isinstance(obj, LiteralFragment):
       return obj.get()
     elif isinstance(obj, ValueFragment):
-      v = obj.get()
-      if isinstance(v, Query):
-        return FaunaEncoder.from_query_interpolation_builder(v)
-      else:
-        return {"value": FaunaEncoder.encode(v)}
+      return FaunaEncoder.encode(obj.get())
     else:
       raise ValueError(f"Unknown fragment type: {type(obj)}")
 
@@ -157,32 +143,32 @@ class FaunaEncoder:
       _markers = set()
 
     if isinstance(o, str):
-      return FaunaEncoder.from_str(o)
+      return {"value": FaunaEncoder.from_str(o)}
     elif o is None:
-      return FaunaEncoder.from_none()
+      return {"value": FaunaEncoder.from_none()}
     elif o is True:
-      return FaunaEncoder.from_bool(o)
+      return {"value": FaunaEncoder.from_bool(o)}
     elif o is False:
-      return FaunaEncoder.from_bool(o)
+      return {"value": FaunaEncoder.from_bool(o)}
     elif isinstance(o, int):
-      return FaunaEncoder.from_int(o)
+      return {"value": FaunaEncoder.from_int(o)}
     elif isinstance(o, float):
-      return FaunaEncoder.from_float(o)
+      return {"value": FaunaEncoder.from_float(o)}
     elif isinstance(o, Module):
-      return FaunaEncoder.from_mod(o)
+      return {"value": FaunaEncoder.from_mod(o)}
     elif isinstance(o, DocumentReference):
-      return FaunaEncoder.from_doc_ref(o)
+      return {"value": FaunaEncoder.from_doc_ref(o)}
     elif isinstance(o, NamedDocumentReference):
-      return FaunaEncoder.from_named_doc_ref(o)
+      return {"value": FaunaEncoder.from_named_doc_ref(o)}
     elif isinstance(o, datetime):
-      return FaunaEncoder.from_datetime(o)
+      return {"value": FaunaEncoder.from_datetime(o)}
     elif isinstance(o, date):
-      return FaunaEncoder.from_date(o)
+      return {"value": FaunaEncoder.from_date(o)}
     elif isinstance(o, Document):
-      return FaunaEncoder.from_doc_ref(DocumentReference(o.coll, o.id))
+      return {"value": FaunaEncoder.from_doc_ref(DocumentReference(o.coll, o.id))}
     elif isinstance(o, NamedDocument):
-      return FaunaEncoder.from_named_doc_ref(
-          NamedDocumentReference(o.coll, o.name))
+      return {"value": FaunaEncoder.from_named_doc_ref(
+          NamedDocumentReference(o.coll, o.name))}
     elif isinstance(o, NullDocument):
       return FaunaEncoder.encode(o.ref)
     elif isinstance(o, (list, tuple)):
@@ -201,7 +187,7 @@ class FaunaEncoder:
       raise ValueError("Circular reference detected")
 
     markers.add(id(lst))
-    return [FaunaEncoder._encode(elem, markers) for elem in lst]
+    return {"array": [FaunaEncoder._encode(elem, markers) for elem in lst]}
 
   @staticmethod
   def _encode_dict(dct, markers):
@@ -210,11 +196,4 @@ class FaunaEncoder:
       raise ValueError("Circular reference detected")
 
     markers.add(id(dct))
-    if any(i in _RESERVED_TAGS for i in dct.keys()):
-      return {
-          "@object": {
-              k: FaunaEncoder._encode(v, markers) for k, v in dct.items()
-          }
-      }
-    else:
-      return {k: FaunaEncoder._encode(v, markers) for k, v in dct.items()}
+    return {"object": {k: FaunaEncoder._encode(v, markers) for k, v in dct.items()}}

@@ -45,3 +45,17 @@ u.update(${data})
   assert result.data.id == doc.id
   assert result.data.coll == doc.coll
   assert result.data.ts != doc.ts
+
+
+def test_array_composition(client):
+  queries = [fql("1"), fql("2"), {"key": 3}, [fql("${inner}", inner={"inner": "thing"})]]
+  q = fql("${queries}", queries=queries)
+  res = client.query(q).data
+  assert [1, 2, {'key': 3}, [{'inner': 'thing'}]] == res
+
+
+def test_object_composition(client):
+  queries = {1: fql("1"), 2: fql("2"), 3: {"key": fql("3")}, 4: {"inner": fql("${inner}", inner=["inner", "thing"])}}
+  q = fql("${queries}", queries=queries)
+  res = client.query(q).data
+  assert {'1': 1, '2': 2, '3': {'key': 3}, '4': {'inner': ['inner', 'thing']}} == res
