@@ -146,3 +146,117 @@ def complex_typed_object():
           }
       }]
   }
+
+
+@pytest.fixture
+def complex_wire_encoded_object():
+  return {
+      'object': {
+          'bugs_coll': {
+              'value': {
+                  '@mod': 'Bugs'
+              }
+          },
+          'bug': {
+              'value': {
+                  '@ref': {
+                      'id': "123",
+                      'coll': {
+                          '@mod': 'Bugs'
+                      }
+                  }
+              }
+          },
+          'name': {
+              'value': 'fir'
+          },
+          'age': {
+              'value': {
+                  '@int': '200'
+              }
+          },
+          'birthdate': {
+              'value': {
+                  '@date': '1823-02-08'
+              }
+          },
+          'molecules': {
+              'value': {
+                  '@long': '999999999999999999'
+              }
+          },
+          'circumference': {
+              'value': {
+                  '@double': '3.82'
+              }
+          },
+          'created_at': {
+              'value': {
+                  '@time': '2003-02-08T13:28:12.000555+00:00'
+              }
+          },
+          'extras': {
+              'object': {
+                  'nest': {
+                      'object': {
+                          '@object': {
+                              'object': {
+                                  'egg': {
+                                      'object': {
+                                          'fertilized': {
+                                              'value': False
+                                          }
+                                      }
+                                  }
+                              }
+                          },
+                          'num_sticks': {
+                              'value': {
+                                  '@int': '58'
+                              }
+                          },
+                      }
+                  }
+              }
+          },
+          'measurements': {
+              'array': [{
+                  'object': {
+                      'id': {
+                          'value': {
+                              '@int': '1'
+                          }
+                      },
+                      'employee': {
+                          'value': {
+                              '@int': '3'
+                          }
+                      },
+                      'time': {
+                          'value': {
+                              '@time': '2013-02-08T12:00:05.000123+00:00'
+                          }
+                      }
+                  }
+              }, {
+                  'object': {
+                      'id': {
+                          'value': {
+                              '@int': '2'
+                          }
+                      },
+                      'employee': {
+                          'value': {
+                              '@int': '5'
+                          }
+                      },
+                      'time': {
+                          'value': {
+                              '@time': '2023-02-08T14:22:01.000001+00:00'
+                          }
+                      }
+                  }
+              }]
+          }
+      }
+  }
