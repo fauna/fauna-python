@@ -67,7 +67,7 @@ class HTTPClient(abc.ABC):
       url: str,
       headers: Mapping[str, str],
       data: Mapping[str, Any],
-  ) -> HTTPResponse:
+  ) -> Iterator[Any]:
     pass
 
   @abc.abstractmethod

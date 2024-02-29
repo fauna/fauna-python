@@ -1,15 +1,17 @@
+import json
 from datetime import timedelta
 from typing import Dict
 
 import httpx
 import pytest
 import pytest_subtests
-from pytest_httpx import HTTPXMock
+from pytest_httpx import HTTPXMock, IteratorStream
 
 import fauna
 from fauna import fql
 from fauna.client import Client, Header, QueryOptions, Endpoints
 from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError
+from fauna.query.models import StreamToken
 from fauna.http import HTTPXClient
 
 
@@ -413,3 +415,17 @@ def test_call_query_with_string():
       match="'fql' must be a Query but was a <class 'str'>. You can build a Query by "
       "calling fauna.fql()"):
     c.query("fake")  # type: ignore
+
+
+def test_client_stream(subtests, httpx_mock: HTTPXMock):
+  response = ['{"@int": "10"}\n', '{"@long": "20"}\n']
+
+  httpx_mock.add_response(
+      stream=IteratorStream([bytes(r, 'utf-8') for r in response]))
+
+  with httpx.Client() as mockClient:
+    http_client = HTTPXClient(mockClient)
+    c = Client(http_client=http_client)
+    ret = [obj for obj in c.stream(StreamToken("token"))]
+
+    assert ret == [10, 20]

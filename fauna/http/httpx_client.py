@@ -93,13 +93,16 @@ class HTTPXClient(HTTPClient):
       else:
         return self._send_with_retry(retryCount - 1, request)
 
+  # todo: decorate with context manager
   def stream(
       self,
       url: str,
       headers: Mapping[str, str],
       data: Mapping[str, Any],
-  ) -> Iterator[HTTPResponse]:
-    raise NotImplementedError()
+  ) -> Iterator[Any]:
+    with self._c.stream("POST", url=url, headers=headers, json=data) as r:
+      for line in r.iter_lines():
+        yield json.loads(line)
 
   def close(self):
     self._c.close()

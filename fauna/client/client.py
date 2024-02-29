@@ -10,6 +10,7 @@ from fauna.errors import AuthenticationError, ClientError, ProtocolError, Servic
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
+from fauna.query.models import StreamToken
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
 from fauna.encoding import QuerySuccess, ConstraintFailure, QueryTags, QueryStats
@@ -374,6 +375,28 @@ class Client:
           txn_ts=txn_ts,
           schema_version=schema_version,
       )
+
+  def stream(self, token: StreamToken):
+    # todo: pass a token or a Query
+
+    if not isinstance(token, StreamToken):
+      err_msg = f"'token' must be a StreamToken but was a {type(token)}."
+      raise TypeError(err_msg)
+
+    headers = self._headers.copy()
+    headers[_Header.Format] = "tagged"
+    headers[_Header.Authorization] = self._auth.bearer()
+
+    data = {"token": token.token}
+
+    response = self._session.stream(
+        url=self._endpoint + "/stream/1",
+        headers=headers,
+        data=data,
+    )
+
+    for line in response:
+      yield FaunaDecoder.decode(line)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
