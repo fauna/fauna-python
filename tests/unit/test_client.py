@@ -426,6 +426,24 @@ def test_client_stream(subtests, httpx_mock: HTTPXMock):
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
-    ret = [obj for obj in c.stream(StreamToken("token"))]
+    with c.stream(StreamToken("token")) as stream:
+      ret = [obj for obj in stream]
 
-    assert ret == [10, 20]
+      assert ret == [10, 20]
+
+
+def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
+  response = ['{"@int": "10"}\n', '{"@long": "20"}\n']
+
+  httpx_mock.add_response(
+      stream=IteratorStream([bytes(r, 'utf-8') for r in response]))
+
+  with httpx.Client() as mockClient:
+    http_client = HTTPXClient(mockClient)
+    c = Client(http_client=http_client)
+    with c.stream(StreamToken("token")) as stream:
+      next(stream) == 10
+      stream.close()
+
+      with pytest.raises(StopIteration):
+        next(stream)

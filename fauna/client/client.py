@@ -1,6 +1,7 @@
 from datetime import timedelta
 from dataclasses import dataclass
 from typing import Any, Dict, Iterator, Mapping, Optional, List
+from contextlib import contextmanager
 
 import fauna
 from fauna.client.retryable import Retryable
@@ -376,7 +377,8 @@ class Client:
           schema_version=schema_version,
       )
 
-  def stream(self, token: StreamToken):
+  @contextmanager
+  def stream(self, token: StreamToken) -> Iterator[Any]:
     # todo: pass a token or a Query
 
     if not isinstance(token, StreamToken):
@@ -395,8 +397,12 @@ class Client:
         data=data,
     )
 
-    for line in response:
-      yield FaunaDecoder.decode(line)
+    with response as stream:
+      yield self._transform(stream)
+
+  def _transform(self, stream):
+    for f in stream:
+      yield FaunaDecoder.decode(f)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.

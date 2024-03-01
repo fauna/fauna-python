@@ -1,6 +1,7 @@
 import json
 from json import JSONDecodeError
 from typing import Mapping, Any, Optional, Iterator
+from contextlib import contextmanager
 
 import httpx
 
@@ -93,16 +94,20 @@ class HTTPXClient(HTTPClient):
       else:
         return self._send_with_retry(retryCount - 1, request)
 
-  # todo: decorate with context manager
+  @contextmanager
   def stream(
       self,
       url: str,
       headers: Mapping[str, str],
       data: Mapping[str, Any],
   ) -> Iterator[Any]:
-    with self._c.stream("POST", url=url, headers=headers, json=data) as r:
-      for line in r.iter_lines():
-        yield json.loads(line)
+    with self._c.stream(
+        "POST", url=url, headers=headers, json=data) as response:
+      yield self._transform(response)
+
+  def _transform(self, response):
+    for line in response.iter_lines():
+      yield json.loads(line)
 
   def close(self):
     self._c.close()
