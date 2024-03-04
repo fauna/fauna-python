@@ -7,7 +7,8 @@ import fauna
 from fauna.client.retryable import Retryable
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
-    QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError
+    QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError, RetryableFaunaException, \
+    NetworkError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
@@ -377,17 +378,23 @@ class Client:
           schema_version=schema_version,
       )
 
+  def stream(self, fql: StreamToken | Query) -> Iterator[Any]:
+    return RetryStreamIter(self, fql)
+
   @contextmanager
-  def stream(self, token: StreamToken) -> Iterator[Any]:
-    # todo: pass a token or a Query
-
-    if not isinstance(token, StreamToken):
-      err_msg = f"'token' must be a StreamToken but was a {type(token)}."
-      raise TypeError(err_msg)
-
+  def _stream(self, fql: StreamToken | Query) -> Iterator[Any]:
     headers = self._headers.copy()
     headers[_Header.Format] = "tagged"
     headers[_Header.Authorization] = self._auth.bearer()
+
+    if not isinstance(fql, StreamToken):
+      token = self.query(fql).data
+
+      if not isinstance(token, StreamToken):
+        err_msg = f"'token' must be a StreamToken but was a {type(token)}."
+        raise TypeError(err_msg)
+    else:
+      token = fql
 
     data = {"token": token.token}
 
@@ -401,8 +408,8 @@ class Client:
       yield self._transform(stream)
 
   def _transform(self, stream):
-    for f in stream:
-      yield FaunaDecoder.decode(f)
+    for obj in stream:
+      yield FaunaDecoder.decode(obj)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -606,6 +613,42 @@ class Client:
       endpoint = endpoint[:-1]
 
     self._endpoint = endpoint
+
+
+class RetryStreamIter:
+  """A class that mix a ContextManager and an Iterator so we can detected retryable errors."""
+
+  def __init__(self, client, fql):
+    self.client = client
+    self.fql = fql
+    self.ctx = self.client._stream(self.fql)
+    self.stream = None
+    self.retries = 0
+
+  def __enter__(self):
+    self.stream = self.ctx.__enter__()
+    return self
+
+  def __exit__(self, exc_type, exc_value, exc_traceback):
+    self.ctx.__exit__(exc_type, exc_value, exc_traceback)
+    return True
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    try:
+      return next(self.stream)
+    except NetworkError as e:
+      return self._retry()
+
+  def _retry(self):
+    self.ctx = self.client._stream(self.fql)
+    self.stream = self.ctx.__enter__()
+    return self.__next__()
+
+  def close(self):
+    self.stream.close()
 
 
 class QueryIterator:

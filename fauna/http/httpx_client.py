@@ -101,13 +101,18 @@ class HTTPXClient(HTTPClient):
       headers: Mapping[str, str],
       data: Mapping[str, Any],
   ) -> Iterator[Any]:
-    with self._c.stream(
-        "POST", url=url, headers=headers, json=data) as response:
+    stream = self._c.stream("POST", url=url, headers=headers, json=data)
+    with stream as response:
       yield self._transform(response)
 
   def _transform(self, response):
-    for line in response.iter_lines():
-      yield json.loads(line)
+    try:
+      for line in response.iter_lines():
+        yield json.loads(line)
+    except httpx.StreamError as e:
+      raise StopIteration
+    except (httpx.HTTPError, httpx.InvalidURL) as e:
+      raise NetworkError("Exception re-raised from HTTP request") from e
 
   def close(self):
     self._c.close()
