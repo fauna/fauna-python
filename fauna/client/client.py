@@ -379,37 +379,31 @@ class Client:
       )
 
   def stream(self, fql: StreamToken | Query) -> "StreamIterator":
-    return StreamIterator(self, fql)
+    if isinstance(fql, Query):
+      token = self.query(fql).data
+    else:
+      token = fql
 
-  @contextmanager
-  def _stream(self, fql: StreamToken | Query):
+    if not isinstance(token, StreamToken):
+      err_msg = f"'token' must be a StreamToken but was a {type(token)}."
+      raise TypeError(err_msg)
+
+    return StreamIterator(self, token)
+
+  def _stream(self, token: StreamToken, start_ts: int | None):
     headers = self._headers.copy()
     headers[_Header.Format] = "tagged"
     headers[_Header.Authorization] = self._auth.bearer()
 
-    if not isinstance(fql, StreamToken):
-      token = self.query(fql).data
+    data: Dict[str, Any] = {"token": token.token}
+    if start_ts is not None:
+      data["start_ts"] = start_ts
 
-      if not isinstance(token, StreamToken):
-        err_msg = f"'token' must be a StreamToken but was a {type(token)}."
-        raise TypeError(err_msg)
-    else:
-      token = fql
-
-    data = {"token": token.token}
-
-    response = self._session.stream(
+    return self._session.stream(
         url=self._endpoint + "/stream/1",
         headers=headers,
         data=data,
     )
-
-    with response as stream:
-      yield self._transform(stream)
-
-  def _transform(self, stream):
-    for obj in stream:
-      yield FaunaDecoder.decode(obj)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -621,9 +615,9 @@ class StreamIterator:
   def __init__(self, client, fql):
     self.client = client
     self.fql = fql
-    self.ctx = self.client._stream(self.fql)
+    self.ctx = self.client._stream(self.fql, None)
     self.stream = None
-    self.retries = 0
+    self.last_ts = 0
 
   def __enter__(self):
     self.stream = self.ctx.__enter__()
@@ -639,12 +633,16 @@ class StreamIterator:
   def __next__(self):
     try:
       if self.stream is not None:
-        return next(self.stream)
+        event: Any = FaunaDecoder.decode(next(self.stream))
+        self.last_ts = event["ts"]
+        return event
+
+      raise StopIteration
     except NetworkError as e:
       return self._retry()
 
   def _retry(self):
-    self.ctx = self.client._stream(self.fql)
+    self.ctx = self.client._stream(self.fql, self.last_ts)
     self.stream = self.ctx.__enter__()
     return self.__next__()
 

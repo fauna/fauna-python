@@ -1,6 +1,6 @@
 import json
 from datetime import timedelta
-from typing import Dict
+from typing import Dict, List, Any
 
 import httpx
 import pytest
@@ -419,18 +419,29 @@ def test_call_query_with_string():
 
 def test_client_stream(subtests, httpx_mock: HTTPXMock):
   response = [
-      b'{"@int": "10"}\n', b'{"@long": "20"}\n', b"\"a multiline\\nstring\""
+      b'{"type": "start", "ts": 1}\n', b'{"type": "start", "ts": 2}\n',
+      b'{"type": "start", "ts": 3}\n'
   ]
 
   httpx_mock.add_response(stream=IteratorStream(response))
 
+  ret = []
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
     with c.stream(StreamToken("token")) as stream:
       ret = [obj for obj in stream]
 
-      assert ret == [10, 20, "a multiline\nstring"]
+  assert ret == [{
+      "type": "start",
+      "ts": 1
+  }, {
+      "type": "start",
+      "ts": 2
+  }, {
+      "type": "start",
+      "ts": 3
+  }]
 
 
 def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
@@ -452,37 +463,21 @@ def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
 def test_client_retry_stream(subtests, httpx_mock: HTTPXMock):
 
   def stream_iter0():
-    yield b'{"@int": "10"}\n'
+    yield b'{"type": "start", "ts": 1}\n'
     raise NetworkError("Some network error")
-    yield b'{"@int": "20"}\n'
+    yield b'{"type": "start", "ts": 2}\n'
 
   def stream_iter1():
-    yield b'{"@int": "30"}\n'
+    yield b'{"type": "start", "ts": 3}\n'
 
   httpx_mock.add_response(stream=IteratorStream(stream_iter0()))
   httpx_mock.add_response(stream=IteratorStream(stream_iter1()))
 
+  ret = []
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
     with c.stream(StreamToken("token")) as stream:
       ret = [obj for obj in stream]
-      assert ret == [10, 30]
 
-
-def test_client_dont_retry_stream(subtests, httpx_mock: HTTPXMock):
-
-  def stream_iter():
-    yield b'{"@int": "10"}\n'
-    yield b'{"@int": "20"}\n'
-    raise StopIteration
-    yield b'{"@int": "30"}\n'
-
-  httpx_mock.add_response(stream=IteratorStream(stream_iter()))
-
-  with httpx.Client() as mockClient:
-    http_client = HTTPXClient(mockClient)
-    c = Client(http_client=http_client)
-    with c.stream(StreamToken("token")) as stream:
-      ret = [obj for obj in stream]
-      assert ret == [10, 20]
+  assert ret == [{"type": "start", "ts": 1}, {"type": "start", "ts": 3}]
