@@ -1,6 +1,6 @@
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, Mapping, Optional, List
+from typing import Any, Dict, Iterator, Mapping, Optional, List, Union
 from contextlib import contextmanager
 
 import fauna
@@ -378,7 +378,7 @@ class Client:
           schema_version=schema_version,
       )
 
-  def stream(self, fql: StreamToken | Query) -> "StreamIterator":
+  def stream(self, fql: Union[StreamToken, Query]) -> "StreamIterator":
     if isinstance(fql, Query):
       token = self.query(fql).data
     else:
@@ -390,7 +390,7 @@ class Client:
 
     return StreamIterator(self, token)
 
-  def _stream(self, token: StreamToken, start_ts: int | None):
+  def _stream(self, token: StreamToken, start_ts: Optional[int]):
     headers = self._headers.copy()
     headers[_Header.Format] = "tagged"
     headers[_Header.Authorization] = self._auth.bearer()
