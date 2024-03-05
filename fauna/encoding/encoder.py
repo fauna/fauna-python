@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import Any, Optional, Set
+from typing import Any, Optional, List
 
 from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, NullDocument
 from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
@@ -152,9 +152,9 @@ class FaunaEncoder:
     return {"fql": [FaunaEncoder.from_fragment(f) for f in obj.fragments]}
 
   @staticmethod
-  def _encode(o: Any, _markers: Optional[Set] = None):
+  def _encode(o: Any, _markers: Optional[List] = None):
     if _markers is None:
-      _markers = set()
+      _markers = []
 
     if isinstance(o, str):
       return FaunaEncoder.from_str(o)
@@ -200,8 +200,10 @@ class FaunaEncoder:
     if _id in markers:
       raise ValueError("Circular reference detected")
 
-    markers.add(id(lst))
-    return [FaunaEncoder._encode(elem, markers) for elem in lst]
+    markers.append(id(lst))
+    res = [FaunaEncoder._encode(elem, markers) for elem in lst]
+    markers.pop()
+    return res
 
   @staticmethod
   def _encode_dict(dct, markers):
@@ -209,12 +211,16 @@ class FaunaEncoder:
     if _id in markers:
       raise ValueError("Circular reference detected")
 
-    markers.add(id(dct))
+    markers.append(id(dct))
     if any(i in _RESERVED_TAGS for i in dct.keys()):
-      return {
+      res = {
           "@object": {
               k: FaunaEncoder._encode(v, markers) for k, v in dct.items()
           }
       }
+      markers.pop()
+      return res
     else:
-      return {k: FaunaEncoder._encode(v, markers) for k, v in dct.items()}
+      res = {k: FaunaEncoder._encode(v, markers) for k, v in dct.items()}
+      markers.pop()
+      return res

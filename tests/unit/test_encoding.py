@@ -396,6 +396,27 @@ def test_encode_with_circular_references(subtests):
       FaunaEncoder.encode(lst)
 
 
+def test_encode_list_peers_without_circular_ref_error():
+  myList = []
+  myDict = {"value": "test", "list1": myList, "list2": myList}
+  documents = [myDict]
+  query = fql("${x}", x=documents)
+
+  expected = {'fql': [{'value': [{'list1': [], 'list2': [], 'value': 'test'}]}]}
+  encoded = FaunaEncoder.encode(query)
+  assert encoded == expected
+
+
+def test_encode_dict_peers_without_circular_ref_error():
+  myDict = {"value": "test"}
+  documents = [myDict, myDict]
+  query = fql("${x}", x=documents)
+
+  expected = {'fql': [{'value': [{'value': 'test'}, {'value': 'test'}]}]}
+  encoded = FaunaEncoder.encode(query)
+  assert encoded == expected
+
+
 def test_encode_int_conflicts(subtests):
 
   with subtests.test(msg="@int conflict with int type"):
