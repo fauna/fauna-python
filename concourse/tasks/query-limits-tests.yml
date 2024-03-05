@@ -12,7 +12,6 @@ params:
   FAUNA_ENDPOINT: http://fauna-limits:8443
   QUERY_LIMITS_DB:
   QUERY_LIMITS_COLL:
-  QUERY_LIMITS_PAGE_SIZE:
 
 inputs:
   - name: fauna-python-repository
