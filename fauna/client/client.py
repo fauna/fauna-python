@@ -618,6 +618,7 @@ class StreamIterator:
     self.ctx = self.client._stream(self.fql, None)
     self.stream = None
     self.last_ts = 0
+    self.error = False
 
   def __enter__(self):
     self.stream = self.ctx.__enter__()
@@ -632,9 +633,10 @@ class StreamIterator:
 
   def __next__(self):
     try:
-      if self.stream is not None:
+      if not self.error and self.stream is not None:
         event: Any = FaunaDecoder.decode(next(self.stream))
         self.last_ts = event["ts"]
+        self.error = event["type"] == "error"
         return event
 
       raise StopIteration

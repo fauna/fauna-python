@@ -481,3 +481,22 @@ def test_client_retry_stream(subtests, httpx_mock: HTTPXMock):
       ret = [obj for obj in stream]
 
   assert ret == [{"type": "start", "ts": 1}, {"type": "start", "ts": 3}]
+
+
+def test_client_close_stream_on_error(subtests, httpx_mock: HTTPXMock):
+
+  def stream_iter():
+    yield b'{"type": "start", "ts": 1}\n'
+    yield b'{"type": "error", "ts": 2}\n'
+    yield b'{"type": "start", "ts": 3}\n'
+
+  httpx_mock.add_response(stream=IteratorStream(stream_iter()))
+
+  ret = []
+  with httpx.Client() as mockClient:
+    http_client = HTTPXClient(mockClient)
+    c = Client(http_client=http_client)
+    with c.stream(StreamToken("token")) as stream:
+      ret = [obj for obj in stream]
+
+  assert ret == [{"type": "start", "ts": 1}, {"type": "error", "ts": 2}]
