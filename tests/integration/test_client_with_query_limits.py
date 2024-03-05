@@ -10,7 +10,8 @@ from fauna.encoding import QuerySuccess
 
 def query_collection(client: Client) -> QuerySuccess:
   coll_name = os.environ.get("QUERY_LIMITS_COLL") or ""
-  return client.query(fql("${coll}.all().paginate(50)", coll=fql(coll_name)))
+  page_size = os.environ.get("QUERY_LIMITS_PAGE_SIZE") or "10"
+  return client.query(fql("${coll}.all().paginate(${page})", coll=fql(coll_name), page=int(page_size)))
 
 
 @pytest.mark.skipif(
