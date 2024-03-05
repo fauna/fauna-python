@@ -6,11 +6,16 @@ import pytest
 from fauna import fql
 from fauna.client import Client
 from fauna.encoding import QuerySuccess
+from fauna.errors.errors import ThrottlingError
 
 
 def query_collection(client: Client) -> QuerySuccess:
   coll_name = os.environ.get("QUERY_LIMITS_COLL") or ""
-  return client.query(fql("${coll}.all().paginate(50)", coll=fql(coll_name)))
+  try:
+    return client.query(fql("${coll}.all().paginate(50)", coll=fql(coll_name)))
+  # Ignore ThrottlingErrors - just means retries were exhausted
+  except ThrottlingError:
+    return None
 
 
 @pytest.mark.skipif(
@@ -36,8 +41,9 @@ if (Database.byName(${db}).exists()) {
   with ThreadPool() as pool:
     results = pool.map(query_collection, clients)
 
+    # Expect at least one client to have succeeded on retry
     for result in results:
-      if result.stats.attempts > 1:
+      if result is not None and result.stats.attempts > 1:
         throttled = True
 
   assert throttled == True
