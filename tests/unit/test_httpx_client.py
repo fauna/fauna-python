@@ -37,7 +37,7 @@ def test_httx_client_close_stream(subtests, httpx_mock: HTTPXMock):
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     with http_client.stream("http://localhost:8443", {}, {}) as stream:
-      next(stream) == expected[0]
+      assert next(stream) == expected[0]
       stream.close()
 
       with pytest.raises(StopIteration):

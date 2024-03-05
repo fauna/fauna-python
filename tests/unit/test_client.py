@@ -442,7 +442,7 @@ def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
     with c.stream(StreamToken("token")) as stream:
-      next(stream) == 10
+      assert next(stream) == 10
       stream.close()
 
       with pytest.raises(StopIteration):

@@ -1,4 +1,5 @@
 import abc
+import contextlib
 
 from typing import Iterator, Mapping, Any
 from dataclasses import dataclass
@@ -62,6 +63,7 @@ class HTTPClient(abc.ABC):
     pass
 
   @abc.abstractmethod
+  @contextlib.contextmanager
   def stream(
       self,
       url: str,

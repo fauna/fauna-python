@@ -378,11 +378,11 @@ class Client:
           schema_version=schema_version,
       )
 
-  def stream(self, fql: StreamToken | Query) -> Iterator[Any]:
-    return RetryStreamIter(self, fql)
+  def stream(self, fql: StreamToken | Query) -> "StreamIterator":
+    return StreamIterator(self, fql)
 
   @contextmanager
-  def _stream(self, fql: StreamToken | Query) -> Iterator[Any]:
+  def _stream(self, fql: StreamToken | Query):
     headers = self._headers.copy()
     headers[_Header.Format] = "tagged"
     headers[_Header.Authorization] = self._auth.bearer()
@@ -615,7 +615,7 @@ class Client:
     self._endpoint = endpoint
 
 
-class RetryStreamIter:
+class StreamIterator:
   """A class that mix a ContextManager and an Iterator so we can detected retryable errors."""
 
   def __init__(self, client, fql):
@@ -638,7 +638,8 @@ class RetryStreamIter:
 
   def __next__(self):
     try:
-      return next(self.stream)
+      if self.stream is not None:
+        return next(self.stream)
     except NetworkError as e:
       return self._retry()
 
@@ -648,7 +649,8 @@ class RetryStreamIter:
     return self.__next__()
 
   def close(self):
-    self.stream.close()
+    if self.stream is not None:
+      self.stream.close()
 
 
 class QueryIterator:
