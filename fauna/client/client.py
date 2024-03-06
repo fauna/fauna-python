@@ -388,22 +388,12 @@ class Client:
       err_msg = f"'token' must be a StreamToken but was a {type(token)}."
       raise TypeError(err_msg)
 
-    return StreamIterator(self, token)
-
-  def _stream(self, token: StreamToken, start_ts: Optional[int]):
     headers = self._headers.copy()
     headers[_Header.Format] = "tagged"
     headers[_Header.Authorization] = self._auth.bearer()
 
-    data: Dict[str, Any] = {"token": token.token}
-    if start_ts is not None:
-      data["start_ts"] = start_ts
-
-    return self._session.stream(
-        url=self._endpoint + "/stream/1",
-        headers=headers,
-        data=data,
-    )
+    return StreamIterator(self._session, headers, self._endpoint + "/stream/1",
+                          token)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -612,13 +602,15 @@ class Client:
 class StreamIterator:
   """A class that mix a ContextManager and an Iterator so we can detected retryable errors."""
 
-  def __init__(self, client, fql):
-    self.client = client
-    self.fql = fql
-    self.ctx = self.client._stream(self.fql, None)
+  def __init__(self, http_client, headers, endpoint, token):
+    self.http_client = http_client
+    self.headers = headers
+    self.endpoint = endpoint
+    self.token = token
     self.stream = None
-    self.last_ts = 0
+    self.last_ts = None
     self.error = False
+    self.ctx = self._create_stream()
 
   def __enter__(self):
     self.stream = self.ctx.__enter__()
@@ -643,8 +635,19 @@ class StreamIterator:
     except NetworkError as e:
       return self._retry()
 
+  def _create_stream(self):
+    data: Dict[str, Any] = {"token": self.token.token}
+    if self.last_ts is not None:
+      data["start_ts"] = self.last_ts
+
+    return self.http_client.stream(
+        url=self.endpoint,
+        headers=self.headers,
+        data=data,
+    )
+
   def _retry(self):
-    self.ctx = self.client._stream(self.fql, self.last_ts)
+    self.ctx = self._create_stream()
     self.stream = self.ctx.__enter__()
     return self.__next__()
 
