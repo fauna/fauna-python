@@ -393,7 +393,7 @@ class Client:
     headers[_Header.Authorization] = self._auth.bearer()
 
     return StreamIterator(self._session, headers, self._endpoint + "/stream/1",
-                          token)
+                          self._max_attempts, self._max_backoff, token)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -602,10 +602,14 @@ class Client:
 class StreamIterator:
   """A class that mixes a ContextManager and an Iterator so we can detected retryable errors."""
 
-  def __init__(self, http_client, headers, endpoint, token):
+  def __init__(self, http_client: HTTPClient, headers: Dict[str,
+                                                            str], endpoint: str,
+               max_attempts: int, max_backoff: int, token: StreamToken):
     self.http_client = http_client
     self.headers = headers
     self.endpoint = endpoint
+    self.max_attempts = max_attempts
+    self.max_backoff = max_backoff
     self.token = token
     self.stream = None
     self.last_ts = None
@@ -624,6 +628,11 @@ class StreamIterator:
     return self
 
   def __next__(self):
+    retryable = Retryable(self.max_attempts, self.max_backoff,
+                          self._next_element)
+    return retryable.run().response
+
+  def _next_element(self):
     try:
       if not self.error and self.stream is not None:
         event: Any = FaunaDecoder.decode(next(self.stream))
@@ -633,7 +642,9 @@ class StreamIterator:
 
       raise StopIteration
     except NetworkError as e:
-      return self._retry()
+      self.ctx = self._create_stream()
+      self.stream = self.ctx.__enter__()
+      raise RetryableFaunaException from e
 
   def _create_stream(self):
     data: Dict[str, Any] = {"token": self.token.token}
@@ -645,11 +656,6 @@ class StreamIterator:
         headers=self.headers,
         data=data,
     )
-
-  def _retry(self):
-    self.ctx = self._create_stream()
-    self.stream = self.ctx.__enter__()
-    return self.__next__()
 
   def close(self):
     if self.stream is not None:

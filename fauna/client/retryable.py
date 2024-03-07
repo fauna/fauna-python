@@ -62,7 +62,6 @@ class Retryable:
 
         Returns the number of attempts and the response
         """
-    err: Optional[RetryableFaunaException] = None
     attempt = 0
     while True:
       sleep_time = 0.0 if attempt == 0 else self._strategy.wait()
