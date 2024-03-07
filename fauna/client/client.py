@@ -385,7 +385,7 @@ class Client:
       token = fql
 
     if not isinstance(token, StreamToken):
-      err_msg = f"'token' must be a StreamToken but was a {type(token)}."
+      err_msg = f"'fql' must be a StreamToken, or a Query that returns a StreamToken but was a {type(token)}."
       raise TypeError(err_msg)
 
     headers = self._headers.copy()
@@ -600,7 +600,7 @@ class Client:
 
 
 class StreamIterator:
-  """A class that mix a ContextManager and an Iterator so we can detected retryable errors."""
+  """A class that mixes a ContextManager and an Iterator so we can detected retryable errors."""
 
   def __init__(self, http_client, headers, endpoint, token):
     self.http_client = http_client
