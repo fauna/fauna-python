@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 import httpx
 
-from fauna.errors import ClientError, NetworkError
+from fauna.errors import ClientError, NetworkError, StreamTimeout
 from fauna.http.http_client import HTTPResponse, HTTPClient
 
 
@@ -100,8 +100,10 @@ class HTTPXClient(HTTPClient):
       url: str,
       headers: Mapping[str, str],
       data: Mapping[str, Any],
+      timeout: Optional[float] = None,
   ) -> Iterator[Any]:
-    stream = self._c.stream("POST", url=url, headers=headers, json=data)
+    stream = self._c.stream(
+        "POST", url=url, headers=headers, json=data, timeout=timeout)
     with stream as response:
       yield self._transform(response)
 
@@ -111,6 +113,8 @@ class HTTPXClient(HTTPClient):
         yield json.loads(line)
     except httpx.StreamError as e:
       raise StopIteration
+    except httpx.ReadTimeout as e:
+      raise StreamTimeout("Stream timeout") from e
     except (httpx.HTTPError, httpx.InvalidURL) as e:
       raise NetworkError("Exception re-raised from HTTP request") from e
 

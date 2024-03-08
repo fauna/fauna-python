@@ -19,6 +19,11 @@ class ClientError(FaunaException):
   pass
 
 
+class StreamTimeout(FaunaException):
+  """An error representing Straming timeouts."""
+  pass
+
+
 class NetworkError(FaunaException):
   """An error representing a failure due to the network.
     This indicates Fauna was never reached."""

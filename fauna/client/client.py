@@ -8,7 +8,7 @@ from fauna.client.retryable import Retryable
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
     QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError, RetryableFaunaException, \
-    NetworkError
+    NetworkError, StreamTimeout
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
@@ -49,6 +49,19 @@ class QueryOptions:
   traceparent: Optional[str] = None
   typecheck: Optional[bool] = None
   additional_headers: Optional[Dict[str, str]] = None
+
+
+@dataclass
+class StreamOptions:
+  """
+    A dataclass representing options available for a stream.
+
+    * idle_timeout - Controls the maximum amount of time the driver will wait on stream idling.
+    * retry_on_timeout - If true, streaming is reconnected on timeouts.
+    """
+
+  idle_timeout: Optional[timedelta] = None
+  retry_on_timeout: bool = True
 
 
 class Client:
@@ -278,7 +291,7 @@ class Client:
     except Exception as e:
       raise ClientError("Failed to encode Query") from e
 
-    retryable = Retryable(
+    retryable = Retryable[QuerySuccess](
         self._max_attempts,
         self._max_backoff,
         self._query,
@@ -378,7 +391,11 @@ class Client:
           schema_version=schema_version,
       )
 
-  def stream(self, fql: Union[StreamToken, Query]) -> "StreamIterator":
+  def stream(
+      self,
+      fql: Union[StreamToken, Query],
+      opts: StreamOptions = StreamOptions()
+  ) -> "StreamIterator":
     if isinstance(fql, Query):
       token = self.query(fql).data
     else:
@@ -393,7 +410,7 @@ class Client:
     headers[_Header.Authorization] = self._auth.bearer()
 
     return StreamIterator(self._session, headers, self._endpoint + "/stream/1",
-                          self._max_attempts, self._max_backoff, token)
+                          self._max_attempts, self._max_backoff, opts, token)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -602,14 +619,15 @@ class Client:
 class StreamIterator:
   """A class that mixes a ContextManager and an Iterator so we can detected retryable errors."""
 
-  def __init__(self, http_client: HTTPClient, headers: Dict[str,
-                                                            str], endpoint: str,
-               max_attempts: int, max_backoff: int, token: StreamToken):
+  def __init__(self, http_client: HTTPClient, headers: Dict[str, str],
+               endpoint: str, max_attempts: int, max_backoff: int,
+               opts: StreamOptions, token: StreamToken):
     self.http_client = http_client
     self.headers = headers
     self.endpoint = endpoint
     self.max_attempts = max_attempts
     self.max_backoff = max_backoff
+    self.opts = opts
     self.token = token
     self.stream = None
     self.last_ts = None
@@ -628,8 +646,8 @@ class StreamIterator:
     return self
 
   def __next__(self):
-    retryable = Retryable(self.max_attempts, self.max_backoff,
-                          self._next_element)
+    retryable = Retryable[Any](self.max_attempts, self.max_backoff,
+                               self._next_element)
     return retryable.run().response
 
   def _next_element(self):
@@ -641,12 +659,27 @@ class StreamIterator:
         return event
 
       raise StopIteration
+    except StreamTimeout as e:
+      if self.opts.retry_on_timeout:
+        self._retry_stream(e)
+      raise StopIteration
+
     except NetworkError as e:
-      self.ctx = self._create_stream()
-      self.stream = self.ctx.__enter__()
-      raise RetryableFaunaException from e
+      self._retry_stream(e)
+
+  def _retry_stream(self, e):
+    if self.stream is not None:
+      self.stream.close()
+    self.ctx = self._create_stream()
+    self.stream = self.ctx.__enter__()
+    raise RetryableFaunaException from e
 
   def _create_stream(self):
+    if self.opts.idle_timeout:
+      timeout = self.opts.idle_timeout.total_seconds()
+    else:
+      timeout = None
+
     data: Dict[str, Any] = {"token": self.token.token}
     if self.last_ts is not None:
       data["start_ts"] = self.last_ts
@@ -655,6 +688,7 @@ class StreamIterator:
         url=self.endpoint,
         headers=self.headers,
         data=data,
+        timeout=timeout,
     )
 
   def close(self):
