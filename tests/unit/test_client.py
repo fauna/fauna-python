@@ -480,7 +480,7 @@ def test_client_close_stream_on_error(subtests, httpx_mock: HTTPXMock):
   def stream_iter():
     yield b'{"type": "start", "ts": 1}\n'
     yield b'{"type": "add", "ts": 2}\n'
-    yield b'{"type": "error", "ts": 3}\n'
+    yield b'{"type": "error", "ts": 3, "message": "message", "code": "code"}\n'
     yield b'{"type": "start", "ts": 4}\n'
 
   httpx_mock.add_response(stream=IteratorStream(stream_iter()))

@@ -666,9 +666,9 @@ class StreamIterator:
       if self.stream is not None:
         event: Any = FaunaDecoder.decode(next(self.stream))
         self.last_ts = event["ts"]
+
         if event["type"] == "error":
-          # todo: parse error
-          raise StreamError
+          raise StreamError(event["message"], event["code"], event.get("stats"))
 
         if event["type"] == "start":
           return self._next_element()

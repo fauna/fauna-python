@@ -21,7 +21,11 @@ class ClientError(FaunaException):
 
 class StreamError(FaunaException):
   """An error representing Stream failure."""
-  pass
+
+  def __init__(self, message, code, stats):
+    self.message = message
+    self.code = code
+    self.stats = stats
 
 
 class NetworkError(FaunaException):
