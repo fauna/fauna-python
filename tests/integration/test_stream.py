@@ -27,7 +27,7 @@ def test_stream(client, a_collection):
     stream = client.stream(fql("${coll}.all().toStream()", coll=a_collection))
 
     with stream as iter:
-      events[0] = [evt["type"] for evt in take(iter, 4)]
+      events[0] = [evt["type"] for evt in take(iter, 3)]
 
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
@@ -37,7 +37,7 @@ def test_stream(client, a_collection):
   client.query(fql("${coll}.create({}).id", coll=a_collection))
 
   stream_thread.join()
-  assert events[0] == ["start", "add", "remove", "add"]
+  assert events[0] == ["add", "remove", "add"]
 
 
 def test_close_method(client, a_collection):
@@ -62,7 +62,7 @@ def test_close_method(client, a_collection):
   client.query(fql("${coll}.create({}).id", coll=a_collection)).data
 
   stream_thread.join()
-  assert events == ["start", "add"]
+  assert events == ["add", "add"]
 
 
 def test_max_retries(a_collection):

@@ -669,6 +669,10 @@ class StreamIterator:
         if event["type"] == "error":
           # todo: parse error
           raise StreamError
+
+        if event["type"] == "start":
+          return self._next_element()
+
         return event
 
       raise StopIteration
