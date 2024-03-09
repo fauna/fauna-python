@@ -2,24 +2,32 @@ import threading
 from datetime import timedelta
 
 import pytest
+import httpx
+import fauna
 
 from fauna import fql
-from fauna.client import StreamOptions
+from fauna.client import Client, StreamOptions
+from fauna.http.httpx_client import HTTPXClient
+from fauna.errors import NetworkError, RetryableFaunaException
+
+
+def take(stream, count):
+  i = iter(stream)
+
+  while count > 0:
+    count -= 1
+    yield next(i)
 
 
 def test_stream(client, a_collection):
 
-  opts = StreamOptions(
-      idle_timeout=timedelta(seconds=1), retry_on_timeout=False)
+  events = [[]]
 
   def thread_fn():
-    stream = client.stream(
-        fql("${coll}.all().toStream()", coll=a_collection), opts)
+    stream = client.stream(fql("${coll}.all().toStream()", coll=a_collection))
 
     with stream as iter:
-      events = [evt["type"] for evt in iter]
-
-    assert events == ["start", "add", "remove", "add"]
+      events[0] = [evt["type"] for evt in take(iter, 4)]
 
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
@@ -29,26 +37,58 @@ def test_stream(client, a_collection):
   client.query(fql("${coll}.create({}).id", coll=a_collection))
 
   stream_thread.join()
+  assert events[0] == ["start", "add", "remove", "add"]
 
 
-def test_retry_on_timeout(client, a_collection):
+def test_close_method(client, a_collection):
 
-  opts = StreamOptions(
-      idle_timeout=timedelta(seconds=0.1), retry_on_timeout=True)
+  events = []
 
   def thread_fn():
-    stream = client.stream(
-        fql("${coll}.all().toStream()", coll=a_collection), opts)
+    stream = client.stream(fql("${coll}.all().toStream()", coll=a_collection))
 
-    events = []
     with stream as iter:
       for evt in iter:
         events.append(evt["type"])
-        if len(events) == 4:
-          iter.close()
 
-    assert events == ["start", "start", "start", "start"]
+        # close after 2 events
+        if len(events) == 2:
+          iter.close()
 
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
+
+  client.query(fql("${coll}.create({}).id", coll=a_collection)).data
+  client.query(fql("${coll}.create({}).id", coll=a_collection)).data
+
   stream_thread.join()
+  assert events == ["start", "add"]
+
+
+def test_max_retries(a_collection):
+  httpx_client = httpx.Client(http1=False, http2=True)
+  client = Client(
+      http_client=HTTPXClient(httpx_client), max_attempts=3, max_backoff=1)
+
+  count = [0]
+
+  def stream_func(*args, **kwargs):
+    count[0] += 1
+    raise NetworkError('foo')
+
+  httpx_client.stream = stream_func
+
+  count[0] = 0
+  with pytest.raises(RetryableFaunaException):
+    with client.stream(fql("${coll}.all().toStream()",
+                           coll=a_collection)) as iter:
+      events = [evt["type"] for evt in iter]
+  assert count[0] == 3
+
+  count[0] = 0
+  with pytest.raises(RetryableFaunaException):
+    opts = StreamOptions(max_attempts=5)
+    with client.stream(
+        fql("${coll}.all().toStream()", coll=a_collection), opts) as iter:
+      events = [evt["type"] for evt in iter]
+  assert count[0] == 5

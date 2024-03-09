@@ -10,7 +10,7 @@ from pytest_httpx import HTTPXMock, IteratorStream
 import fauna
 from fauna import fql
 from fauna.client import Client, Header, QueryOptions, Endpoints
-from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError, NetworkError
+from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError, NetworkError, StreamError
 from fauna.query.models import StreamToken
 from fauna.http import HTTPXClient
 
@@ -445,7 +445,7 @@ def test_client_stream(subtests, httpx_mock: HTTPXMock):
 
 
 def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
-  response = [b'{"@int": "10"}\n', b'{"@long": "20"}\n']
+  response = [b'{"type": "start", "ts": 1}\n', b'{"type": "error", "ts": 2}\n']
 
   httpx_mock.add_response(stream=IteratorStream(response))
 
@@ -453,7 +453,7 @@ def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
     with c.stream(StreamToken("token")) as stream:
-      assert next(stream) == 10
+      assert next(stream) == {"type": "start", "ts": 1}
       stream.close()
 
       with pytest.raises(StopIteration):
@@ -493,10 +493,13 @@ def test_client_close_stream_on_error(subtests, httpx_mock: HTTPXMock):
   httpx_mock.add_response(stream=IteratorStream(stream_iter()))
 
   ret = []
-  with httpx.Client() as mockClient:
-    http_client = HTTPXClient(mockClient)
-    c = Client(http_client=http_client)
-    with c.stream(StreamToken("token")) as stream:
-      ret = [obj for obj in stream]
 
-  assert ret == [{"type": "start", "ts": 1}, {"type": "error", "ts": 2}]
+  with pytest.raises(StreamError):
+    with httpx.Client() as mockClient:
+      http_client = HTTPXClient(mockClient)
+      c = Client(http_client=http_client)
+      with c.stream(StreamToken("token")) as stream:
+        for obj in stream:
+          ret.append(obj)
+
+  assert ret == [{"type": "start", "ts": 1}]

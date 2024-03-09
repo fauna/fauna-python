@@ -8,7 +8,7 @@ from fauna.client.retryable import Retryable
 from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
     ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
     QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError, RetryableFaunaException, \
-    NetworkError, StreamTimeout
+    NetworkError, StreamError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
@@ -56,12 +56,10 @@ class StreamOptions:
   """
     A dataclass representing options available for a stream.
 
-    * idle_timeout - Controls the maximum amount of time the driver will wait on stream idling.
-    * retry_on_timeout - If true, streaming is reconnected on timeouts.
+    * max_attempts - The maximum number of times to attempt a stream query when a retryable exception is thrown.
     """
 
-  idle_timeout: Optional[timedelta] = None
-  retry_on_timeout: bool = True
+  max_attempts: Optional[int] = None
 
 
 class Client:
@@ -635,61 +633,69 @@ class StreamIterator:
     self.ctx = self._create_stream()
 
   def __enter__(self):
-    self.stream = self.ctx.__enter__()
     return self
 
   def __exit__(self, exc_type, exc_value, exc_traceback):
+    if self.stream is not None:
+      self.stream.close()
+
     self.ctx.__exit__(exc_type, exc_value, exc_traceback)
-    return True
+    return False
 
   def __iter__(self):
     return self
 
   def __next__(self):
-    retryable = Retryable[Any](self.max_attempts, self.max_backoff,
+    if self.opts.max_attempts is not None:
+      max_attempts = self.opts.max_attempts
+    else:
+      max_attempts = self.max_attempts
+
+    retryable = Retryable[Any](max_attempts, self.max_backoff,
                                self._next_element)
     return retryable.run().response
 
   def _next_element(self):
     try:
-      if not self.error and self.stream is not None:
+      if self.stream is None:
+        try:
+          self.stream = self.ctx.__enter__()
+        except Exception as ex:
+          self._retry_stream(ex)
+
+      if self.stream is not None:
         event: Any = FaunaDecoder.decode(next(self.stream))
         self.last_ts = event["ts"]
-        self.error = event["type"] == "error"
+        if event["type"] == "error":
+          # todo: parse error
+          raise StreamError
         return event
 
       raise StopIteration
-    except StreamTimeout as e:
-      if self.opts.retry_on_timeout:
-        self._retry_stream(e)
-      raise StopIteration
-
     except NetworkError as e:
       self._retry_stream(e)
 
   def _retry_stream(self, e):
     if self.stream is not None:
       self.stream.close()
-    self.ctx = self._create_stream()
-    self.stream = self.ctx.__enter__()
+
+    self.stream = None
+
+    self.ctx.__exit__(None, None, None)
+
+    try:
+      self.ctx = self._create_stream()
+    except Exception as ex:
+      pass
     raise RetryableFaunaException from e
 
   def _create_stream(self):
-    if self.opts.idle_timeout:
-      timeout = self.opts.idle_timeout.total_seconds()
-    else:
-      timeout = None
-
     data: Dict[str, Any] = {"token": self.token.token}
     if self.last_ts is not None:
       data["start_ts"] = self.last_ts
 
     return self.http_client.stream(
-        url=self.endpoint,
-        headers=self.headers,
-        data=data,
-        timeout=timeout,
-    )
+        url=self.endpoint, headers=self.headers, data=data)
 
   def close(self):
     if self.stream is not None:

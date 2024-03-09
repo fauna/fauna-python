@@ -69,7 +69,6 @@ class HTTPClient(abc.ABC):
       url: str,
       headers: Mapping[str, str],
       data: Mapping[str, Any],
-      timeout: Optional[float],
   ) -> Iterator[Any]:
     pass
 

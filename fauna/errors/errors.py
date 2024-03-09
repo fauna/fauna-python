@@ -19,8 +19,8 @@ class ClientError(FaunaException):
   pass
 
 
-class StreamTimeout(FaunaException):
-  """An error representing Straming timeouts."""
+class StreamError(FaunaException):
+  """An error representing Stream failure."""
   pass
 
 

@@ -3,4 +3,4 @@ from .errors import ClientError, FaunaError, NetworkError
 from .errors import ProtocolError, ServiceError
 from .errors import AuthenticationError, AuthorizationError, QueryCheckError, QueryRuntimeError, \
     QueryTimeoutError, ServiceInternalError, ServiceTimeoutError, ThrottlingError, ContendedTransactionError, \
-    InvalidRequestError, AbortError, RetryableFaunaException, StreamTimeout
+    InvalidRequestError, AbortError, RetryableFaunaException, StreamError
