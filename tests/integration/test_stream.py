@@ -1,4 +1,5 @@
 import threading
+import time
 from datetime import timedelta
 
 import pytest
@@ -11,35 +12,37 @@ from fauna.http.httpx_client import HTTPXClient
 from fauna.errors import NetworkError, RetryableFaunaException
 
 
-def take(stream, count):
-  i = iter(stream)
-
-  while count > 0:
-    count -= 1
-    yield next(i)
-
-
 def test_stream(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
   scoped_client.query(fql("Product.create({})"))
 
-  events = [[]]
+  events = []
 
   def thread_fn():
     stream = scoped_client.stream(fql("Product.all().toStream()"))
 
     with stream as iter:
-      events[0] = [evt["type"] for evt in take(iter, 3)]
+      for evt in iter:
+        events.append(evt["type"])
+
+        # close after 3 events
+        if len(events) == 3:
+          iter.close()
 
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
 
+  # adds a delay so the thread can open the stream,
+  # otherwise we could miss some events
+  time.sleep(0.5)
+
   id = scoped_client.query(fql("Product.create({}).id")).data
   scoped_client.query(fql("Product.byId(${id})!.delete()", id=id))
-  scoped_client.query(fql("Product.create({}).id"))
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
 
   stream_thread.join()
-  assert events[0] == ["add", "remove", "add"]
+  assert events == ["add", "remove", "add"]
 
 
 def test_close_method(scoped_client):
@@ -61,8 +64,12 @@ def test_close_method(scoped_client):
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
 
-  scoped_client.query(fql("Product.create({}).id")).data
-  scoped_client.query(fql("Product.create({}).id")).data
+  # adds a delay so the thread can open the stream,
+  # otherwise we could miss some events
+  time.sleep(0.5)
+
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
 
   stream_thread.join()
   assert events == ["add", "add"]
