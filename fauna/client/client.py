@@ -55,9 +55,11 @@ class StreamOptions:
     A dataclass representing options available for a stream.
 
     * max_attempts - The maximum number of times to attempt a stream query when a retryable exception is thrown.
+    * max_backoff - The maximum backoff in seconds for an individual retry
     """
 
   max_attempts: Optional[int] = None
+  max_backoff: Optional[int] = None
 
 
 class Client:
@@ -478,8 +480,12 @@ class StreamIterator:
     else:
       max_attempts = self.max_attempts
 
-    retryable = Retryable[Any](max_attempts, self.max_backoff,
-                               self._next_element)
+    if self.opts.max_backoff is not None:
+      max_backoff = self.opts.max_backoff
+    else:
+      max_backoff = self.max_backoff
+
+    retryable = Retryable[Any](max_attempts, max_backoff, self._next_element)
     return retryable.run().response
 
   def _next_element(self):
