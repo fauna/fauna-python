@@ -5,10 +5,8 @@ from contextlib import contextmanager
 
 import fauna
 from fauna.client.retryable import Retryable
-from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
-    ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
-    QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError, RetryableFaunaException, \
-    NetworkError, StreamError
+from fauna.errors import FaunaError, ClientError, ProtocolError, \
+    RetryableFaunaException, NetworkError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
@@ -364,7 +362,7 @@ class Client:
       dec: Any = FaunaDecoder.decode(response_json)
 
       if status_code > 399:
-        self._handle_error(dec, status_code)
+        FaunaError.parse_error_and_throw(dec, status_code)
 
       if "txn_ts" in dec:
         self.set_last_txn_ts(int(response_json["txn_ts"]))
@@ -433,177 +431,6 @@ class Client:
           f"Response is in an unknown format: \n{response_json}",
       )
 
-  def _handle_error(self, body: Any, status_code: int):
-    err = body["error"]
-    code = err["code"]
-    message = err["message"]
-
-    query_tags = QueryTags.decode(
-        body["query_tags"]) if "query_tags" in body else None
-    stats = QueryStats(body["stats"]) if "stats" in body else None
-    txn_ts = body["txn_ts"] if "txn_ts" in body else None
-    schema_version = body["schema_version"] if "schema_version" in body else None
-    summary = body["summary"] if "summary" in body else None
-
-    constraint_failures: Optional[List[ConstraintFailure]] = None
-    if "constraint_failures" in err:
-      constraint_failures = [
-          ConstraintFailure(
-              message=cf["message"],
-              name=cf["name"] if "name" in cf else None,
-              paths=cf["paths"] if "paths" in cf else None,
-          ) for cf in err["constraint_failures"]
-      ]
-
-    if status_code == 400:
-      if code == "invalid_query":
-        raise QueryCheckError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-      elif code == "invalid_request":
-        raise InvalidRequestError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-      elif code == "abort":
-        abort = err["abort"] if "abort" in err else None
-        raise AbortError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            abort=abort,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-
-      else:
-        raise QueryRuntimeError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-    elif status_code == 401:
-      raise AuthenticationError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 403:
-      raise AuthorizationError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 409:
-      raise ContendedTransactionError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 429:
-      raise ThrottlingError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 440:
-      raise QueryTimeoutError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 500:
-      raise ServiceInternalError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 503:
-      raise ServiceTimeoutError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    else:
-      raise ServiceError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-
   def _set_endpoint(self, endpoint):
     if endpoint is None:
       endpoint = _Environment.EnvFaunaEndpoint()
@@ -665,10 +492,11 @@ class StreamIterator:
 
       if self.stream is not None:
         event: Any = FaunaDecoder.decode(next(self.stream))
-        self.last_ts = event["ts"]
 
         if event["type"] == "error":
-          raise StreamError(event["message"], event["code"], event.get("stats"))
+          FaunaError.parse_error_and_throw(event, 400)
+
+        self.last_ts = event["txn_ts"]
 
         if event["type"] == "start":
           return self._next_element()

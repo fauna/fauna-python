@@ -9,7 +9,7 @@ import fauna
 from fauna import fql
 from fauna.client import Client, StreamOptions
 from fauna.http.httpx_client import HTTPXClient
-from fauna.errors import NetworkError, RetryableFaunaException
+from fauna.errors import NetworkError, RetryableFaunaException, QueryRuntimeError
 
 
 def test_stream(scoped_client):
@@ -73,6 +73,32 @@ def test_close_method(scoped_client):
 
   stream_thread.join()
   assert events == ["add", "add"]
+
+
+def test_error_on_stream(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  events = []
+
+  def thread_fn():
+    stream = scoped_client.stream(fql("Product.all().map(.foo / 0).toStream()"))
+
+    with pytest.raises(QueryRuntimeError):
+      with stream as iter:
+        for evt in iter:
+          pass
+
+  stream_thread = threading.Thread(target=thread_fn)
+  stream_thread.start()
+
+  # adds a delay so the thread can open the stream,
+  # otherwise we could miss some events
+  time.sleep(0.5)
+
+  scoped_client.query(fql("Product.create({foo: 10})"))
+  scoped_client.query(fql("Product.create({foo: 10})"))
+
+  stream_thread.join()
 
 
 def test_max_retries(scoped_secret):
