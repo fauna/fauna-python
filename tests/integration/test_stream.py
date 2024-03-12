@@ -19,12 +19,14 @@ def take(stream, count):
     yield next(i)
 
 
-def test_stream(client, a_collection):
+def test_stream(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+  scoped_client.query(fql("Product.create({})"))
 
   events = [[]]
 
   def thread_fn():
-    stream = client.stream(fql("${coll}.all().toStream()", coll=a_collection))
+    stream = scoped_client.stream(fql("Product.all().toStream()"))
 
     with stream as iter:
       events[0] = [evt["type"] for evt in take(iter, 3)]
@@ -32,20 +34,21 @@ def test_stream(client, a_collection):
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
 
-  id = client.query(fql("${coll}.create({}).id", coll=a_collection)).data
-  client.query(fql("${coll}.byId(${id})!.delete()", coll=a_collection, id=id))
-  client.query(fql("${coll}.create({}).id", coll=a_collection))
+  id = scoped_client.query(fql("Product.create({}).id")).data
+  scoped_client.query(fql("Product.byId(${id})!.delete()", id=id))
+  scoped_client.query(fql("Product.create({}).id"))
 
   stream_thread.join()
   assert events[0] == ["add", "remove", "add"]
 
 
-def test_close_method(client, a_collection):
+def test_close_method(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
 
   events = []
 
   def thread_fn():
-    stream = client.stream(fql("${coll}.all().toStream()", coll=a_collection))
+    stream = scoped_client.stream(fql("Product.all().toStream()"))
 
     with stream as iter:
       for evt in iter:
@@ -58,17 +61,23 @@ def test_close_method(client, a_collection):
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
 
-  client.query(fql("${coll}.create({}).id", coll=a_collection)).data
-  client.query(fql("${coll}.create({}).id", coll=a_collection)).data
+  scoped_client.query(fql("Product.create({}).id")).data
+  scoped_client.query(fql("Product.create({}).id")).data
 
   stream_thread.join()
   assert events == ["add", "add"]
 
 
-def test_max_retries(a_collection):
+def test_max_retries(scoped_secret):
+  scoped_client = Client(secret=scoped_secret)
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
   httpx_client = httpx.Client(http1=False, http2=True)
   client = Client(
-      http_client=HTTPXClient(httpx_client), max_attempts=3, max_backoff=1)
+      secret=scoped_secret,
+      http_client=HTTPXClient(httpx_client),
+      max_attempts=3,
+      max_backoff=0)
 
   count = [0]
 
@@ -80,15 +89,13 @@ def test_max_retries(a_collection):
 
   count[0] = 0
   with pytest.raises(RetryableFaunaException):
-    with client.stream(fql("${coll}.all().toStream()",
-                           coll=a_collection)) as iter:
+    with client.stream(fql("Product.all().toStream()")) as iter:
       events = [evt["type"] for evt in iter]
   assert count[0] == 3
 
   count[0] = 0
   with pytest.raises(RetryableFaunaException):
     opts = StreamOptions(max_attempts=5)
-    with client.stream(
-        fql("${coll}.all().toStream()", coll=a_collection), opts) as iter:
+    with client.stream(fql("Product.all().toStream()"), opts) as iter:
       events = [evt["type"] for evt in iter]
   assert count[0] == 5
