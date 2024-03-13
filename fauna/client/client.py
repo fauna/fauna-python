@@ -449,55 +449,54 @@ class StreamIterator:
   def __init__(self, http_client: HTTPClient, headers: Dict[str, str],
                endpoint: str, max_attempts: int, max_backoff: int,
                opts: StreamOptions, token: StreamToken):
-    self.http_client = http_client
-    self.headers = headers
-    self.endpoint = endpoint
-    self.max_attempts = max_attempts
-    self.max_backoff = max_backoff
-    self.opts = opts
-    self.token = token
-    self.stream = None
+    self._http_client = http_client
+    self._headers = headers
+    self._endpoint = endpoint
+    self._max_attempts = max_attempts
+    self._max_backoff = max_backoff
+    self._opts = opts
+    self._token = token
+    self._stream = None
     self.last_ts = None
-    self.error = False
-    self.ctx = self._create_stream()
+    self._ctx = self._create_stream()
 
   def __enter__(self):
     return self
 
   def __exit__(self, exc_type, exc_value, exc_traceback):
-    if self.stream is not None:
-      self.stream.close()
+    if self._stream is not None:
+      self._stream.close()
 
-    self.ctx.__exit__(exc_type, exc_value, exc_traceback)
+    self._ctx.__exit__(exc_type, exc_value, exc_traceback)
     return False
 
   def __iter__(self):
     return self
 
   def __next__(self):
-    if self.opts.max_attempts is not None:
-      max_attempts = self.opts.max_attempts
+    if self._opts.max_attempts is not None:
+      max_attempts = self._opts.max_attempts
     else:
-      max_attempts = self.max_attempts
+      max_attempts = self._max_attempts
 
-    if self.opts.max_backoff is not None:
-      max_backoff = self.opts.max_backoff
+    if self._opts.max_backoff is not None:
+      max_backoff = self._opts.max_backoff
     else:
-      max_backoff = self.max_backoff
+      max_backoff = self._max_backoff
 
     retryable = Retryable[Any](max_attempts, max_backoff, self._next_element)
     return retryable.run().response
 
   def _next_element(self):
     try:
-      if self.stream is None:
+      if self._stream is None:
         try:
-          self.stream = self.ctx.__enter__()
-        except Exception as ex:
-          self._retry_stream(ex)
+          self._stream = self._ctx.__enter__()
+        except Exception:
+          self._retry_stream()
 
-      if self.stream is not None:
-        event: Any = FaunaDecoder.decode(next(self.stream))
+      if self._stream is not None:
+        event: Any = FaunaDecoder.decode(next(self._stream))
 
         if event["type"] == "error":
           FaunaError.parse_error_and_throw(event, 400)
@@ -510,34 +509,32 @@ class StreamIterator:
         return event
 
       raise StopIteration
-    except NetworkError as e:
-      self._retry_stream(e)
+    except NetworkError:
+      self._retry_stream()
 
-  def _retry_stream(self, e):
-    if self.stream is not None:
-      self.stream.close()
+  def _retry_stream(self):
+    if self._stream is not None:
+      self._stream.close()
 
-    self.stream = None
-
-    self.ctx.__exit__(None, None, None)
+    self._stream = None
 
     try:
-      self.ctx = self._create_stream()
-    except Exception as ex:
+      self._ctx = self._create_stream()
+    except Exception:
       pass
-    raise RetryableFaunaException from e
+    raise RetryableFaunaException
 
   def _create_stream(self):
-    data: Dict[str, Any] = {"token": self.token.token}
+    data: Dict[str, Any] = {"token": self._token.token}
     if self.last_ts is not None:
       data["start_ts"] = self.last_ts
 
-    return self.http_client.stream(
-        url=self.endpoint, headers=self.headers, data=data)
+    return self._http_client.stream(
+        url=self._endpoint, headers=self._headers, data=data)
 
   def close(self):
-    if self.stream is not None:
-      self.stream.close()
+    if self._stream is not None:
+      self._stream.close()
 
 
 class QueryIterator:
