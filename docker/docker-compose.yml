@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  db:
+    image: fauna/faunadb:latest
+    ports:
+      - "8443:8443"
+    volumes:
+      - ../docker/feature-flags.json:/etc/feature-flag-periodic.d/feature-flags.json
+  test:
+    image: fauna-python-test:latest
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+  integration-test:
+    image: fauna-python-test:latest
+    volumes:
+      - ..:/fauna-python
+    command:
+      - /bin/bash
+      - -cx
+      - |
+        while ! curl -s --fail -m 1 http://db:8443/ping 2>&1; do sleep 3; done
+        pytest -v --cov=fauna --cov-context=test tests/integration
+    environment:
+      - FAUNA_ENDPOINT=http://db:8443
+    depends_on:
+      - db
+  unit-test:
+    image: fauna-python-test:latest
+    volumes:
+      - ..:/fauna-python
+    command: pytest -v --cov=fauna --cov-context=test tests/unit
+  coverage:
+    image: fauna-python-test:latest
+    volumes:
+      - ..:/fauna-python
+    command: coverage html --show-contexts

@@ -1,15 +1,17 @@
+import json
 from datetime import timedelta
-from typing import Dict
+from typing import Dict, List, Any
 
 import httpx
 import pytest
 import pytest_subtests
-from pytest_httpx import HTTPXMock
+from pytest_httpx import HTTPXMock, IteratorStream
 
 import fauna
 from fauna import fql
 from fauna.client import Client, Header, QueryOptions, Endpoints
-from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError
+from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError, NetworkError, AbortError
+from fauna.query.models import StreamToken
 from fauna.http import HTTPXClient
 
 
@@ -413,3 +415,86 @@ def test_call_query_with_string():
       match="'fql' must be a Query but was a <class 'str'>. You can build a Query by "
       "calling fauna.fql()"):
     c.query("fake")  # type: ignore
+
+
+def test_client_stream(subtests, httpx_mock: HTTPXMock):
+  response = [
+      b'{"type": "start", "txn_ts": 1}\n', b'{"type": "add", "txn_ts": 2}\n',
+      b'{"type": "remove", "txn_ts": 3}\n'
+  ]
+
+  httpx_mock.add_response(stream=IteratorStream(response))
+
+  ret = []
+  with httpx.Client() as mockClient:
+    http_client = HTTPXClient(mockClient)
+    c = Client(http_client=http_client)
+    with c.stream(StreamToken("token")) as stream:
+      ret = [obj for obj in stream]
+
+  assert ret == [{"type": "add", "txn_ts": 2}, {"type": "remove", "txn_ts": 3}]
+
+
+def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
+  response = [
+      b'{"type": "start", "txn_ts": 1}\n', b'{"type": "add", "txn_ts": 2}\n'
+  ]
+
+  httpx_mock.add_response(stream=IteratorStream(response))
+
+  with httpx.Client() as mockClient:
+    http_client = HTTPXClient(mockClient)
+    c = Client(http_client=http_client)
+    with c.stream(StreamToken("token")) as stream:
+      assert next(stream) == {"type": "add", "txn_ts": 2}
+      stream.close()
+
+      with pytest.raises(StopIteration):
+        next(stream)
+
+
+def test_client_retry_stream(subtests, httpx_mock: HTTPXMock):
+
+  def stream_iter0():
+    yield b'{"type": "start", "txn_ts": 1}\n'
+    yield b'{"type": "add", "txn_ts": 2}\n'
+    raise NetworkError("Some network error")
+    yield b'{"type": "start", "txn_ts": 3}\n'
+
+  def stream_iter1():
+    yield b'{"type": "start", "txn_ts": 4}\n'
+
+  httpx_mock.add_response(stream=IteratorStream(stream_iter0()))
+  httpx_mock.add_response(stream=IteratorStream(stream_iter1()))
+
+  ret = []
+  with httpx.Client() as mockClient:
+    http_client = HTTPXClient(mockClient)
+    c = Client(http_client=http_client)
+    with c.stream(StreamToken("token")) as stream:
+      ret = [obj for obj in stream]
+
+  assert ret == [{"type": "add", "txn_ts": 2}]
+
+
+def test_client_close_stream_on_error(subtests, httpx_mock: HTTPXMock):
+
+  def stream_iter():
+    yield b'{"type": "start", "txn_ts": 1}\n'
+    yield b'{"type": "add", "txn_ts": 2}\n'
+    yield b'{"type": "error", "txn_ts": 3, "error": {"message": "message", "code": "abort"}}\n'
+    yield b'{"type": "start", "txn_ts": 4}\n'
+
+  httpx_mock.add_response(stream=IteratorStream(stream_iter()))
+
+  ret = []
+
+  with pytest.raises(AbortError):
+    with httpx.Client() as mockClient:
+      http_client = HTTPXClient(mockClient)
+      c = Client(http_client=http_client)
+      with c.stream(StreamToken("token")) as stream:
+        for obj in stream:
+          ret.append(obj)
+
+  assert ret == [{"type": "add", "txn_ts": 2}]

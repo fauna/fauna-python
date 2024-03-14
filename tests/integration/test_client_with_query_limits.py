@@ -1,4 +1,5 @@
 from multiprocessing.pool import ThreadPool
+from typing import Optional
 import os
 
 import pytest
@@ -9,7 +10,7 @@ from fauna.encoding import QuerySuccess
 from fauna.errors.errors import ThrottlingError
 
 
-def query_collection(client: Client) -> QuerySuccess:
+def query_collection(client: Client) -> Optional[QuerySuccess]:
   coll_name = os.environ.get("QUERY_LIMITS_COLL") or ""
   try:
     return client.query(fql("${coll}.all().paginate(50)", coll=fql(coll_name)))

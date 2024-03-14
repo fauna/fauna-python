@@ -2,7 +2,7 @@ import abc
 from dataclasses import dataclass
 from random import random
 from time import sleep
-from typing import Callable, Optional
+from typing import Callable, Optional, TypeVar, Generic
 
 from fauna.encoding import QuerySuccess
 from fauna.errors import RetryableFaunaException, ClientError
@@ -28,15 +28,18 @@ class ExponentialBackoffStrategy(RetryStrategy):
     return min(backoff, self._max_backoff)
 
 
+T = TypeVar('T')
+
+
 @dataclass
-class RetryableResponse:
+class RetryableResponse(Generic[T]):
   attempts: int
-  response: QuerySuccess
+  response: T
 
 
-class Retryable:
+class Retryable(Generic[T]):
   """
-    Retryable is a wrapper class that acts on a Callable that returns a QuerySuccess.
+    Retryable is a wrapper class that acts on a Callable that returns a T type.
     """
   _strategy: RetryStrategy
   _error: Optional[Exception]
@@ -45,7 +48,7 @@ class Retryable:
       self,
       max_attempts: int,
       max_backoff: int,
-      func: Callable[..., QuerySuccess],
+      func: Callable[..., T],
       *args,
       **kwargs,
   ):
@@ -56,13 +59,12 @@ class Retryable:
     self._kwargs = kwargs
     self._error = None
 
-  def run(self) -> RetryableResponse:
+  def run(self) -> RetryableResponse[T]:
     """Runs the wrapped function. Retries up to max_attempts if the function throws a RetryableFaunaException. It propagates
         the thrown exception if max_attempts is reached or if a non-retryable is thrown.
 
         Returns the number of attempts and the response
         """
-    err: Optional[RetryableFaunaException] = None
     attempt = 0
     while True:
       sleep_time = 0.0 if attempt == 0 else self._strategy.wait()
@@ -71,7 +73,7 @@ class Retryable:
       try:
         attempt += 1
         qs = self._func(*self._args, **self._kwargs)
-        return RetryableResponse(attempt, qs)
+        return RetryableResponse[T](attempt, qs)
       except RetryableFaunaException as e:
         if attempt >= self._max_attempts:
           raise e
