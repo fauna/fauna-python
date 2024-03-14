@@ -394,6 +394,21 @@ class Client:
       fql: Union[StreamToken, Query],
       opts: StreamOptions = StreamOptions()
   ) -> "StreamIterator":
+    """
+        Opens a Stream in Fauna and returns an iterator that consume Fauna events.
+
+        :param fql: A Query that returns a StreamToken or a StreamToken.
+        :param opts: (Optional) Stream Options.
+
+        :return: a :class:`StreamIterator`
+
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
+        :raises TypeError: Invalid param types
+        """
+
     if isinstance(fql, Query):
       token = self.query(fql).data
     else:
