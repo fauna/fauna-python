@@ -14,7 +14,6 @@ from fauna.errors import NetworkError, RetryableFaunaException, QueryRuntimeErro
 
 def test_stream(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
-  scoped_client.query(fql("Product.create({})"))
 
   events = []
 
@@ -132,3 +131,75 @@ def test_max_retries(scoped_secret):
     with client.stream(fql("Product.all().toStream()"), opts) as iter:
       events = [evt["type"] for evt in iter]
   assert count[0] == 5
+
+
+def test_last_ts_is_monotonic(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  events = []
+
+  def thread_fn():
+    stream = scoped_client.stream(fql("Product.all().toStream()"))
+
+    with stream as iter:
+      last_ts = 0
+
+      for evt in iter:
+        assert iter.last_ts > last_ts
+
+        last_ts = iter.last_ts
+
+        events.append(evt["type"])
+
+        # close after 3 events
+        if len(events) == 3:
+          iter.close()
+
+  stream_thread = threading.Thread(target=thread_fn)
+  stream_thread.start()
+
+  # adds a delay so the thread can open the stream,
+  # otherwise we could miss some events
+  time.sleep(0.5)
+
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
+
+  stream_thread.join()
+  assert events == ["add", "add", "add"]
+
+
+@pytest.mark.xfail(reason="not currently supported by core")
+def test_handle_status_events(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  events = []
+
+  def thread_fn():
+    opts = StreamOptions(status_events=True)
+    stream = scoped_client.stream(fql("Product.all().toStream()"), opts)
+
+    with stream as iter:
+      for evt in iter:
+        events.append(evt["type"])
+
+        # close after 3 events
+        if len(events) == 3:
+          iter.close()
+
+  stream_thread = threading.Thread(target=thread_fn)
+  stream_thread.start()
+
+  # adds a delay so the thread can open the stream,
+  # otherwise we could miss some events
+  time.sleep(0.5)
+
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
+  scoped_client.query(fql("Product.create({})"))
+
+  stream_thread.join()
+  assert events == ["status", "add", "add"]
