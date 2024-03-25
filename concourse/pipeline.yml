@@ -11,6 +11,13 @@ resources:
     source:
       url: ((slack-webhook))
 
+  - name: beta.git
+    type: git
+    icon: github
+    source:
+      uri: https://github.com/fauna/fauna-python
+      branch: beta
+
   - name: fauna-python-repository
     type: git
     icon: github
@@ -49,12 +56,15 @@ groups:
       - set-self
       - test
       - release
+      - test-beta
+      - release-beta
 
 jobs:
   - name: set-self
     plan:
       - get: fauna-python-repository
         trigger: true
+      - get: beta.git
       - set_pipeline: self
         file: fauna-python-repository/concourse/pipeline.yml
 
@@ -62,7 +72,6 @@ jobs:
     serial: true
     plan:
       - get: fauna-python-repository
-        trigger: true
         passed:
           - set-self
       - get: testtools-repo
@@ -134,3 +143,72 @@ jobs:
       - put: fauna-python-repository-docs
         params:
           repository: fauna-python-repository-updated-docs
+
+  - name: test-beta
+    serial: true
+    plan:
+      - get: beta.git
+        passed:
+          - set-self
+      - get: testtools-repo
+      - get: testtools-image
+
+      - load_var: git-commit
+        reveal: true
+        file: beta.git/.git/ref
+
+      - in_parallel:
+          fail_fast: false
+          steps:
+            - task: unit-and-integration-tests
+              file: beta.git/concourse/tasks/tests.yml
+              privileged: true
+
+            - task: aws-lambda-tests
+              image: testtools-image
+              file: testtools-repo/fauna-driver-platform-tests/concourse/tasks/python-aws-lambda-tests.yml
+              params:
+                GIT_COMMIT: ((.:git-commit))
+                FAUNA_SECRET: ((drivers-platform-tests/fauna-secret))
+                AWS_LAMBDA_ROLE_ARN: ((drivers-platform-tests/aws-lambda-role-arn))
+                AWS_ACCESS_KEY_ID: ((drivers-platform-tests/aws-access-key-id))
+                AWS_SECRET_ACCESS_KEY: ((drivers-platform-tests/aws-secret-key))
+
+            - task: vercel-tests
+              image: testtools-image
+              file: testtools-repo/fauna-driver-platform-tests/concourse/tasks/python-vercel-tests.yml
+              params:
+                GIT_COMMIT: ((.:git-commit))
+                FAUNA_SECRET: ((drivers-platform-tests/fauna-secret))
+                VERCEL_TOKEN: ((drivers-platform-tests/vercel-token))
+
+            - task: query-limits-tests
+              privileged: true
+              file: beta.git/concourse/tasks/query-limits-tests.yml
+              params:
+                QUERY_LIMITS_DB: limited
+                QUERY_LIMITS_COLL: limitCollection
+
+
+  - name: release-beta
+    serial: true
+    public: false
+    plan:
+      - get: beta.git
+        passed:
+          - set-self
+
+      - task: build
+        file: beta.git/concourse/tasks/build.yml
+        input_mapping: {fauna-python-repository: beta.git }
+
+      - task: publish
+        file: beta.git/concourse/tasks/publish.yml
+        input_mapping: {fauna-python-repository: beta.git }
+        params:
+          TWINE_USERNAME: ((pypi-username))
+          TWINE_PASSWORD: ((pypi-password))
+        on_success:
+          put: notify
+          params:
+            text_file: slack-message/publish
