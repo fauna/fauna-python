@@ -1,5 +1,5 @@
 __title__ = "Fauna"
-__version__ = "1.1.1"
+__version__ = "1.2.0b1"
 __api_version__ = "10"
 __author__ = "Fauna, Inc"
 __license__ = "MPL 2.0"
