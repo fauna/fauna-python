@@ -200,6 +200,7 @@ jobs:
 
       - task: build
         file: beta.git/concourse/tasks/build.yml
+        input_mapping: {fauna-python-repository: beta.git }
 
       - task: publish
         file: beta.git/concourse/tasks/publish.yml
