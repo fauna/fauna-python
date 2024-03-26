@@ -56,13 +56,16 @@ class StreamOptions:
 
     * max_attempts - The maximum number of times to attempt a stream query when a retryable exception is thrown.
     * max_backoff - The maximum backoff in seconds for an individual retry.
+    * start_ts - The starting timestamp of the stream, exclusive. If set, Fauna will return events starting after
+    the timestamp.
     * status_events - Indicates if stream should include status events. Status events are periodic events that
-    * update the client with the latest valid timestamp (in the event of a dropped connection) as well as metrics
-    * about about the cost of maintaining the stream other than the cost of the received events.
+    update the client with the latest valid timestamp (in the event of a dropped connection) as well as metrics
+    about the cost of maintaining the stream other than the cost of the received events.
     """
 
   max_attempts: Optional[int] = None
   max_backoff: Optional[int] = None
+  start_ts: Optional[int] = None
   status_events: bool = False
 
 
@@ -550,6 +553,8 @@ class StreamIterator:
     data: Dict[str, Any] = {"token": self._token.token}
     if self.last_ts is not None:
       data["start_ts"] = self.last_ts
+    elif self._opts.start_ts is not None:
+      data["start_ts"] = self._opts.start_ts
 
     return self._http_client.stream(
         url=self._endpoint, headers=self._headers, data=data)
