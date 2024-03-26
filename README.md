@@ -244,11 +244,94 @@ except ServiceError as e:
     # more error handling...
 ```
 ## Streaming
+Below are examples on how to get started with streaming in the python driver. For more information on streaming capabilities visit our [Streaming Documentation](https://docs.fauna.com/fauna/current/reference/streaming_reference/)
 
-Not implemented
+There are two ways a stream can be initiated with the python driver:
+1. Obtaining a stream token by first issuing a fql query that returns a stream token and providing that to the clients' stream method.
+2. Providing the stream method with a fql query that returns a stream token
+   1. In this case the stream method will first issue a request to obtain the stream token and then start the stream.
+
+_Using a Stream Token_
+```python
+import fauna
+
+from fauna import fql
+from fauna.client import Client, StreamOptions
+
+client = Client()
+response = client.query(fql('''
+  let set = Product.all()
+  { 
+    initialPage: set.pageSize(10),
+    streamToken: set.toStream() { name, price, category }
+  }
+  '''))
+  
+initialPage = response.data["initialPage"]
+streamToken = response.data["streamToken"]
+
+with client.stream(streamToken) as stream:
+  for event in stream:
+    print(event["type"])
+    print(event["data"])
+    eventType = event["type"]
+    if (eventType == "add"):
+      print("add event")
+      ## handle add event
+    elif (eventType == "update"):
+      print("update event")
+      ## handle update event
+    elif (eventType == "remove"):
+      print("remove event")
+      ## handle remove event
+```
+
+_Using the client stream method directly_
+
+```python
+import fauna
+
+from fauna import fql
+from fauna.client import Client
+
+client = Client()
+
+with client.stream(fql(
+  'Product.all().where(.price > 50).toStream() { name, price, category }'
+)) as stream:
+  for event in stream:
+    print(event["type"])
+    print(event["data"])
+```
+
+_Stream events iterator_
+
+The stream method returns an iterator that can be used to provide the events as they happen.  See above examples for using the iterator to process events.
+
+_Error Handling_
+
+If a non retryable error occurs as part of stream processing, or when attempting to open a stream, a FaunaException will be raised. This can be handled as follows:
+```python
+import fauna
+
+from fauna import fql
+from fauna.client import Client
+from fauna.errors import FaunaException
+
+client = Client()
+
+try:
+  with client.stream(fql(
+    'Product.all().where(.price > 50).toStream() { name, price, category }'
+  )) as stream:
+    for event in stream:
+      print(event["type"])
+      print(event["data"])
+except FaunaException as e:
+  print("error ocurred with stream: ", e)
+```
 
 ## Setup
-
 
 ```bash
 virtualenv venv
