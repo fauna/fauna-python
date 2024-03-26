@@ -165,6 +165,7 @@ def test_last_ts_is_monotonic(scoped_client):
   stream_thread.join()
   assert events == ["add", "add", "add"]
 
+
 def test_providing_start_ts(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
 
@@ -175,15 +176,17 @@ def test_providing_start_ts(scoped_client):
   createThree = scoped_client.query(fql("Product.create({})"))
 
   events = []
+
   def thread_fn():
     # replay excludes the ts that was passed in, it provides events for all ts after the one provided
-    stream = scoped_client.stream(stream_token, StreamOptions(start_ts=createOne.txn_ts))
+    stream = scoped_client.stream(stream_token,
+                                  StreamOptions(start_ts=createOne.txn_ts))
     with stream as iter:
       for event in iter:
         events.append(event)
         if (len(events) == 3):
           iter.close()
-  
+
   stream_thread = threading.Thread(target=thread_fn)
   stream_thread.start()
 
@@ -196,6 +199,7 @@ def test_providing_start_ts(scoped_client):
   assert events[0]["txn_ts"] == createTwo.txn_ts
   assert events[1]["txn_ts"] == createThree.txn_ts
   assert events[2]["txn_ts"] == createFour.txn_ts
+
 
 @pytest.mark.xfail(reason="not currently supported by core")
 def test_handle_status_events(scoped_client):
