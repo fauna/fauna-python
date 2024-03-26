@@ -11,8 +11,9 @@ See the [Fauna Documentation](https://docs.fauna.com/fauna/current/)
 for additional information how to configure and query your databases.
 
 ## Installation
+Pre-release installations must specify the version you want to install. Find the version you want to install on [PyPI](https://pypi.org/project/fauna/#history).
 ```bash
-pip install fauna
+pip install fauna==<version>
 ```
 
 ## Compatibility
