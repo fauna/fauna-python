@@ -247,7 +247,7 @@ except ServiceError as e:
 Below are examples on how to get started with streaming in the python driver. For more information on streaming capabilities visit our [Streaming Documentation](https://docs.fauna.com/fauna/current/reference/streaming_reference/)
 
 There are two ways a stream can be initiated with the python driver:
-1. Obtaining a stream token by first issuing a fql query that returns a stream token and providing that to the clients' stream method.
+1. Obtaining a stream token by first issuing a fql query that returns a stream token and providing that to the client's stream method.
 2. Providing the stream method with a fql query that returns a stream token
    1. In this case the stream method will first issue a request to obtain the stream token and then start the stream.
 
