@@ -9,7 +9,7 @@ from fauna import __version__ as pkg_version
 
 # Load the README file for use in the long description
 local_dir = path.abspath(path.dirname(__file__))
-with open(path.join(local_dir, "README.rst"), encoding="utf-8") as f:
+with open(path.join(local_dir, "README.md"), encoding="utf-8") as f:
   long_description = f.read()
 
 requires = [
@@ -31,8 +31,8 @@ setup(
     version=pkg_version,
     description="Fauna Python driver for FQL 10+",
     long_description=long_description,
-    long_description_content_type="text/x-rst",
-    url="https://github.com/fauna/fauna-python",
+    long_description_content_type="text/markdown",
+    url="https://github.com/fauna/fauna-python/tree/beta",
     author=pkg_author,
     author_email="priority@fauna.com",
     license=pkg_license,
