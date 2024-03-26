@@ -63,6 +63,7 @@ class StreamOptions:
 
   max_attempts: Optional[int] = None
   max_backoff: Optional[int] = None
+  start_ts: Optional[int] = None
   status_events: bool = False
 
 
@@ -550,6 +551,8 @@ class StreamIterator:
     data: Dict[str, Any] = {"token": self._token.token}
     if self.last_ts is not None:
       data["start_ts"] = self.last_ts
+    elif self._opts.start_ts is not None:
+      data["start_ts"] = self._opts.start_ts
 
     return self._http_client.stream(
         url=self._endpoint, headers=self._headers, data=data)
