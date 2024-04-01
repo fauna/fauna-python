@@ -1,7 +1,6 @@
 import abc
-import contextlib
 
-from typing import Iterator, Mapping, Any, Optional
+from typing import Iterator, Mapping, Any
 from dataclasses import dataclass
 
 
@@ -63,13 +62,12 @@ class HTTPClient(abc.ABC):
     pass
 
   @abc.abstractmethod
-  @contextlib.contextmanager
   def stream(
       self,
       url: str,
       headers: Mapping[str, str],
       data: Mapping[str, Any],
-  ) -> Iterator[Any]:
+  ) -> HTTPResponse:
     pass
 
   @abc.abstractmethod

@@ -2,7 +2,7 @@ import abc
 from dataclasses import dataclass
 from random import random
 from time import sleep
-from typing import Callable, Optional, TypeVar, Generic
+from typing import Callable, Optional
 
 from fauna.encoding import QuerySuccess
 from fauna.errors import RetryableFaunaException, ClientError
@@ -28,18 +28,15 @@ class ExponentialBackoffStrategy(RetryStrategy):
     return min(backoff, self._max_backoff)
 
 
-T = TypeVar('T')
-
-
 @dataclass
-class RetryableResponse(Generic[T]):
+class RetryableResponse:
   attempts: int
-  response: T
+  response: QuerySuccess
 
 
-class Retryable(Generic[T]):
+class Retryable:
   """
-    Retryable is a wrapper class that acts on a Callable that returns a T type.
+    Retryable is a wrapper class that acts on a Callable that returns a QuerySuccess.
     """
   _strategy: RetryStrategy
   _error: Optional[Exception]
@@ -48,7 +45,7 @@ class Retryable(Generic[T]):
       self,
       max_attempts: int,
       max_backoff: int,
-      func: Callable[..., T],
+      func: Callable[..., QuerySuccess],
       *args,
       **kwargs,
   ):
@@ -59,12 +56,13 @@ class Retryable(Generic[T]):
     self._kwargs = kwargs
     self._error = None
 
-  def run(self) -> RetryableResponse[T]:
+  def run(self) -> RetryableResponse:
     """Runs the wrapped function. Retries up to max_attempts if the function throws a RetryableFaunaException. It propagates
         the thrown exception if max_attempts is reached or if a non-retryable is thrown.
 
         Returns the number of attempts and the response
         """
+    err: Optional[RetryableFaunaException] = None
     attempt = 0
     while True:
       sleep_time = 0.0 if attempt == 0 else self._strategy.wait()
@@ -73,7 +71,7 @@ class Retryable(Generic[T]):
       try:
         attempt += 1
         qs = self._func(*self._args, **self._kwargs)
-        return RetryableResponse[T](attempt, qs)
+        return RetryableResponse(attempt, qs)
       except RetryableFaunaException as e:
         if attempt >= self._max_attempts:
           raise e
