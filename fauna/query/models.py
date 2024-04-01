@@ -36,19 +36,6 @@ class Page:
     return not self.__eq__(other)
 
 
-class StreamToken:
-  """A class represeting a Stream in Fauna."""
-
-  def __init__(self, token: str):
-    self.token = token
-
-  def __eq__(self, other):
-    return isinstance(other, StreamToken) and self.token == other.token
-
-  def __hash__(self):
-    return hash(self.token)
-
-
 class Module:
   """A class representing a Module in Fauna. Examples of modules include Collection, Math, and a user-defined
     collection, among others.
@@ -115,7 +102,7 @@ class DocumentReference(BaseReference):
     self._id = id
 
   def __hash__(self):
-    return hash((type(self), self._collection, self._id))
+    hash((type(self), self._collection, self._id))
 
   def __repr__(self):
     return f"{self.__class__.__name__}(id={repr(self._id)},coll={repr(self._collection)})"
@@ -149,7 +136,7 @@ class NamedDocumentReference(BaseReference):
     self._name = name
 
   def __hash__(self):
-    return hash((type(self), self._collection, self._name))
+    hash((type(self), self._collection, self._name))
 
   def __repr__(self):
     return f"{self.__class__.__name__}(name={repr(self._name)},coll={repr(self._collection)})"

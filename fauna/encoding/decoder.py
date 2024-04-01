@@ -3,7 +3,7 @@ from typing import Any, List, Union
 from iso8601 import parse_date
 
 from fauna.query.models import Module, DocumentReference, Document, NamedDocument, NamedDocumentReference, Page, \
-    NullDocument, StreamToken
+    NullDocument
 
 
 class FaunaDecoder:
@@ -42,8 +42,6 @@ class FaunaDecoder:
      +--------------------+---------------+
      | Page               | @set          |
      +--------------------+---------------+
-     | StreamToken        | @stream       |
-     +--------------------+---------------+
 
      """
 
@@ -61,7 +59,6 @@ class FaunaDecoder:
             - { "@ref": ... } decodes to a DocumentReference or NamedDocumentReference
             - { "@mod": ... } decodes to a Module
             - { "@set": ... } decodes to a Page
-            - { "@stream": ... } decodes to a StreamToken
 
         :param obj: the object to decode
         """
@@ -167,8 +164,5 @@ class FaunaDecoder:
         data = FaunaDecoder._decode(value["data"]) if "data" in value else None
 
         return Page(data=data, after=after)
-
-      if "@stream" in dct:
-        return StreamToken(dct["@stream"])
 
     return {k: FaunaDecoder._decode(v) for k, v in dct.items()}

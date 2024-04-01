@@ -1,6 +1,6 @@
 from multiprocessing.pool import ThreadPool
-from typing import Optional
 import os
+from typing import Optional
 
 import pytest
 
