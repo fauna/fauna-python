@@ -30,7 +30,7 @@ class Page:
         other, Page) and self.data == other.data and self.after == other.after
 
   def __hash__(self):
-    hash((type(self), self.data, self.after))
+    return hash((type(self), self.data, self.after))
 
   def __ne__(self, other):
     return not self.__eq__(other)
@@ -56,7 +56,7 @@ class Module:
     return isinstance(other, Module) and str(self) == str(other)
 
   def __hash__(self):
-    hash(self.name)
+    return hash(self.name)
 
 
 class BaseReference:
