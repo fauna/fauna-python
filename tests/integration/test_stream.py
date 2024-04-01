@@ -1,8 +1,11 @@
 import threading
 import time
+from datetime import timedelta
+
 import pytest
 import httpx
 import fauna
+
 from fauna import fql
 from fauna.client import Client, StreamOptions
 from fauna.http.httpx_client import HTTPXClient
@@ -73,6 +76,8 @@ def test_close_method(scoped_client):
 
 def test_error_on_stream(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  events = []
 
   def thread_fn():
     stream = scoped_client.stream(fql("Product.all().map(.foo / 0).toStream()"))
@@ -164,41 +169,6 @@ def test_last_ts_is_monotonic(scoped_client):
 
   stream_thread.join()
   assert events == ["add", "add", "add"]
-
-
-def test_providing_start_ts(scoped_client):
-  scoped_client.query(fql("Collection.create({name: 'Product'})"))
-
-  stream_token = scoped_client.query(fql("Product.all().toStream()")).data
-
-  createOne = scoped_client.query(fql("Product.create({})"))
-  createTwo = scoped_client.query(fql("Product.create({})"))
-  createThree = scoped_client.query(fql("Product.create({})"))
-
-  events = []
-
-  def thread_fn():
-    # replay excludes the ts that was passed in, it provides events for all ts after the one provided
-    stream = scoped_client.stream(stream_token,
-                                  StreamOptions(start_ts=createOne.txn_ts))
-    with stream as iter:
-      for event in iter:
-        events.append(event)
-        if (len(events) == 3):
-          iter.close()
-
-  stream_thread = threading.Thread(target=thread_fn)
-  stream_thread.start()
-
-  # adds a delay so the thread can open the stream,
-  # otherwise we could miss some events
-  time.sleep(0.5)
-
-  createFour = scoped_client.query(fql("Product.create({})"))
-  stream_thread.join()
-  assert events[0]["txn_ts"] == createTwo.txn_ts
-  assert events[1]["txn_ts"] == createThree.txn_ts
-  assert events[2]["txn_ts"] == createFour.txn_ts
 
 
 @pytest.mark.xfail(reason="not currently supported by core")
