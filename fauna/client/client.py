@@ -55,15 +55,11 @@ class StreamOptions:
     A dataclass representing options available for a stream.
 
     * max_attempts - The maximum number of times to attempt a stream query when a retryable exception is thrown.
-    * max_backoff - The maximum backoff in seconds for an individual retry.
-    * status_events - Indicates if stream should include status events. Status events are periodic events that
-    * update the client with the latest valid timestamp (in the event of a dropped connection) as well as metrics
-    * about about the cost of maintaining the stream other than the cost of the received events.
+    * max_backoff - The maximum backoff in seconds for an individual retry
     """
 
   max_attempts: Optional[int] = None
   max_backoff: Optional[int] = None
-  status_events: bool = False
 
 
 class Client:
@@ -523,9 +519,6 @@ class StreamIterator:
         self.last_ts = event["txn_ts"]
 
         if event["type"] == "start":
-          return self._next_element()
-
-        if not self._opts.status_events and event["type"] == "status":
           return self._next_element()
 
         return event
