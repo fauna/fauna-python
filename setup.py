@@ -13,16 +13,16 @@ with open(path.join(local_dir, "README.rst"), encoding="utf-8") as f:
   long_description = f.read()
 
 requires = [
-    "iso8601==1.1.0",
-    "future==0.18.3",
-    "httpx[http2]==0.23.*",
+    "iso8601==2.1.0",
+    "future==1.0.0",
+    "httpx[http2]==0.27.*",
 ]
 
 extras_require = {
     "lint": ["yapf==0.40.1"],
     "test": [
-        "pytest==7.3.0", "pytest-env==0.8.1", "pytest-cov==4.0.0",
-        "pytest-httpx==0.21.3", "pytest-subtests==0.10.0"
+        "pytest==8.1.1", "pytest-env==1.1.3", "pytest-cov==5.0.0",
+        "pytest-httpx==0.30.0", "pytest-subtests==0.12.1"
     ]
 }
 
