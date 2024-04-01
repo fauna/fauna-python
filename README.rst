@@ -11,7 +11,7 @@ of FQL. To query your databases with earlier API versions, see
 the `faunadb <https://pypi.org/project/faunadb/>`_ package.
 
 See the `Fauna Documentation <https://docs.fauna.com/fauna/current/>`_
-for additional information how to configure and query your databases.
+for additional information on how to configure and query your databases.
 
 
 Installation
@@ -52,7 +52,7 @@ Supported Environment Variables:
     from fauna.errors import FaunaException
 
     client = Client()
-    # The client defaults to using using the value stored FAUNA_SECRET for its secret.
+    # The client defaults to using the value stored FAUNA_SECRET for its secret.
     # Either set the FAUNA_SECRET env variable or retrieve it from a secret store.
     # As a best practice, don't store your secret directly in your code.
 
@@ -96,7 +96,7 @@ Serialization / Deserialization
 
 Serialization and deserialization with user-defined classes is not yet supported.
 
-When building queries, adapt your classes into dicts or lists prior to using them in composition. When instantiating classes from the query result data, build them from the expected result.
+When building queries, adapt your classes into dicts or lists before using them in composition. When instantiating classes from the query result data, build them from the expected result.
 
 .. code-block:: python
 
@@ -270,10 +270,13 @@ Stats are returned on query responses and ServiceErrors.
             emit_stats(e.stats)
         # more error handling...
 
-Document Streaming
+Event Streaming
 ------------------
 
-Not implemented
+`Event Streaming <https://docs.fauna.com/fauna/current/learn/streaming>`_ is currently available in the beta version of the driver:
+
+- `Beta Python driver <https://pypi.org/project/fauna/1.2.0b4/>`_
+- `Beta Python driver docs <https://github.com/fauna/fauna-python/tree/beta>`_
 
 Setup
 -----
