@@ -275,7 +275,7 @@ Event Streaming
 
 `Event Streaming <https://docs.fauna.com/fauna/current/learn/streaming>`_ is currently available in the beta version of the driver:
 
-- `Beta Python driver <https://pypi.org/project/fauna/1.2.0b3/>`_
+- `Beta Python driver <https://pypi.org/project/fauna/1.2.0b4/>`_
 - `Beta Python driver docs <https://github.com/fauna/fauna-python/tree/beta>`_
 
 Setup
