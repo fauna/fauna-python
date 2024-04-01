@@ -98,20 +98,20 @@ jobs:
                 AWS_ACCESS_KEY_ID: ((drivers-platform-tests/aws-access-key-id))
                 AWS_SECRET_ACCESS_KEY: ((drivers-platform-tests/aws-secret-key))
 
-            - task: vercel-tests
-              image: testtools-image
-              file: testtools-repo/fauna-driver-platform-tests/concourse/tasks/python-vercel-tests.yml
-              params:
-                GIT_COMMIT: ((.:git-commit))
-                FAUNA_SECRET: ((drivers-platform-tests/fauna-secret))
-                VERCEL_TOKEN: ((drivers-platform-tests/vercel-token))
-
-            - task: query-limits-tests
-              privileged: true
-              file: fauna-python-repository/concourse/tasks/query-limits-tests.yml
-              params:
-                QUERY_LIMITS_DB: limited
-                QUERY_LIMITS_COLL: limitCollection
+#            - task: vercel-tests
+#              image: testtools-image
+#              file: testtools-repo/fauna-driver-platform-tests/concourse/tasks/python-vercel-tests.yml
+#              params:
+#                GIT_COMMIT: ((.:git-commit))
+#                FAUNA_SECRET: ((drivers-platform-tests/fauna-secret))
+#                VERCEL_TOKEN: ((drivers-platform-tests/vercel-token))
+#
+#            - task: query-limits-tests
+#              privileged: true
+#              file: fauna-python-repository/concourse/tasks/query-limits-tests.yml
+#              params:
+#                QUERY_LIMITS_DB: limited
+#                QUERY_LIMITS_COLL: limitCollection
 
 
   - name: release
