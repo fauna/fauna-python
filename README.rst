@@ -270,6 +270,40 @@ Stats are returned on query responses and ServiceErrors.
             emit_stats(e.stats)
         # more error handling...
 
+Pagination
+------------------
+
+Use the ``Client.paginate()`` method to iterate sets that contain more than one
+page of results.
+
+``Client.paginate()`` accepts the same query options as ``Client.query()``.
+
+Change the default items per page using FQL's ``<set>.pageSize()`` method.
+
+.. code-block:: python
+
+    from datetime import timedelta
+    from fauna import fql
+    from fauna.client import Client, QueryOptions
+
+    # Adjust `pageSize()` size as needed.
+    query = fql(
+        """
+        Product
+            .byName("limes")
+            .pageSize(60) { description }"""
+    )
+
+    client = Client()
+
+    options = QueryOptions(query_timeout=timedelta(seconds=20))
+
+    pages = client.paginate(query, options)
+
+    for products in pages:
+        for product in products:
+            print(products)
+
 Event Streaming
 ------------------
 
