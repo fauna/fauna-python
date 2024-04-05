@@ -309,6 +309,34 @@ _Stream events iterator_
 
 The stream method returns an iterator that can be used to provide the events as they happen.  See above examples for using the iterator to process events.
 
+_Close a stream_
+
+Use the `<stream>.close()` method to close a stream.
+
+```python
+import fauna
+
+from fauna import fql
+from fauna.client import Client
+
+client = Client()
+
+events = []
+
+with client.stream(fql(
+  'Product.all().where(.price > 50).toStream() { name, price, category }'
+)) as stream:
+  for event in stream:
+    print(event["type"])
+    print(event["data"])
+
+    events.append(event)
+    # Close the stream after 2 events
+    if len(events) == 2:
+      print("Closing the stream ...")
+      stream.close()
+```
+
 _Error Handling_
 
 If a non retryable error occurs as part of stream processing, or when attempting to open a stream, a FaunaException will be raised. This can be handled as follows:
