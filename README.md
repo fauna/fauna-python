@@ -8,7 +8,7 @@ of FQL. To query your databases with earlier API versions, see
 the [faunadb](https://pypi.org/project/faunadb/) package.
 
 See the [Fauna Documentation](https://docs.fauna.com/fauna/current/)
-for additional information how to configure and query your databases.
+for additional information on how to configure and query your databases.
 
 ## Installation
 Pre-release installations must specify the version you want to install. Find the version you want to install on [PyPI](https://pypi.org/project/fauna/#history).
@@ -43,7 +43,7 @@ from fauna.encoding import QuerySuccess
 from fauna.errors import FaunaException
 
 client = Client()
-# The client defaults to using using the value stored FAUNA_SECRET for its secret.
+# The client defaults to using the value stored FAUNA_SECRET for its secret.
 # Either set the FAUNA_SECRET env variable or retrieve it from a secret store.
 # As a best practice, don't store your secret directly in your code.
 
@@ -86,7 +86,7 @@ print(res.data) # 8
 
 Serialization and deserialization with user-defined classes is not yet supported.
 
-When building queries, adapt your classes into dicts or lists prior to using them in composition. When instantiating classes from the query result data, build them from the expected result.
+When building queries, adapt your classes into dicts or lists before using them in composition. When instantiating classes from the query result data, build them from the expected result.
 
 ```python
 class MyClass:
