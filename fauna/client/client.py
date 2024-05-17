@@ -1,15 +1,16 @@
 from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, Mapping, Optional, List
+from typing import Any, Dict, Iterator, Mapping, Optional, List, Union
+from contextlib import contextmanager
 
 import fauna
 from fauna.client.retryable import Retryable
-from fauna.errors import AuthenticationError, ClientError, ProtocolError, ServiceError, AuthorizationError, \
-    ServiceInternalError, ServiceTimeoutError, ThrottlingError, QueryTimeoutError, QueryRuntimeError, \
-    QueryCheckError, ContendedTransactionError, AbortError, InvalidRequestError
+from fauna.errors import FaunaError, ClientError, ProtocolError, \
+    RetryableFaunaException, NetworkError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
+from fauna.query.models import StreamToken
 from fauna.client.utils import _Environment, LastTxnTs
 from fauna.encoding import FaunaEncoder, FaunaDecoder
 from fauna.encoding import QuerySuccess, ConstraintFailure, QueryTags, QueryStats
@@ -46,6 +47,26 @@ class QueryOptions:
   traceparent: Optional[str] = None
   typecheck: Optional[bool] = None
   additional_headers: Optional[Dict[str, str]] = None
+
+
+@dataclass
+class StreamOptions:
+  """
+    A dataclass representing options available for a stream.
+
+    * max_attempts - The maximum number of times to attempt a stream query when a retryable exception is thrown.
+    * max_backoff - The maximum backoff in seconds for an individual retry.
+    * start_ts - The starting timestamp of the stream, exclusive. If set, Fauna will return events starting after
+    the timestamp.
+    * status_events - Indicates if stream should include status events. Status events are periodic events that
+    update the client with the latest valid timestamp (in the event of a dropped connection) as well as metrics
+    about the cost of maintaining the stream other than the cost of the received events.
+    """
+
+  max_attempts: Optional[int] = None
+  max_backoff: Optional[int] = None
+  start_ts: Optional[int] = None
+  status_events: bool = False
 
 
 class Client:
@@ -275,7 +296,7 @@ class Client:
     except Exception as e:
       raise ClientError("Failed to encode Query") from e
 
-    retryable = Retryable(
+    retryable = Retryable[QuerySuccess](
         self._max_attempts,
         self._max_backoff,
         self._query,
@@ -350,7 +371,7 @@ class Client:
       dec: Any = FaunaDecoder.decode(response_json)
 
       if status_code > 399:
-        self._handle_error(dec, status_code)
+        FaunaError.parse_error_and_throw(dec, status_code)
 
       if "txn_ts" in dec:
         self.set_last_txn_ts(int(response_json["txn_ts"]))
@@ -375,6 +396,42 @@ class Client:
           schema_version=schema_version,
       )
 
+  def stream(
+      self,
+      fql: Union[StreamToken, Query],
+      opts: StreamOptions = StreamOptions()
+  ) -> "StreamIterator":
+    """
+        Opens a Stream in Fauna and returns an iterator that consume Fauna events.
+
+        :param fql: A Query that returns a StreamToken or a StreamToken.
+        :param opts: (Optional) Stream Options.
+
+        :return: a :class:`StreamIterator`
+
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
+        :raises TypeError: Invalid param types
+        """
+
+    if isinstance(fql, Query):
+      token = self.query(fql).data
+    else:
+      token = fql
+
+    if not isinstance(token, StreamToken):
+      err_msg = f"'fql' must be a StreamToken, or a Query that returns a StreamToken but was a {type(token)}."
+      raise TypeError(err_msg)
+
+    headers = self._headers.copy()
+    headers[_Header.Format] = "tagged"
+    headers[_Header.Authorization] = self._auth.bearer()
+
+    return StreamIterator(self._session, headers, self._endpoint + "/stream/1",
+                          self._max_attempts, self._max_backoff, opts, token)
+
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
     should_raise = False
@@ -398,177 +455,6 @@ class Client:
           f"Response is in an unknown format: \n{response_json}",
       )
 
-  def _handle_error(self, body: Any, status_code: int):
-    err = body["error"]
-    code = err["code"]
-    message = err["message"]
-
-    query_tags = QueryTags.decode(
-        body["query_tags"]) if "query_tags" in body else None
-    stats = QueryStats(body["stats"]) if "stats" in body else None
-    txn_ts = body["txn_ts"] if "txn_ts" in body else None
-    schema_version = body["schema_version"] if "schema_version" in body else None
-    summary = body["summary"] if "summary" in body else None
-
-    constraint_failures: Optional[List[ConstraintFailure]] = None
-    if "constraint_failures" in err:
-      constraint_failures = [
-          ConstraintFailure(
-              message=cf["message"],
-              name=cf["name"] if "name" in cf else None,
-              paths=cf["paths"] if "paths" in cf else None,
-          ) for cf in err["constraint_failures"]
-      ]
-
-    if status_code == 400:
-      if code == "invalid_query":
-        raise QueryCheckError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-      elif code == "invalid_request":
-        raise InvalidRequestError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-      elif code == "abort":
-        abort = err["abort"] if "abort" in err else None
-        raise AbortError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            abort=abort,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-
-      else:
-        raise QueryRuntimeError(
-            status_code=status_code,
-            code=code,
-            message=message,
-            summary=summary,
-            constraint_failures=constraint_failures,
-            query_tags=query_tags,
-            stats=stats,
-            txn_ts=txn_ts,
-            schema_version=schema_version,
-        )
-    elif status_code == 401:
-      raise AuthenticationError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 403:
-      raise AuthorizationError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 409:
-      raise ContendedTransactionError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 429:
-      raise ThrottlingError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 440:
-      raise QueryTimeoutError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 500:
-      raise ServiceInternalError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    elif status_code == 503:
-      raise ServiceTimeoutError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-    else:
-      raise ServiceError(
-          status_code=status_code,
-          code=code,
-          message=message,
-          summary=summary,
-          constraint_failures=constraint_failures,
-          query_tags=query_tags,
-          stats=stats,
-          txn_ts=txn_ts,
-          schema_version=schema_version,
-      )
-
   def _set_endpoint(self, endpoint):
     if endpoint is None:
       endpoint = _Environment.EnvFaunaEndpoint()
@@ -577,6 +463,105 @@ class Client:
       endpoint = endpoint[:-1]
 
     self._endpoint = endpoint
+
+
+class StreamIterator:
+  """A class that mixes a ContextManager and an Iterator so we can detected retryable errors."""
+
+  def __init__(self, http_client: HTTPClient, headers: Dict[str, str],
+               endpoint: str, max_attempts: int, max_backoff: int,
+               opts: StreamOptions, token: StreamToken):
+    self._http_client = http_client
+    self._headers = headers
+    self._endpoint = endpoint
+    self._max_attempts = max_attempts
+    self._max_backoff = max_backoff
+    self._opts = opts
+    self._token = token
+    self._stream = None
+    self.last_ts = None
+    self._ctx = self._create_stream()
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, exc_type, exc_value, exc_traceback):
+    if self._stream is not None:
+      self._stream.close()
+
+    self._ctx.__exit__(exc_type, exc_value, exc_traceback)
+    return False
+
+  def __iter__(self):
+    return self
+
+  def __next__(self):
+    if self._opts.max_attempts is not None:
+      max_attempts = self._opts.max_attempts
+    else:
+      max_attempts = self._max_attempts
+
+    if self._opts.max_backoff is not None:
+      max_backoff = self._opts.max_backoff
+    else:
+      max_backoff = self._max_backoff
+
+    retryable = Retryable[Any](max_attempts, max_backoff, self._next_element)
+    return retryable.run().response
+
+  def _next_element(self):
+    try:
+      if self._stream is None:
+        try:
+          self._stream = self._ctx.__enter__()
+        except Exception:
+          self._retry_stream()
+
+      if self._stream is not None:
+        event: Any = FaunaDecoder.decode(next(self._stream))
+
+        if event["type"] == "error":
+          FaunaError.parse_error_and_throw(event, 400)
+
+        self.last_ts = event["txn_ts"]
+
+        if event["type"] == "start":
+          return self._next_element()
+
+        if not self._opts.status_events and event["type"] == "status":
+          return self._next_element()
+
+        return event
+
+      raise StopIteration
+    except NetworkError:
+      self._retry_stream()
+
+  def _retry_stream(self):
+    if self._stream is not None:
+      self._stream.close()
+
+    self._stream = None
+
+    try:
+      self._ctx = self._create_stream()
+    except Exception:
+      pass
+    raise RetryableFaunaException
+
+  def _create_stream(self):
+    data: Dict[str, Any] = {"token": self._token.token}
+    if self.last_ts is not None:
+      data["start_ts"] = self.last_ts
+    elif self._opts.start_ts is not None:
+      data["start_ts"] = self._opts.start_ts
+
+    return self._http_client.stream(
+        url=self._endpoint, headers=self._headers, data=data)
+
+  def close(self):
+    if self._stream is not None:
+      self._stream.close()
 
 
 class QueryIterator:

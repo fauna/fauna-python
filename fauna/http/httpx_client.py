@@ -1,6 +1,7 @@
 import json
 from json import JSONDecodeError
 from typing import Mapping, Any, Optional, Iterator
+from contextlib import contextmanager
 
 import httpx
 
@@ -93,13 +94,25 @@ class HTTPXClient(HTTPClient):
       else:
         return self._send_with_retry(retryCount - 1, request)
 
+  @contextmanager
   def stream(
       self,
       url: str,
       headers: Mapping[str, str],
       data: Mapping[str, Any],
-  ) -> Iterator[HTTPResponse]:
-    raise NotImplementedError()
+  ) -> Iterator[Any]:
+    with self._c.stream(
+        "POST", url=url, headers=headers, json=data) as response:
+      yield self._transform(response)
+
+  def _transform(self, response):
+    try:
+      for line in response.iter_lines():
+        yield json.loads(line)
+    except httpx.ReadTimeout as e:
+      raise NetworkError("Stream timeout") from e
+    except (httpx.HTTPError, httpx.InvalidURL) as e:
+      raise NetworkError("Exception re-raised from HTTP request") from e
 
   def close(self):
     self._c.close()
