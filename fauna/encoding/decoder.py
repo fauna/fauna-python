@@ -1,5 +1,6 @@
+import base64
+import io
 from typing import Any, List, Union
-
 from iso8601 import parse_date
 
 from fauna.query.models import Module, DocumentReference, Document, NamedDocument, NamedDocumentReference, Page, \
@@ -34,6 +35,8 @@ class FaunaDecoder:
      +--------------------+---------------+
      | None               | null          |
      +--------------------+---------------+
+     | bytearray          | @bytes        |
+     +--------------------+---------------+
      | *DocumentReference | @ref          |
      +--------------------+---------------+
      | *Document          | @doc          |
@@ -62,6 +65,7 @@ class FaunaDecoder:
             - { "@mod": ... } decodes to a Module
             - { "@set": ... } decodes to a Page
             - { "@stream": ... } decodes to a StreamToken
+            - { "@bytes": ... } decodes to a bytearray
 
         :param obj: the object to decode
         """
@@ -103,6 +107,9 @@ class FaunaDecoder:
         return parse_date(dct["@time"])
       if "@date" in dct:
         return parse_date(dct["@date"]).date()
+      if "@bytes" in dct:
+        bts = base64.b64decode(dct["@bytes"])
+        return bytearray(bts)
       if "@doc" in dct:
         value = dct["@doc"]
         if isinstance(value, str):

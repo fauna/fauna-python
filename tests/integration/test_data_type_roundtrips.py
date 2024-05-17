@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, timezone, timedelta
 
 from fauna import fql, Document, NamedDocument
@@ -79,3 +80,16 @@ def test_named_document_roundtrip(client, a_collection):
   assert type(test.data) == NamedDocument
   result = client.query(fql("${doc}", doc=test.data))
   assert test.data == result.data
+
+
+def test_bytes_roundtrip(client):
+  test_str = "This is a test string 🚀 with various characters: !@#$%^&*()_+=-`~[]{}|;:'\",./<>?"
+  test_bytearray = test_str.encode('utf-8')
+  test = client.query(fql("${bts}", bts=test_bytearray))
+  assert test.data == test_bytearray
+  assert test.data.decode('utf-8') == test_str
+
+  test_bytes = bytes(test_bytearray)
+  test = client.query(fql("${bts}", bts=test_bytes))
+  assert test.data == test_bytearray
+  assert test.data.decode('utf-8') == test_str
