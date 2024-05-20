@@ -2,7 +2,7 @@ name: Validate README
 on:
   push:
     paths:
-      - 'README.rst'
+      - 'README.md'
 
 jobs:
   validate:
@@ -19,5 +19,5 @@ jobs:
       - name: Install dependencies
         run: pip install readme_renderer 'readme_renderer[md]'
 
-      - name: Validate readme.rst
-        run: python -m readme_renderer README.rst
+      - name: Validate README.md
+        run: python -m readme_renderer README.md
