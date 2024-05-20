@@ -8,7 +8,7 @@ of FQL. To query your databases with earlier API versions, see
 the [faunadb](https://pypi.org/project/faunadb/) package.
 
 See the [Fauna Documentation](https://docs.fauna.com/fauna/current/)
-for additional information how to configure and query your databases.
+for additional information on how to configure and query your databases.
 
 ## Installation
 Pre-release installations must specify the version you want to install. Find the version you want to install on [PyPI](https://pypi.org/project/fauna/#history).
@@ -43,7 +43,7 @@ from fauna.encoding import QuerySuccess
 from fauna.errors import FaunaException
 
 client = Client()
-# The client defaults to using using the value stored FAUNA_SECRET for its secret.
+# The client defaults to using the value stored FAUNA_SECRET for its secret.
 # Either set the FAUNA_SECRET env variable or retrieve it from a secret store.
 # As a best practice, don't store your secret directly in your code.
 
@@ -86,7 +86,7 @@ print(res.data) # 8
 
 Serialization and deserialization with user-defined classes is not yet supported.
 
-When building queries, adapt your classes into dicts or lists prior to using them in composition. When instantiating classes from the query result data, build them from the expected result.
+When building queries, adapt your classes into dicts or lists before using them in composition. When instantiating classes from the query result data, build them from the expected result.
 
 ```python
 class MyClass:
@@ -244,6 +244,40 @@ except ServiceError as e:
         emit_stats(e.stats)
     # more error handling...
 ```
+
+## Pagination
+
+Use the ``Client.paginate()`` method to iterate sets that contain more than one
+page of results.
+
+``Client.paginate()`` accepts the same query options as ``Client.query()``.
+
+Change the default items per page using FQL's ``<set>.pageSize()`` method.
+
+```python
+from datetime import timedelta
+from fauna import fql
+from fauna.client import Client, QueryOptions
+
+# Adjust `pageSize()` size as needed.
+query = fql(
+    """
+    Product
+        .byName("limes")
+        .pageSize(60) { description }"""
+)
+
+client = Client()
+
+options = QueryOptions(query_timeout=timedelta(seconds=20))
+
+pages = client.paginate(query, options)
+
+for products in pages:
+    for product in products:
+        print(products)
+```
+
 ## Event Streaming
 
 The driver supports `Event Streaming <https://docs.fauna.com/fauna/current/learn/streaming>`_.
