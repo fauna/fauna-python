@@ -4,7 +4,6 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock, IteratorStream
 
-from fauna.client import Client
 from fauna.http import HTTPXClient
 
 

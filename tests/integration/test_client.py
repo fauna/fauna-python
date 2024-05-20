@@ -1,11 +1,11 @@
 from datetime import timedelta
-import pytest
-from fauna.client.client import QueryOptions
 
-from fauna.errors import ClientError
+import pytest
 
 from fauna import fql
 from fauna.client import Client
+from fauna.client.client import QueryOptions
+from fauna.errors import ClientError
 
 
 def test_client_tracks_last_txn_ts(a_collection):

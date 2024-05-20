@@ -1,5 +1,5 @@
-from typing import Optional, Tuple, Iterator, Match
 import re as _re
+from typing import Optional, Tuple, Iterator, Match
 
 
 class FaunaTemplate:

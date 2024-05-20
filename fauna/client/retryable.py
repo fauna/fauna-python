@@ -4,8 +4,7 @@ from random import random
 from time import sleep
 from typing import Callable, Optional, TypeVar, Generic
 
-from fauna.encoding import QuerySuccess
-from fauna.errors import RetryableFaunaException, ClientError
+from fauna.errors import RetryableFaunaException
 
 
 class RetryStrategy:

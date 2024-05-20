@@ -1,13 +1,13 @@
-from datetime import timedelta
 import json
+from datetime import timedelta
 from types import SimpleNamespace
 
 import pytest
 
 from fauna import fql, Page, NullDocument, Module
 from fauna.client import Client, QueryOptions
-from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError, ClientError, QueryTimeoutError
 from fauna.encoding import ConstraintFailure
+from fauna.errors import QueryCheckError, QueryRuntimeError, AbortError, ClientError, QueryTimeoutError
 
 
 def test_query_smoke_test(subtests, client):

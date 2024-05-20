@@ -1,7 +1,7 @@
 import json
+from contextlib import contextmanager
 from json import JSONDecodeError
 from typing import Mapping, Any, Optional, Iterator
-from contextlib import contextmanager
 
 import httpx
 

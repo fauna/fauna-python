@@ -2,7 +2,8 @@ import base64
 from datetime import datetime, date
 from typing import Any, Optional, List, Union
 
-from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, NullDocument, StreamToken
+from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, NullDocument, \
+  StreamToken
 from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [

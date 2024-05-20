@@ -1,4 +1,3 @@
-import base64
 from datetime import datetime, timezone, timedelta
 
 from fauna import fql, Document, NamedDocument
