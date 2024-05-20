@@ -1,5 +1,6 @@
+import base64
 from datetime import datetime, date
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Union
 
 from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, NullDocument, StreamToken
 from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
@@ -45,6 +46,8 @@ class FaunaEncoder:
     | False                         | False         |
     +-------------------------------+---------------+
     | None                          | None          |
+    +-------------------------------+---------------+
+    | bytes / bytearray             | @bytes        |
     +-------------------------------+---------------+
     | *Document                     | @ref          |
     +-------------------------------+---------------+
@@ -118,6 +121,10 @@ class FaunaEncoder:
     return {"@date": obj.isoformat()}
 
   @staticmethod
+  def from_bytes(obj: Union[bytearray, bytes]):
+    return {"@bytes": base64.b64encode(obj).decode('ascii')}
+
+  @staticmethod
   def from_doc_ref(obj: DocumentReference):
     return {"@ref": {"id": obj.id, "coll": FaunaEncoder.from_mod(obj.coll)}}
 
@@ -185,6 +192,8 @@ class FaunaEncoder:
       return FaunaEncoder.from_datetime(o)
     elif isinstance(o, date):
       return FaunaEncoder.from_date(o)
+    elif isinstance(o, bytearray) or isinstance(o, bytes):
+      return FaunaEncoder.from_bytes(o)
     elif isinstance(o, Document):
       return FaunaEncoder.from_doc_ref(DocumentReference(o.coll, o.id))
     elif isinstance(o, NamedDocument):

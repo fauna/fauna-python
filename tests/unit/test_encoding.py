@@ -1,3 +1,4 @@
+import base64
 import re
 from datetime import date, datetime, timezone, timedelta
 from typing import Any
@@ -115,6 +116,25 @@ def test_encode_decode_primitives(subtests):
     assert test == encoded
     decoded = FaunaDecoder.decode(encoded)
     assert test == decoded
+
+
+def test_encode_bytes(subtests):
+  test_str = "This is a test string 🚀 with various characters: !@#$%^&*()_+=-`~[]{}|;:'\",./<>?"
+  test_bytes = test_str.encode('utf-8')
+  test_b64_bytes = base64.b64encode(test_bytes)
+  test_b64_str = test_b64_bytes.decode('utf-8')
+
+  with subtests.test(msg="encode/decode bytes"):
+    encoded = FaunaEncoder.encode(test_bytes)
+    assert {"@bytes": test_b64_str} == encoded
+    decoded = FaunaDecoder.decode(encoded)
+    assert test_bytes == decoded
+
+  with subtests.test(msg="encode/decode bytearray"):
+    encoded = FaunaEncoder.encode(bytearray(test_bytes))
+    assert {"@bytes": test_b64_str} == encoded
+    decoded = FaunaDecoder.decode(encoded)
+    assert test_bytes == decoded
 
 
 def test_encode_dates_times(subtests):
