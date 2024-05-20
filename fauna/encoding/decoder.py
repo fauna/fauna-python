@@ -1,10 +1,10 @@
 import base64
-import io
 from typing import Any, List, Union
+
 from iso8601 import parse_date
 
 from fauna.query.models import Module, DocumentReference, Document, NamedDocument, NamedDocumentReference, Page, \
-    NullDocument, StreamToken
+  NullDocument, StreamToken
 
 
 class FaunaDecoder:
