@@ -1,7 +1,7 @@
 import datetime
 
 from fauna.query.models import Document, Module, NamedDocument, BaseReference, DocumentReference, \
-    NamedDocumentReference, Page
+  NamedDocumentReference, Page
 
 fixed_datetime = datetime.datetime.fromisoformat("2023-03-17")
 

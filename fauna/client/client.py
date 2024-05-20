@@ -1,19 +1,18 @@
-from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Dict, Iterator, Mapping, Optional, List, Union
-from contextlib import contextmanager
+from datetime import timedelta
+from typing import Any, Dict, Iterator, Mapping, Optional, Union
 
 import fauna
-from fauna.client.retryable import Retryable
-from fauna.errors import FaunaError, ClientError, ProtocolError, \
-    RetryableFaunaException, NetworkError
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
+from fauna.client.retryable import Retryable
+from fauna.client.utils import _Environment, LastTxnTs
+from fauna.encoding import FaunaEncoder, FaunaDecoder
+from fauna.encoding import QuerySuccess, QueryTags, QueryStats
+from fauna.errors import FaunaError, ClientError, ProtocolError, \
+  RetryableFaunaException, NetworkError
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
 from fauna.query.models import StreamToken
-from fauna.client.utils import _Environment, LastTxnTs
-from fauna.encoding import FaunaEncoder, FaunaDecoder
-from fauna.encoding import QuerySuccess, ConstraintFailure, QueryTags, QueryStats
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None

@@ -1,6 +1,5 @@
-import json
 from datetime import timedelta
-from typing import Dict, List, Any
+from typing import Dict
 
 import httpx
 import pytest
@@ -11,8 +10,8 @@ import fauna
 from fauna import fql
 from fauna.client import Client, Header, QueryOptions, Endpoints, StreamOptions
 from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError, NetworkError, AbortError
-from fauna.query.models import StreamToken
 from fauna.http import HTTPXClient
+from fauna.query.models import StreamToken
 
 
 def test_client_defaults(monkeypatch):

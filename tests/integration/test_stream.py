@@ -1,12 +1,13 @@
 import threading
 import time
-import pytest
+
 import httpx
-import fauna
+import pytest
+
 from fauna import fql
 from fauna.client import Client, StreamOptions
-from fauna.http.httpx_client import HTTPXClient
 from fauna.errors import NetworkError, RetryableFaunaException, QueryRuntimeError
+from fauna.http.httpx_client import HTTPXClient
 
 
 def test_stream(scoped_client):

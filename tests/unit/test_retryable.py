@@ -1,5 +1,6 @@
-import pytest
 from typing import List, Optional
+
+import pytest
 
 from fauna.client.retryable import Retryable, ExponentialBackoffStrategy
 from fauna.encoding import QuerySuccess, QueryStats

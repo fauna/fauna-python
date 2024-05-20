@@ -1,8 +1,7 @@
 import abc
 import contextlib
-
-from typing import Iterator, Mapping, Any, Optional
 from dataclasses import dataclass
+from typing import Iterator, Mapping, Any
 
 
 @dataclass(frozen=True)
