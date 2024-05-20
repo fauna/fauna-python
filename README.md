@@ -36,7 +36,7 @@ Supported Environment Variables:
 * ``FAUNA_ENDPOINT``: The Fauna endpoint to use. For example, ``http://localhost:8443``
 * ``FAUNA_SECRET``: The Fauna secret to use.
 
-```python 
+```python
 from fauna import fql
 from fauna.client import Client
 from fauna.encoding import QuerySuccess
@@ -280,13 +280,12 @@ for products in pages:
 
 ## Event Streaming
 
-The driver supports `Event Streaming <https://docs.fauna.com/fauna/current/learn/streaming>`_.
+The driver supports [Event Streaming](https://docs.fauna.com/fauna/current/learn/streaming).
 
-_Start a stream_
+### Start a stream
 
 To get a stream token, append ``toStream()`` or ``changesOn()`` to a set from a
-`supported source
-<https://docs.fauna.com/fauna/current/reference/streaming_reference/#supported-sources>`_.
+[supported source](https://docs.fauna.com/fauna/current/reference/streaming_reference/#supported-sources).
 
 
 To start and subscribe to the stream, pass the stream token to
@@ -295,9 +294,9 @@ To start and subscribe to the stream, pass the stream token to
 ```python
   from fauna import fql
   from fauna.client import Client
-    
+
   client = Client()
-    
+
   response = client.query(fql('''
   let set = Product.all()
   {
@@ -305,10 +304,10 @@ To start and subscribe to the stream, pass the stream token to
     streamToken: set.toStream()
   }
   '''))
-    
+
   initialPage = response.data['initialPage']
   streamToken = response.data['streamToken']
-  
+
   client.stream(streamToken)
 ```
 
@@ -321,7 +320,7 @@ You can also pass a query that produces a stream token directly to
   client.stream(query)
 ```
 
-_Iterate on a stream_
+### Iterate on a stream
 
 ``Client.stream()`` returns an iterator that emits events as they occur. You can
 use a generator expression to iterate through the events:
@@ -343,7 +342,7 @@ with client.stream(query) as stream:
       ## ...
 ```
 
-_Close a stream_
+### Close a stream
 
 Use ``<stream>.close()`` to close a stream:
 
@@ -356,12 +355,12 @@ with client.stream(query) as stream:
     print('Stream event', event)
     # ...
     count+=1
-    
+
     if (count == 2):
        stream.close()
 ```
 
-_Error handling_
+### Error handling
 
 If a non-retryable error occurs when opening or processing a stream, Fauna
 raises a ``FaunaException``:
@@ -383,7 +382,7 @@ try:
 except FaunaException as e:
   print('error ocurred with stream: ', e)
 ```
-_Stream options_
+### Stream options
 
 The client configuration sets default options for the ``Client.stream()``
 method.
