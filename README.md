@@ -166,7 +166,7 @@ client = Client(http_idle_timeout=timedelta(seconds=6))
 ```
 
 > **Note**
-> Your application process may continue executing after all requests are completed for the duration of the session idle timeout. To prevent this, it is recommended to call ``Client.close()`` once all requests are complete. It is not recommended to set ``http_idle_timeout`` to small values.
+> Your application process may continue executing after all requests are completed for the duration of the session idle timeout. To prevent this, it is recommended to call ``close()`` once all requests are complete. It is not recommended to set ``http_idle_timeout`` to small values.
 
 ### Connect Timeout
 
@@ -247,12 +247,12 @@ except ServiceError as e:
 
 ## Pagination
 
-Use the ``Client.paginate()`` method to iterate sets that contain more than one
+Use the ``paginate()`` method to iterate sets that contain more than one
 page of results.
 
-``Client.paginate()`` accepts the same query options as ``Client.query()``.
+``paginate()`` accepts the same query options as ``query()``.
 
-Change the default items per page using FQL's ``<set>.pageSize()`` method.
+Change the default items per page using FQL's ``pageSize()`` method.
 
 ```python
 from datetime import timedelta
@@ -289,7 +289,7 @@ To get a stream token, append ``toStream()`` or ``changesOn()`` to a set from a
 
 
 To start and subscribe to the stream, pass the stream token to
-``Client.stream()``:
+``stream()``:
 
 ```python
   from fauna import fql
@@ -312,7 +312,7 @@ To start and subscribe to the stream, pass the stream token to
 ```
 
 You can also pass a query that produces a stream token directly to
-``Client.stream()``:
+``stream()``:
 
 ```python
   query = fql('Product.all().changesOn(.price, .quantity)')
@@ -322,7 +322,7 @@ You can also pass a query that produces a stream token directly to
 
 ### Iterate on a stream
 
-``Client.stream()`` returns an iterator that emits events as they occur. You can
+``stream()`` returns an iterator that emits events as they occur. You can
 use a generator expression to iterate through the events:
 
 ```python
@@ -344,7 +344,7 @@ with client.stream(query) as stream:
 
 ### Close a stream
 
-Use ``<stream>.close()`` to close a stream:
+Use ``close()`` to close a stream:
 
 ```python
 query = fql('Product.all().changesOn(.price, .quantity)')
@@ -384,7 +384,7 @@ except FaunaException as e:
 ```
 ### Stream options
 
-The client configuration sets default options for the ``Client.stream()``
+The client configuration sets default options for the ``stream()``
 method.
 
 You can pass a ``StreamOptions`` object to override these defaults:
