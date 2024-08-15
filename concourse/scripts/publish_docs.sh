@@ -34,6 +34,9 @@ cd fauna-python-repository-updated-docs
 mkdir -p "${PACKAGE_VERSION}/api/"
 cp -R ../docs/* "./${PACKAGE_VERSION}/api/"
 
+echo "Updating 'latest' symlink to point to $PACKAGE_VERSION"
+ln -sfn "$PACKAGE_VERSION" latest
+
 git config --global user.email "nobody@fauna.com"
 git config --global user.name "Fauna, Inc"
 
