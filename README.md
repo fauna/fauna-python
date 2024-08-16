@@ -26,6 +26,13 @@ The following versions of Python are supported:
 * Python 3.12
 
 
+## API reference
+
+API reference documentation for the driver is available at
+https://fauna.github.io/fauna-python/. The docs are generated using
+[pdoc](https://pdoc.dev/docs/pdoc.html).
+
+
 ## Basic Usage
 You can expect a ``Client`` instance to have reasonable defaults, like the Fauna endpoint ``https://db.fauna.com`` and a global HTTP client, but you will always need to configure a secret.
 
