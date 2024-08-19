@@ -1,24 +1,33 @@
-<!-- Reminder: Keep READMEs up to date -->
+<!--- Provide a general summary of your changes in the title. -->
 
-Ticket(s): BT-###, FE-###,...
+### Description
+<!--- Describe your changes in detail. -->
 
-## Problem
+### Motivation and context
+<!--- Why is this change required? What problem does it solve? -->
+<!--- If it fixes an open issue, link to the issue. -->
 
-Explain the context and why you're making that change. What is the problem you're trying to solve? In some cases there is not a problem and this can be thought of being the motivation for your change.
+### How was the change tested?
+<!--- Describe how you tested your changes. -->
+<!--- Include details of your testing environment, tests you ran to -->
+<!--- see how your change affects other areas of the code, etc. -->
 
-## Solution
+### Screenshots (if appropriate):
 
-Describe the modifications you've done.
+### Change types
+<!--- What types of changes does your code introduce? Put an `x` in any boxes that apply: -->
+* - [ ] Bug fix (non-breaking change that fixes an issue)
+* - [ ] New feature (non-breaking change that adds functionality)
+* - [ ] Breaking change (backwards-incompatible fix or feature)
 
-## Result
-
-What will change as a result of your pull request? Note that sometimes this section is unnecessary because it is self-explanatory based on the solution.
-
-## Testing
-
-Describe the manual and automated tests you completed to verify the change is working as expected.
-
+### Checklist:
+<!--- Review the following points. Put an `x` in any boxes that apply. -->
+<!--- If you're unsure, don't hesitate to ask. We're here to help! -->
+* - [ ] My code follows the code style of this project.
+* - [ ] My change requires a change to Fauna documentation.
+* - [ ] My change requires a change to the README, and I have updated it accordingly.
 
 ----
 By submitting this pull request, I confirm that you can use, modify, copy, and redistribute this contribution, under the terms of your choice.
+
 
