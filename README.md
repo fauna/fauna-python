@@ -398,10 +398,11 @@ You can pass a ``StreamOptions`` object to override these defaults:
 
 ```python
 options = StreamOptions(
-  max_attempts=5,
-  max_backoff=1,
-  start_ts=1710968002310000,
-  status_events=True,
+  max_attempts=3,
+  max_backoff=20,
+  start_ts=None,
+  cursor=None,
+  status_events=False,
  )
 
 client.stream(fql('Product.all().toStream()'), options)
