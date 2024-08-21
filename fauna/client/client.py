@@ -180,8 +180,8 @@ class Client:
         from fauna.http.httpx_client import HTTPXClient
         c = HTTPXClient(
             httpx.Client(
-                http1=False,
-                http2=True,
+                http1=True,
+                http2=False,
                 timeout=httpx.Timeout(
                     timeout=timeout_s,
                     connect=connect_timeout_s,

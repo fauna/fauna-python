@@ -30,16 +30,16 @@ jobs:
         run: ulimit -a
 
       - name: Build docker
-        run: docker-compose -f docker/docker-compose.yml build --build-arg BASE_IMG=python:${{ matrix.python-version }} --no-cache
+        run: docker compose -f docker/docker-compose.yml build --build-arg BASE_IMG=python:${{ matrix.python-version }} --no-cache
 
       - name: Run unit tests
-        run: docker-compose -f docker/docker-compose.yml run --rm unit-test
+        run: docker compose -f docker/docker-compose.yml run --rm unit-test
 
       - name: Run integration tests
-        run: docker-compose -f docker/docker-compose.yml run --rm integration-test
+        run: docker compose -f docker/docker-compose.yml run --rm integration-test
 
       - name: Generate coverage html report with dynamic contexts
-        run: docker-compose -f docker/docker-compose.yml run --rm coverage
+        run: docker compose -f docker/docker-compose.yml run --rm coverage
 
       - uses: actions/upload-artifact@v3
         with:
