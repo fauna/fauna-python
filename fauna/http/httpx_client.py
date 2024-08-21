@@ -73,26 +73,12 @@ class HTTPXClient(HTTPClient):
       raise ClientError("Invalid URL Format") from e
 
     try:
-      return HTTPXResponse(self._send_with_retry(3, request))
-    except (httpx.HTTPError, httpx.InvalidURL) as e:
-      raise NetworkError("Exception re-raised from HTTP request") from e
-
-  def _send_with_retry(
-      self,
-      retryCount: int,
-      request: httpx.Request,
-  ) -> httpx.Response:
-    try:
-      response = self._c.send(
+      return HTTPXResponse(self._c.send(
           request,
           stream=False,
-      )
-      return response
-    except httpx.TransportError as e:
-      if retryCount == 0:
-        raise e
-      else:
-        return self._send_with_retry(retryCount - 1, request)
+      ))
+    except (httpx.HTTPError, httpx.InvalidURL) as e:
+      raise NetworkError("Exception re-raised from HTTP request") from e
 
   @contextmanager
   def stream(
