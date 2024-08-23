@@ -57,6 +57,7 @@ class StreamOptions:
     * max_backoff - The maximum backoff in seconds for an individual retry.
     * start_ts - The starting timestamp of the stream, exclusive. If set, Fauna will return events starting after
     the timestamp.
+    * cursor - The starting event cursor, exclusive. If set, Fauna will return events starting after the cursor.
     * status_events - Indicates if stream should include status events. Status events are periodic events that
     update the client with the latest valid timestamp (in the event of a dropped connection) as well as metrics
     about the cost of maintaining the stream other than the cost of the received events.
@@ -65,6 +66,7 @@ class StreamOptions:
   max_attempts: Optional[int] = None
   max_backoff: Optional[int] = None
   start_ts: Optional[int] = None
+  cursor: Optional[str] = None
   status_events: bool = False
 
 
@@ -408,6 +410,7 @@ class Client:
 
         :return: a :class:`StreamIterator`
 
+        :raises ClientError: Invalid options provided
         :raises NetworkError: HTTP Request failed in transit
         :raises ProtocolError: HTTP error not from Fauna
         :raises ServiceError: Fauna returned an error
@@ -416,6 +419,10 @@ class Client:
         """
 
     if isinstance(fql, Query):
+      if opts.cursor is not None:
+        raise ClientError(
+            "The 'cursor' configuration can only be used with a stream token.")
+
       token = self.query(fql).data
     else:
       token = fql
@@ -479,6 +486,7 @@ class StreamIterator:
     self._token = token
     self._stream = None
     self.last_ts = None
+    self.last_cursor = None
     self._ctx = self._create_stream()
 
   def __enter__(self):
@@ -523,6 +531,7 @@ class StreamIterator:
           FaunaError.parse_error_and_throw(event, 400)
 
         self.last_ts = event["txn_ts"]
+        self.last_cursor = event.get('cursor')
 
         if event["type"] == "start":
           return self._next_element()
@@ -550,8 +559,10 @@ class StreamIterator:
 
   def _create_stream(self):
     data: Dict[str, Any] = {"token": self._token.token}
-    if self.last_ts is not None:
-      data["start_ts"] = self.last_ts
+    if self.last_cursor is not None:
+      data["cursor"] = self.last_cursor
+    elif self._opts.cursor is not None:
+      data["cursor"] = self._opts.cursor
     elif self._opts.start_ts is not None:
       data["start_ts"] = self._opts.start_ts
 

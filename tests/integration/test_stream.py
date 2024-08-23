@@ -6,7 +6,7 @@ import pytest
 
 from fauna import fql
 from fauna.client import Client, StreamOptions
-from fauna.errors import NetworkError, RetryableFaunaException, QueryRuntimeError
+from fauna.errors import ClientError, NetworkError, RetryableFaunaException, QueryRuntimeError
 from fauna.http.httpx_client import HTTPXClient
 
 
@@ -200,6 +200,37 @@ def test_providing_start_ts(scoped_client):
   assert events[0]["txn_ts"] == createTwo.txn_ts
   assert events[1]["txn_ts"] == createThree.txn_ts
   assert events[2]["txn_ts"] == createFour.txn_ts
+
+
+def test_providing_cursor(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  stream_token = scoped_client.query(fql("Product.all().toStream()")).data
+  create1 = scoped_client.query(fql("Product.create({ value: 1 })"))
+  create2 = scoped_client.query(fql("Product.create({ value: 2 })"))
+
+  cursor = None
+  with scoped_client.stream(stream_token) as iter:
+    for event in iter:
+      assert event["type"] == "add"
+      assert event["data"]["value"] == 1
+      cursor = event["cursor"]
+      break
+
+  opts = StreamOptions(cursor=cursor)
+  with scoped_client.stream(stream_token, opts) as iter:
+    for event in iter:
+      assert event["type"] == "add"
+      assert event["data"]["value"] == 2
+      break
+
+
+def test_rejects_cursor_with_fql_query(scoped_client):
+  with pytest.raises(
+      ClientError,
+      match="The 'cursor' configuration can only be used with a stream token."):
+    opts = StreamOptions(cursor="abc1234==")
+    scoped_client.stream(fql("Collection.create({name: 'Product'})"), opts)
 
 
 @pytest.mark.xfail(reason="not currently supported by core")
