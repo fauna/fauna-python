@@ -389,6 +389,7 @@ try:
 except FaunaException as e:
   print('error ocurred with stream: ', e)
 ```
+
 ### Stream options
 
 The client configuration sets default options for the ``stream()``
@@ -406,6 +407,167 @@ options = StreamOptions(
  )
 
 client.stream(fql('Product.all().toStream()'), options)
+```
+
+## Change Feeds (beta)
+
+<!-- TODO: turn "Change Feeds" into a link when available. -->
+
+The driver supports Change Feeds.
+
+### Request a Change Feed
+
+A Change Feed asynchronously polls an [event stream](https://docs.fauna.com/fauna/current/learn/streaming),
+represented by a stream token, for events. 
+
+To get a stream token, append ``toStream()`` or ``changesOn()`` to a set from a
+[supported source](https://docs.fauna.com/fauna/current/reference/streaming_reference/#supported-sources).
+
+To get paginated events for the stream, pass the stream token to
+``change_feed()``:
+
+```python
+  from fauna import fql
+  from fauna.client import Client
+
+  client = Client()
+
+  response = client.query(fql('''
+  let set = Product.all()
+  {
+    initialPage: set.pageSize(10),
+    streamToken: set.toStream()
+  }
+  '''))
+
+  initialPage = response.data['initialPage']
+  streamToken = response.data['streamToken']
+
+  client.change_feed(streamToken)
+```
+
+You can also pass a query that produces a stream token directly to
+``change_feed()``:
+
+```python
+  query = fql('Product.all().changesOn(.price, .stock)')
+
+  client.change_feed(query)
+```
+
+### Iterate on a Change Feed
+
+``change_feed()`` returns an iterator that emits pages of events. You can use a
+generator expression to iterate through the pages:
+
+```python
+  query = fql('Product.all().changesOn(.price, .stock)')
+  feed = client.change_feed(query)
+
+  for page in feed:
+    print('Page stats: ', page.stats)
+  
+    for event in page:
+      eventType = event['type']
+      if (eventType == 'add'):
+        print('Add event: ', event)
+        ## ...
+      elif (eventType == 'update'):
+        print('Update event: ', event)
+        ## ...
+      elif (eventType == 'remove'):
+        print('Remove event: ', event)
+        ## ...
+```
+
+Alternatively, you can iterate through events instead of pages with
+``flatten()``:
+
+```python
+  query = fql('Product.all().changesOn(.price, .stock)')
+  feed = client.change_feed(query)
+
+  for event in feed.flatten():
+    eventType = event['type']
+    ## ...
+```
+
+The change feed iterator stops when there are no more events to poll.
+
+### Error handling
+
+If a non-retryable error occurs when opening or processing a change feed, Fauna
+raises a ``FaunaException``:
+
+```python
+  from fauna import fql
+  from fauna.client import Client
+  from fauna.errors import FaunaException
+  
+  client = Client()
+  
+  try:
+    feed = client.change_feed(fql(
+      'Product.all().changesOn(.price, .stock)'
+    ))
+    for event in feed.flatten():
+      print(event)
+      # ...
+  except FaunaException as e:
+    print('error ocurred with change feed: ', e)
+```
+
+Errors can be raised at two different places:
+
+1. At the ``change_feed`` method call;
+2. At the page iteration.
+
+This distinction allows for users to ignore errors originating from event
+processing. For example:
+
+```python
+  from fauna import fql
+  from fauna.client import Client
+  from fauna.errors import FaunaException
+  
+  client = Client()
+  
+  # Imagine if there are some products with details = null.
+  # The ones without details will fail due to the toUpperCase call.
+  feed = client.change_feed(fql(
+    'Product.all().map(.details.toUpperCase()).toStream()'
+  ))
+  
+  for page in feed:
+    try:
+      for event in page:
+        print(event)
+        # ...
+    except FaunaException as e:
+      # Pages will stop at the first error encountered.
+      # Therefore, its safe to handle an event failures
+      # and then pull more pages.
+      print('error ocurred with event processing: ', e)
+```
+
+### Change Feed options
+
+The client configuration sets default options for the ``change_feed()``
+method.
+
+You can pass a ``ChangeFeedOptions`` object to override these defaults:
+
+```python
+options = ChangeFeedOptions(
+  max_attempts=3,
+  max_backoff=20,
+  query_timeout=timedelta(seconds=5),
+  page_size=None,
+  cursor=None,
+  start_ts=None,
+ )
+
+client.change_feed(fql('Product.all().toStream()'), options)
 ```
 
 ## Setup

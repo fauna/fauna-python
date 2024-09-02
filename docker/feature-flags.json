@@ -9,7 +9,8 @@
         "fqlx_typecheck_default": true,
         "persisted_fields": true,
         "changes_by_collection_index": true,
-        "fql2_streams": true
+        "fql2_streams": true,
+        "change_feeds": true
       }
     },
     {
@@ -20,7 +21,8 @@
         "fqlx_typecheck_default": true,
         "persisted_fields": true,
         "changes_by_collection_index": true,
-        "fql2_streams": true
+        "fql2_streams": true,
+        "change_feeds": true
       }
     }
   ]
