@@ -229,7 +229,6 @@ def test_rejects_cursor_with_fql_query(scoped_client):
     scoped_client.stream(fql("Collection.create({name: 'Product'})"), opts)
 
 
-@pytest.mark.xfail(reason="not currently supported by core")
 def test_handle_status_events(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
 
