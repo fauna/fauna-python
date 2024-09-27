@@ -322,7 +322,7 @@ You can also pass a query that produces a stream token directly to
 ``stream()``:
 
 ```python
-  query = fql('Product.all().changesOn(.price, .quantity)')
+  query = fql('Product.all().changesOn(.price, .stock)')
 
   client.stream(query)
 ```
@@ -333,7 +333,7 @@ You can also pass a query that produces a stream token directly to
 use a generator expression to iterate through the events:
 
 ```python
-query = fql('Product.all().changesOn(.price, .quantity)')
+query = fql('Product.all().changesOn(.price, .stock)')
 
 with client.stream(query) as stream:
   for event in stream:
@@ -354,7 +354,7 @@ with client.stream(query) as stream:
 Use ``close()`` to close a stream:
 
 ```python
-query = fql('Product.all().changesOn(.price, .quantity)')
+query = fql('Product.all().changesOn(.price, .stock)')
 
 count = 0
 with client.stream(query) as stream:
@@ -381,7 +381,7 @@ client = Client()
 
 try:
   with client.stream(fql(
-    'Product.all().changesOn(.price, .quantity)'
+    'Product.all().changesOn(.price, .stock)'
   )) as stream:
     for event in stream:
       print(event)
