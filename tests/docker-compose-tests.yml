@@ -6,6 +6,10 @@ services:
     container_name: faunadb
     ports:
       - "8443:8443"
+    volumes:
+      - ../docker/feature-flags.json:/etc/feature-flag-periodic.d/feature-flags.json
+    environment:
+      - FLAG_ACCOUNT_CHANGE_FEEDS=true
     healthcheck:
       test: ["CMD", "curl", "http://faunadb:8443/ping"]
       interval: 1s

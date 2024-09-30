@@ -7,6 +7,8 @@ services:
       - "8443:8443"
     volumes:
       - ../docker/feature-flags.json:/etc/feature-flag-periodic.d/feature-flags.json
+    environment:
+      - FLAG_ACCOUNT_CHANGE_FEEDS=true
   test:
     image: fauna-python-test:latest
     build:
