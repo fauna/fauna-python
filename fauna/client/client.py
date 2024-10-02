@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Dict, Iterator, Mapping, Optional, Union
+from typing import Any, Dict, Iterator, Mapping, Optional, Union, List
 
 import fauna
 from fauna.client.headers import _DriverEnvironment, _Header, _Auth, Header
@@ -68,6 +68,27 @@ class StreamOptions:
   start_ts: Optional[int] = None
   cursor: Optional[str] = None
   status_events: bool = False
+
+
+@dataclass
+class ChangeFeedOptions:
+  """
+    A dataclass representing options available for a change feed.
+
+    * max_attempts - The maximum number of times to attempt a change feed query when a retryable exception is thrown.
+    * max_backoff - The maximum backoff in seconds for an individual retry.
+    * query_timeout - Controls the maximum amount of time Fauna will execute a query before returning a page of events.
+    * start_ts - The starting timestamp of the change feed, exclusive. If set, Fauna will return events starting after
+    the timestamp.
+    * cursor - The starting event cursor, exclusive. If set, Fauna will return events starting after the cursor.
+    * page_size - The desired number of events per page.
+    """
+  max_attempts: Optional[int] = None
+  max_backoff: Optional[int] = None
+  query_timeout: Optional[timedelta] = None
+  page_size: Optional[int] = None
+  start_ts: Optional[int] = None
+  cursor: Optional[str] = None
 
 
 class Client:
@@ -438,6 +459,51 @@ class Client:
     return StreamIterator(self._session, headers, self._endpoint + "/stream/1",
                           self._max_attempts, self._max_backoff, opts, token)
 
+  def change_feed(
+      self,
+      fql: Union[StreamToken, Query],
+      opts: ChangeFeedOptions = ChangeFeedOptions()
+  ) -> "ChangeFeedIterator":
+    """
+        Opens a change feed in Fauna and returns an iterator that consume Fauna events.
+
+        :param fql: A Query that returns a StreamToken or a StreamToken.
+        :param opts: (Optional) Change feed options.
+
+        :return: a :class:`ChangeFeedIterator`
+
+        :raises ClientError: Invalid options provided
+        :raises NetworkError: HTTP Request failed in transit
+        :raises ProtocolError: HTTP error not from Fauna
+        :raises ServiceError: Fauna returned an error
+        :raises ValueError: Encoding and decoding errors
+        :raises TypeError: Invalid param types
+        """
+
+    if isinstance(fql, Query):
+      token = self.query(fql).data
+    else:
+      token = fql
+
+    if not isinstance(token, StreamToken):
+      err_msg = f"'fql' must be a StreamToken, or a Query that returns a StreamToken but was a {type(token)}."
+      raise TypeError(err_msg)
+
+    headers = self._headers.copy()
+    headers[_Header.Format] = "tagged"
+    headers[_Header.Authorization] = self._auth.bearer()
+
+    if opts.query_timeout is not None:
+      query_timeout_ms = int(opts.query_timeout.total_seconds() * 1000)
+      headers[Header.QueryTimeoutMs] = str(query_timeout_ms)
+    elif self._query_timeout_ms is not None:
+      headers[Header.QueryTimeoutMs] = str(self._query_timeout_ms)
+
+    return ChangeFeedIterator(self._session, headers,
+                              self._endpoint + "/changefeed/1",
+                              self._max_attempts, self._max_backoff, opts,
+                              token)
+
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
     should_raise = False
@@ -572,6 +638,86 @@ class StreamIterator:
   def close(self):
     if self._stream is not None:
       self._stream.close()
+
+
+class ChangeFeedPage:
+
+  def __init__(self, events: List[Any], cursor: str, stats: QueryStats):
+    self._events = events
+    self.cursor = cursor
+    self.stats = stats
+
+  def __len__(self):
+    return len(self._events)
+
+  def __iter__(self) -> Iterator[Any]:
+    for event in self._events:
+      if event["type"] == "error":
+        FaunaError.parse_error_and_throw(event, 400)
+      yield event
+
+
+class ChangeFeedIterator:
+  """A class to provide an iterator on top of change feed pages."""
+
+  def __init__(self, http: HTTPClient, headers: Dict[str, str], endpoint: str,
+               max_attempts: int, max_backoff: int, opts: ChangeFeedOptions,
+               token: StreamToken):
+    self._http = http
+    self._headers = headers
+    self._endpoint = endpoint
+    self._max_attempts = opts.max_attempts or max_attempts
+    self._max_backoff = opts.max_backoff or max_backoff
+    self._request: Dict[str, Any] = {"token": token.token}
+    self._is_done = False
+
+    if opts.page_size is not None:
+      self._request["page_size"] = opts.page_size
+
+    if opts.cursor is not None:
+      self._request["cursor"] = opts.cursor
+    elif opts.start_ts is not None:
+      self._request["start_ts"] = opts.start_ts
+
+  def __iter__(self) -> Iterator[ChangeFeedPage]:
+    self._is_done = False
+    return self
+
+  def __next__(self) -> ChangeFeedPage:
+    if self._is_done:
+      raise StopIteration
+
+    retryable = Retryable[Any](self._max_attempts, self._max_backoff,
+                               self._next_page)
+    return retryable.run().response
+
+  def _next_page(self) -> ChangeFeedPage:
+    with self._http.request(
+        method="POST",
+        url=self._endpoint,
+        headers=self._headers,
+        data=self._request,
+    ) as response:
+      status_code = response.status_code()
+      decoded: Any = FaunaDecoder.decode(response.json())
+
+      if status_code > 399:
+        FaunaError.parse_error_and_throw(decoded, status_code)
+
+      self._is_done = not decoded["has_next"]
+      self._request["cursor"] = decoded["cursor"]
+
+      if "start_ts" in self._request:
+        del self._request["start_ts"]
+
+      return ChangeFeedPage(decoded["events"], decoded["cursor"],
+                            QueryStats(decoded["stats"]))
+
+  def flatten(self) -> Iterator:
+    """A generator that yields events instead of pages of events."""
+    for page in self:
+      for event in page:
+        yield event
 
 
 class QueryIterator:
