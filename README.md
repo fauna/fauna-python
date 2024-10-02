@@ -411,9 +411,7 @@ client.stream(fql('Product.all().toStream()'), options)
 
 ## Change Feeds (beta)
 
-<!-- TODO: turn "Change Feeds" into a link when available. -->
-
-The driver supports Change Feeds.
+The driver supports [Change Feeds](https://docs.fauna.com/fauna/current/learn/track-changes/streaming/#change-feeds).
 
 ### Request a Change Feed
 
