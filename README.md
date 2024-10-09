@@ -1,4 +1,4 @@
-# The Official Python Driver for [Fauna](https://fauna.com).
+# Official Python Driver for [Fauna v10](https://fauna.com) (current)
 
 [![Pypi Version](https://img.shields.io/pypi/v/fauna.svg?maxAge=21600)](https://pypi.python.org/pypi/fauna)
 [![License](https://img.shields.io/badge/license-MPL_2.0-blue.svg?maxAge=2592000)](https://raw.githubusercontent.com/fauna/fauna-python/main/LICENSE)
