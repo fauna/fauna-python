@@ -73,12 +73,12 @@ class StreamOptions:
 @dataclass
 class ChangeFeedOptions:
   """
-    A dataclass representing options available for a change feed.
+    A dataclass representing options available for an Event Feed.
 
-    * max_attempts - The maximum number of times to attempt a change feed query when a retryable exception is thrown.
+    * max_attempts - The maximum number of times to attempt an Event Feed query when a retryable exception is thrown.
     * max_backoff - The maximum backoff in seconds for an individual retry.
     * query_timeout - Controls the maximum amount of time Fauna will execute a query before returning a page of events.
-    * start_ts - The starting timestamp of the change feed, exclusive. If set, Fauna will return events starting after
+    * start_ts - The starting timestamp of the Event Feed, exclusive. If set, Fauna will return events starting after
     the timestamp.
     * cursor - The starting event cursor, exclusive. If set, Fauna will return events starting after the cursor.
     * page_size - The desired number of events per page.
@@ -465,10 +465,10 @@ class Client:
       opts: ChangeFeedOptions = ChangeFeedOptions()
   ) -> "ChangeFeedIterator":
     """
-        Opens a change feed in Fauna and returns an iterator that consume Fauna events.
+        Opens an Event Feed in Fauna and returns an iterator that consume Fauna events.
 
         :param fql: A Query that returns a StreamToken or a StreamToken.
-        :param opts: (Optional) Change feed options.
+        :param opts: (Optional) Event Feed options.
 
         :return: a :class:`ChangeFeedIterator`
 
@@ -658,7 +658,7 @@ class ChangeFeedPage:
 
 
 class ChangeFeedIterator:
-  """A class to provide an iterator on top of change feed pages."""
+  """A class to provide an iterator on top of Event Feed pages."""
 
   def __init__(self, http: HTTPClient, headers: Dict[str, str], endpoint: str,
                max_attempts: int, max_backoff: int, opts: ChangeFeedOptions,
