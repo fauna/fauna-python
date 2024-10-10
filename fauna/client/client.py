@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Dict, Iterator, Mapping, Optional, Union, List
@@ -13,6 +14,8 @@ from fauna.errors import FaunaError, ClientError, ProtocolError, \
 from fauna.http.http_client import HTTPClient
 from fauna.query import Query, Page, fql
 from fauna.query.models import StreamToken
+
+logger = logging.getLogger("fauna")
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -217,7 +220,7 @@ class Client:
                     max_keepalive_connections=DefaultMaxIdleConnections,
                     keepalive_expiry=idle_timeout_s,
                 ),
-            ))
+            ), logger)
         fauna.global_http_client = c
 
       self._session = fauna.global_http_client

@@ -568,6 +568,23 @@ options = ChangeFeedOptions(
 client.change_feed(fql('Product.all().toStream()'), options)
 ```
 
+## Logging
+
+Debug logging is handled by the standard logging package in under the `fauna` namespace. We will log the request with body, excluding the Authorization header, as well as the full response.
+
+In your application, you can enable debug logging with the following. Given this is a standard convention in Python, you may want more fine-grained control over which libraries log. See Python's how-to at https://docs.python.org/3/howto/logging.html.
+```python
+import logging
+from fauna.client import Client
+from fauna import fql
+
+logging.basicConfig(
+    level=logging.DEBUG
+)
+c = Client()
+c.query(fql("42"))
+```
+
 ## Setup
 
 ```bash
