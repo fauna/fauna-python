@@ -1,12 +1,11 @@
 import threading
-import time
 
 import httpx
 import pytest
 
 from fauna import fql
 from fauna.client import Client, StreamOptions
-from fauna.errors import ClientError, NetworkError, RetryableFaunaException, QueryRuntimeError
+from fauna.errors import ClientError, RetryableFaunaException, QueryRuntimeError, NetworkError
 from fauna.http.httpx_client import HTTPXClient
 
 
@@ -107,11 +106,16 @@ def test_max_retries(scoped_secret):
 
   count = [0]
 
-  def stream_func(*args, **kwargs):
+  old_send = httpx_client.send
+
+  def send_func(*args, **kwargs):
+    if not kwargs['stream']:
+      return old_send(*args, **kwargs)
+
     count[0] += 1
     raise NetworkError('foo')
 
-  httpx_client.stream = stream_func
+  httpx_client.send = send_func
 
   count[0] = 0
   with pytest.raises(RetryableFaunaException):

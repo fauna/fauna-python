@@ -1,4 +1,5 @@
 import json
+import logging
 from contextlib import contextmanager
 from json import JSONDecodeError
 from typing import Mapping, Any, Optional, Iterator
@@ -50,9 +51,12 @@ class HTTPXResponse(HTTPResponse):
 
 class HTTPXClient(HTTPClient):
 
-  def __init__(self, client: httpx.Client):
+  def __init__(self,
+               client: httpx.Client,
+               logger: logging.Logger = logging.getLogger("fauna")):
     super(HTTPXClient, self).__init__()
     self._c = client
+    self._logger = logger
 
   def request(
       self,
@@ -69,14 +73,29 @@ class HTTPXClient(HTTPClient):
           json=data,
           headers=headers,
       )
+
+      if self._logger.isEnabledFor(logging.DEBUG):
+        headers_to_log = request.headers.copy()
+        headers_to_log.pop("Authorization")
+        self._logger.debug(
+            f"query.request method={request.method} url={request.url} headers={headers_to_log} data={data}"
+        )
+
     except httpx.InvalidURL as e:
       raise ClientError("Invalid URL Format") from e
 
     try:
-      return HTTPXResponse(self._c.send(
+      response = self._c.send(
           request,
           stream=False,
-      ))
+      )
+
+      if self._logger.isEnabledFor(logging.DEBUG):
+        self._logger.debug(
+            f"query.response status_code={response.status_code} headers={response.headers} data={response.text}"
+        )
+
+      return HTTPXResponse(response)
     except (httpx.HTTPError, httpx.InvalidURL) as e:
       raise NetworkError("Exception re-raised from HTTP request") from e
 
@@ -87,14 +106,37 @@ class HTTPXClient(HTTPClient):
       headers: Mapping[str, str],
       data: Mapping[str, Any],
   ) -> Iterator[Any]:
-    with self._c.stream(
-        "POST", url=url, headers=headers, json=data) as response:
+    request = self._c.build_request(
+        method="POST",
+        url=url,
+        headers=headers,
+        json=data,
+    )
+
+    if self._logger.isEnabledFor(logging.DEBUG):
+      headers_to_log = request.headers.copy()
+      headers_to_log.pop("Authorization")
+      self._logger.debug(
+          f"stream.request method={request.method} url={request.url} headers={headers_to_log} data={data}"
+      )
+
+    response = self._c.send(
+        request=request,
+        stream=True,
+    )
+
+    try:
       yield self._transform(response)
+    finally:
+      response.close()
 
   def _transform(self, response):
     try:
       for line in response.iter_lines():
-        yield json.loads(line)
+        loaded = json.loads(line)
+        if self._logger.isEnabledFor(logging.DEBUG):
+          self._logger.debug(f"stream.data data={loaded}")
+        yield loaded
     except httpx.ReadTimeout as e:
       raise NetworkError("Stream timeout") from e
     except (httpx.HTTPError, httpx.InvalidURL) as e:
