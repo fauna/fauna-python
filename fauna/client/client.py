@@ -446,7 +446,6 @@ class Client:
       if opts.cursor is not None:
         raise ClientError(
             "The 'cursor' configuration can only be used with a stream token.")
-
       token = self.query(fql).data
     else:
       token = fql
