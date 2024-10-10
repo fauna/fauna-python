@@ -115,6 +115,17 @@ def test_change_feed_cursor(client, a_collection):
   assert nums == list(range(1, 64))
 
 
+def test_rejects_when_both_start_ts_and_cursor_provided(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  response = scoped_client.query(fql("Product.all().toStream()"))
+  stream_token = response.data
+
+  with pytest.raises(TypeError):
+    opts = ChangeFeedOptions(cursor="abc1234==", start_ts=response.txn_ts)
+    scoped_client.change_feed(stream_token, opts)
+
+
 def test_change_feed_reusable_iterator(client, a_collection):
   feed = client.change_feed(
       fql("${col}.all().map(.n).toStream()", col=a_collection))

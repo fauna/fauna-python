@@ -229,6 +229,17 @@ def test_rejects_cursor_with_fql_query(scoped_client):
     scoped_client.stream(fql("Collection.create({name: 'Product'})"), opts)
 
 
+def test_rejects_when_both_start_ts_and_cursor_provided(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  response = scoped_client.query(fql("Product.all().toStream()"))
+  stream_token = response.data
+
+  with pytest.raises(TypeError):
+    opts = StreamOptions(cursor="abc1234==", start_ts=response.txn_ts)
+    scoped_client.stream(stream_token, opts)
+
+
 def test_handle_status_events(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
 

@@ -555,6 +555,10 @@ class StreamIterator:
     self.last_cursor = None
     self._ctx = self._create_stream()
 
+    if opts.start_ts is not None and opts.cursor is not None:
+      err_msg = "Only one of 'start_ts' or 'cursor' can be defined in the StreamOptions."
+      raise TypeError(err_msg)
+
   def __enter__(self):
     return self
 
@@ -670,6 +674,10 @@ class ChangeFeedIterator:
     self._max_backoff = opts.max_backoff or max_backoff
     self._request: Dict[str, Any] = {"token": token.token}
     self._is_done = False
+
+    if opts.start_ts is not None and opts.cursor is not None:
+      err_msg = "Only one of 'start_ts' or 'cursor' can be defined in the ChangeFeedOptions."
+      raise TypeError(err_msg)
 
     if opts.page_size is not None:
       self._request["page_size"] = opts.page_size
