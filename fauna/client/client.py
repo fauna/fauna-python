@@ -1,3 +1,4 @@
+import warnings
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Dict, Iterator, Mapping, Optional, Union, List
@@ -70,7 +71,7 @@ class StreamOptions:
 
 
 @dataclass
-class ChangeFeedOptions:
+class FeedOptions:
   """
     A dataclass representing options available for an Event Feed.
 
@@ -461,15 +462,25 @@ class Client:
   def change_feed(
       self,
       fql: Union[EventSource, Query],
-      opts: ChangeFeedOptions = ChangeFeedOptions()
-  ) -> "ChangeFeedIterator":
+      opts: FeedOptions = FeedOptions(),
+  ) -> "FeedIterator":
+    warnings.warn(
+        "The 'change_feed' method is deprecated. Prefer the 'feed' method instead.",
+        DeprecationWarning)
+    return self.feed(fql, opts)
+
+  def feed(
+      self,
+      fql: Union[EventSource, Query],
+      opts: FeedOptions = FeedOptions(),
+  ) -> "FeedIterator":
     """
         Opens an Event Feed in Fauna and returns an iterator that consume Fauna events.
 
         :param fql: A Query that returns a EventSource or a EventSource.
         :param opts: (Optional) Event Feed options.
 
-        :return: a :class:`ChangeFeedIterator`
+        :return: a :class:`FeedIterator`
 
         :raises ClientError: Invalid options provided
         :raises NetworkError: HTTP Request failed in transit
@@ -498,10 +509,9 @@ class Client:
     elif self._query_timeout_ms is not None:
       headers[Header.QueryTimeoutMs] = str(self._query_timeout_ms)
 
-    return ChangeFeedIterator(self._session, headers,
-                              self._endpoint + "/changefeed/1",
-                              self._max_attempts, self._max_backoff, opts,
-                              token)
+    return FeedIterator(self._session, headers,
+                        self._endpoint + "/changefeed/1", self._max_attempts,
+                        self._max_backoff, opts, token)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -643,7 +653,7 @@ class StreamIterator:
       self._stream.close()
 
 
-class ChangeFeedPage:
+class FeedPage:
 
   def __init__(self, events: List[Any], cursor: str, stats: QueryStats):
     self._events = events
@@ -660,11 +670,11 @@ class ChangeFeedPage:
       yield event
 
 
-class ChangeFeedIterator:
+class FeedIterator:
   """A class to provide an iterator on top of Event Feed pages."""
 
   def __init__(self, http: HTTPClient, headers: Dict[str, str], endpoint: str,
-               max_attempts: int, max_backoff: int, opts: ChangeFeedOptions,
+               max_attempts: int, max_backoff: int, opts: FeedOptions,
                token: EventSource):
     self._http = http
     self._headers = headers
@@ -675,7 +685,7 @@ class ChangeFeedIterator:
     self._is_done = False
 
     if opts.start_ts is not None and opts.cursor is not None:
-      err_msg = "Only one of 'start_ts' or 'cursor' can be defined in the ChangeFeedOptions."
+      err_msg = "Only one of 'start_ts' or 'cursor' can be defined in the FeedOptions."
       raise TypeError(err_msg)
 
     if opts.page_size is not None:
@@ -686,11 +696,11 @@ class ChangeFeedIterator:
     elif opts.start_ts is not None:
       self._request["start_ts"] = opts.start_ts
 
-  def __iter__(self) -> Iterator[ChangeFeedPage]:
+  def __iter__(self) -> Iterator[FeedPage]:
     self._is_done = False
     return self
 
-  def __next__(self) -> ChangeFeedPage:
+  def __next__(self) -> FeedPage:
     if self._is_done:
       raise StopIteration
 
@@ -698,7 +708,7 @@ class ChangeFeedIterator:
                                self._next_page)
     return retryable.run().response
 
-  def _next_page(self) -> ChangeFeedPage:
+  def _next_page(self) -> FeedPage:
     with self._http.request(
         method="POST",
         url=self._endpoint,
@@ -717,8 +727,8 @@ class ChangeFeedIterator:
       if "start_ts" in self._request:
         del self._request["start_ts"]
 
-      return ChangeFeedPage(decoded["events"], decoded["cursor"],
-                            QueryStats(decoded["stats"]))
+      return FeedPage(decoded["events"], decoded["cursor"],
+                      QueryStats(decoded["stats"]))
 
   def flatten(self) -> Iterator:
     """A generator that yields events instead of pages of events."""
