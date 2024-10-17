@@ -13,11 +13,11 @@ def __getattr__(name):
         DeprecationWarning,
         stacklevel=2)
     return EventSource
-  return super.__getattr__(name)
+  return super.__getattr__(name)  # pyright: ignore
 
 
 def __dir__():
-  return super.__dir__() + "StreamToken"
+  return super.__dir__() + "StreamToken"  # pyright: ignore
 
 
 class Page:

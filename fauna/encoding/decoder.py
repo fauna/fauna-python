@@ -64,7 +64,7 @@ class FaunaDecoder:
             - { "@ref": ... } decodes to a DocumentReference or NamedDocumentReference
             - { "@mod": ... } decodes to a Module
             - { "@set": ... } decodes to a Page
-            - { "@stream": ... } decodes to a EventSource
+            - { "@stream": ... } decodes to an EventSource
             - { "@bytes": ... } decodes to a bytearray
 
         :param obj: the object to decode
