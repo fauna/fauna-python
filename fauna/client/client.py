@@ -11,8 +11,7 @@ from fauna.encoding import QuerySuccess, QueryTags, QueryStats
 from fauna.errors import FaunaError, ClientError, ProtocolError, \
   RetryableFaunaException, NetworkError
 from fauna.http.http_client import HTTPClient
-from fauna.query import Query, Page, fql
-from fauna.query.models import StreamToken
+from fauna.query import EventSource, Query, Page, fql
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -420,13 +419,13 @@ class Client:
 
   def stream(
       self,
-      fql: Union[StreamToken, Query],
+      fql: Union[EventSource, Query],
       opts: StreamOptions = StreamOptions()
   ) -> "StreamIterator":
     """
         Opens a Stream in Fauna and returns an iterator that consume Fauna events.
 
-        :param fql: A Query that returns a StreamToken or a StreamToken.
+        :param fql: A Query that returns a EventSource or a EventSource.
         :param opts: (Optional) Stream Options.
 
         :return: a :class:`StreamIterator`
@@ -442,14 +441,14 @@ class Client:
     if isinstance(fql, Query):
       if opts.cursor is not None:
         raise ClientError(
-            "The 'cursor' configuration can only be used with a stream token.")
+            "The 'cursor' configuration can only be used with an event source.")
 
       token = self.query(fql).data
     else:
       token = fql
 
-    if not isinstance(token, StreamToken):
-      err_msg = f"'fql' must be a StreamToken, or a Query that returns a StreamToken but was a {type(token)}."
+    if not isinstance(token, EventSource):
+      err_msg = f"'fql' must be a EventSource, or a Query that returns a EventSource but was a {type(token)}."
       raise TypeError(err_msg)
 
     headers = self._headers.copy()
@@ -461,13 +460,13 @@ class Client:
 
   def change_feed(
       self,
-      fql: Union[StreamToken, Query],
+      fql: Union[EventSource, Query],
       opts: ChangeFeedOptions = ChangeFeedOptions()
   ) -> "ChangeFeedIterator":
     """
         Opens an Event Feed in Fauna and returns an iterator that consume Fauna events.
 
-        :param fql: A Query that returns a StreamToken or a StreamToken.
+        :param fql: A Query that returns a EventSource or a EventSource.
         :param opts: (Optional) Event Feed options.
 
         :return: a :class:`ChangeFeedIterator`
@@ -485,8 +484,8 @@ class Client:
     else:
       token = fql
 
-    if not isinstance(token, StreamToken):
-      err_msg = f"'fql' must be a StreamToken, or a Query that returns a StreamToken but was a {type(token)}."
+    if not isinstance(token, EventSource):
+      err_msg = f"'fql' must be a EventSource, or a Query that returns a EventSource but was a {type(token)}."
       raise TypeError(err_msg)
 
     headers = self._headers.copy()
@@ -542,7 +541,7 @@ class StreamIterator:
 
   def __init__(self, http_client: HTTPClient, headers: Dict[str, str],
                endpoint: str, max_attempts: int, max_backoff: int,
-               opts: StreamOptions, token: StreamToken):
+               opts: StreamOptions, token: EventSource):
     self._http_client = http_client
     self._headers = headers
     self._endpoint = endpoint
@@ -666,7 +665,7 @@ class ChangeFeedIterator:
 
   def __init__(self, http: HTTPClient, headers: Dict[str, str], endpoint: str,
                max_attempts: int, max_backoff: int, opts: ChangeFeedOptions,
-               token: StreamToken):
+               token: EventSource):
     self._http = http
     self._headers = headers
     self._endpoint = endpoint

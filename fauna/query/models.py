@@ -1,6 +1,23 @@
+import warnings
 from collections.abc import Mapping
 from datetime import datetime
 from typing import Union, Iterator, Any, Optional, List
+
+
+# NB. Override __getattr__ and __dir__ to deprecate StreamToken usages. Based
+# on: https://peps.python.org/pep-0562/
+def __getattr__(name):
+  if name == "StreamToken":
+    warnings.warn(
+        "StreamToken is deprecated. Prefer fauna.query.EventSource instead.",
+        DeprecationWarning,
+        stacklevel=2)
+    return EventSource
+  return super.__getattr__(name)
+
+
+def __dir__():
+  return super.__dir__() + "StreamToken"
 
 
 class Page:
@@ -36,14 +53,14 @@ class Page:
     return not self.__eq__(other)
 
 
-class StreamToken:
-  """A class represeting a Stream in Fauna."""
+class EventSource:
+  """A class represeting an EventSource in Fauna."""
 
   def __init__(self, token: str):
     self.token = token
 
   def __eq__(self, other):
-    return isinstance(other, StreamToken) and self.token == other.token
+    return isinstance(other, EventSource) and self.token == other.token
 
   def __hash__(self):
     return hash(self.token)

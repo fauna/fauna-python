@@ -8,7 +8,7 @@ import pytest
 from fauna import fql
 from fauna.encoding import FaunaEncoder, FaunaDecoder
 from fauna.query.models import DocumentReference, NamedDocumentReference, Document, NamedDocument, Module, Page, \
-  NullDocument, StreamToken
+  NullDocument, EventSource
 
 fixed_datetime = datetime.fromisoformat("2023-03-17T00:00:00+00:00")
 
@@ -799,14 +799,14 @@ def test_encode_query_builder_sub_queries(subtests):
 
 
 def test_decode_stream(subtests):
-  with subtests.test(msg="decode @stream into StreamToken"):
+  with subtests.test(msg="decode @stream into EventSource"):
     test = {"@stream": "asdflkj"}
     decoded = FaunaDecoder.decode(test)
-    assert decoded == StreamToken("asdflkj")
+    assert decoded == EventSource("asdflkj")
 
 
 def test_encode_stream(subtests):
-  with subtests.test(msg="encode StreamToken into @stream"):
+  with subtests.test(msg="encode EventSource into @stream"):
     test = {"@stream": "asdflkj"}
-    encoded = FaunaEncoder.encode(StreamToken("asdflkj"))
+    encoded = FaunaEncoder.encode(EventSource("asdflkj"))
     assert encoded == test

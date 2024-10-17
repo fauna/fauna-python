@@ -9,7 +9,7 @@ from fauna.errors import AbortError
 def test_change_feed_requires_stream(client, a_collection):
   with pytest.raises(
       TypeError,
-      match="'fql' must be a StreamToken, or a Query that returns a StreamToken but was a <class 'int'>."
+      match="'fql' must be a EventSource, or a Query that returns a EventSource but was a <class 'int'>."
   ):
     client.change_feed(fql("42"))
 
@@ -19,9 +19,9 @@ def test_change_feed_query(client, a_collection):
   _pull_one_event(client, a_collection, feed)
 
 
-def test_change_feed_token(client, a_collection):
-  token = client.query(fql("${col}.all().toStream()", col=a_collection)).data
-  feed = client.change_feed(token)
+def test_change_feed_event_source(client, a_collection):
+  source = client.query(fql("${col}.all().toStream()", col=a_collection)).data
+  feed = client.change_feed(source)
   _pull_one_event(client, a_collection, feed)
 
 
@@ -82,7 +82,7 @@ def test_change_feeds_continue_after_an_error(client, a_collection):
 
 
 def test_change_feed_start_ts(client, a_collection):
-  token = client.query(
+  source = client.query(
       fql("${col}.all().map(.n).toStream()", col=a_collection)).data
 
   # NB. Issue separate queries to ensure they get different txn times.
@@ -91,25 +91,25 @@ def test_change_feed_start_ts(client, a_collection):
 
   # NB. Use a short page size to ensure that more than one roundtrip is made,
   # thus testing the interator's internal cursoring is correct.
-  first = next(client.change_feed(token).flatten())
+  first = next(client.change_feed(source).flatten())
   opts = ChangeFeedOptions(start_ts=first['txn_ts'], page_size=5)
-  feed = client.change_feed(token, opts)
+  feed = client.change_feed(source, opts)
 
   nums = [event['data'] for event in feed.flatten()]
   assert nums == list(range(1, 64))
 
 
 def test_change_feed_cursor(client, a_collection):
-  token = client.query(
+  source = client.query(
       fql("${col}.all().map(.n).toStream()", col=a_collection)).data
 
   _create_docs(client, a_collection, 0, 64)
 
   # NB. Use a short page size to ensure that more than one roundtrip is made,
   # thus testing the interator's internal cursoring is correct.
-  first = next(client.change_feed(token).flatten())
+  first = next(client.change_feed(source).flatten())
   opts = ChangeFeedOptions(cursor=first['cursor'], page_size=5)
-  feed = client.change_feed(token, opts)
+  feed = client.change_feed(source, opts)
 
   nums = [event['data'] for event in feed.flatten()]
   assert nums == list(range(1, 64))
@@ -119,11 +119,11 @@ def test_rejects_when_both_start_ts_and_cursor_provided(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
 
   response = scoped_client.query(fql("Product.all().toStream()"))
-  stream_token = response.data
+  source = response.data
 
   with pytest.raises(TypeError):
     opts = ChangeFeedOptions(cursor="abc1234==", start_ts=response.txn_ts)
-    scoped_client.change_feed(stream_token, opts)
+    scoped_client.change_feed(source, opts)
 
 
 def test_change_feed_reusable_iterator(client, a_collection):
