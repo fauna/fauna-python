@@ -564,6 +564,24 @@ options = StreamOptions(
 client.stream(fql('Product.all().eventSource()'), options)
 ```
 
+## Logging
+
+Logging is handled using Python's standard `logging` package under the `fauna` namespace. Logs include the HTTP request with body (excluding the `Authorization` header) and the full HTTP response.
+
+To enable logging:
+```python
+import logging
+from fauna.client import Client
+from fauna import fql
+
+logging.basicConfig(
+    level=logging.DEBUG
+)
+client = Client()
+client.query(fql('42'))
+```
+For configuration options or to set specific log levels, see Python's [Logging HOWTO](https://docs.python.org/3/howto/logging.html).
+
 ## Setup
 
 ```bash
