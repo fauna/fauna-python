@@ -291,14 +291,13 @@ The driver supports [Event Feeds](https://docs.fauna.com/fauna/current/learn/tra
 
 ### Request an Event Feed
 
-An Event Feed asynchronously polls an [event stream](https://docs.fauna.com/fauna/current/learn/streaming),
-represented by a stream token, for events.
+An Event Feed asynchronously polls an [event source](https://docs.fauna.com/fauna/current/learn/streaming),
+for paginated events.
 
-To get a stream token, append ``toStream()`` or ``changesOn()`` to a set from a
-[supported source](https://docs.fauna.com/fauna/current/reference/streaming_reference/#supported-sources).
+To get an event source, append ``eventSource()`` or ``eventsOn()`` to a
+[supported Set](https://docs.fauna.com/fauna/current/reference/streaming_reference/#sets). 
 
-To get paginated events for the stream, pass the stream token to
-``change_feed()``:
+To get paginated events for the source, pass the event source to ``feed()``:
 
 ```python
   from fauna import fql
@@ -310,46 +309,45 @@ To get paginated events for the stream, pass the stream token to
   let set = Product.all()
   {
     initialPage: set.pageSize(10),
-    streamToken: set.toStream()
+    eventSource: set.eventSource()
   }
   '''))
 
-  initialPage = response.data['initialPage']
-  streamToken = response.data['streamToken']
+  initial_page = response.data['initialPage']
+  event_source = response.data['eventSource']
 
-  client.change_feed(streamToken)
+  client.feed(event_source)
 ```
 
-You can also pass a query that produces a stream token directly to
-``change_feed()``:
+You can also pass a query that produces an event source directly to ``feed()``:
 
 ```python
-  query = fql('Product.all().changesOn(.price, .stock)')
+  query = fql('Product.all().eventsOn(.price, .stock)')
 
-  client.change_feed(query)
+  client.feed(query)
 ```
 
 ### Iterate on an Event Feed
 
-``change_feed()`` returns an iterator that emits pages of events. You can use a
+``feed()`` returns an iterator that emits pages of events. You can use a
 generator expression to iterate through the pages:
 
 ```python
-  query = fql('Product.all().changesOn(.price, .stock)')
-  feed = client.change_feed(query)
+  query = fql('Product.all().eventsOn(.price, .stock)')
+  feed = client.feed(query)
 
   for page in feed:
     print('Page stats: ', page.stats)
 
     for event in page:
-      eventType = event['type']
-      if (eventType == 'add'):
+      event_type = event['type']
+      if (event_type == 'add'):
         print('Add event: ', event)
         ## ...
-      elif (eventType == 'update'):
+      elif (event_type == 'update'):
         print('Update event: ', event)
         ## ...
-      elif (eventType == 'remove'):
+      elif (event_type == 'remove'):
         print('Remove event: ', event)
         ## ...
 ```
@@ -358,11 +356,11 @@ Alternatively, you can iterate through events instead of pages with
 ``flatten()``:
 
 ```python
-  query = fql('Product.all().changesOn(.price, .stock)')
-  feed = client.change_feed(query)
+  query = fql('Product.all().eventsOn(.price, .stock)')
+  feed = client.feed(query)
 
   for event in feed.flatten():
-    eventType = event['type']
+    event_type = event['type']
     ## ...
 ```
 
@@ -381,8 +379,8 @@ raises a ``FaunaException``:
   client = Client()
 
   try:
-    feed = client.change_feed(fql(
-      'Product.all().changesOn(.price, .stock)'
+    feed = client.feed(fql(
+      'Product.all().eventsOn(.price, .stock)'
     ))
     for event in feed.flatten():
       print(event)
@@ -393,7 +391,7 @@ raises a ``FaunaException``:
 
 Errors can be raised at two different places:
 
-1. At the ``change_feed`` method call;
+1. At the ``feed`` method call;
 2. At the page iteration.
 
 This distinction allows for users to ignore errors originating from event
@@ -408,8 +406,8 @@ processing. For example:
 
   # Imagine if there are some products with details = null.
   # The ones without details will fail due to the toUpperCase call.
-  feed = client.change_feed(fql(
-    'Product.all().map(.details.toUpperCase()).toStream()'
+  feed = client.feed(fql(
+    'Product.all().map(.details.toUpperCase()).eventSource()'
   ))
 
   for page in feed:
@@ -426,13 +424,12 @@ processing. For example:
 
 ### Event Feed options
 
-The client configuration sets default options for the ``change_feed()``
-method.
+The client configuration sets default options for the ``feed()`` method.
 
-You can pass a ``ChangeFeedOptions`` object to override these defaults:
+You can pass a ``FeedOptions`` object to override these defaults:
 
 ```python
-options = ChangeFeedOptions(
+options = FeedOptions(
   max_attempts=3,
   max_backoff=20,
   query_timeout=timedelta(seconds=5),
@@ -441,7 +438,7 @@ options = ChangeFeedOptions(
   start_ts=None,
  )
 
-client.change_feed(fql('Product.all().toStream()'), options)
+client.feed(fql('Product.all().eventSource()'), options)
 ```
 
 ## Event Streaming
@@ -450,12 +447,11 @@ The driver supports [Event Streaming](https://docs.fauna.com/fauna/current/learn
 
 ### Start a stream
 
-To get a stream token, append ``toStream()`` or ``changesOn()`` to a set from a
-[supported source](https://docs.fauna.com/fauna/current/reference/streaming_reference/#supported-sources).
+To get an event source, append ``eventSource()`` or ``eventsOn()`` to a
+[supported Set](https://docs.fauna.com/fauna/current/reference/streaming_reference/#sets).
 
 
-To start and subscribe to the stream, pass the stream token to
-``stream()``:
+To start and subscribe to the stream, pass the event source to ``stream()``:
 
 ```python
   from fauna import fql
@@ -467,21 +463,21 @@ To start and subscribe to the stream, pass the stream token to
   let set = Product.all()
   {
     initialPage: set.pageSize(10),
-    streamToken: set.toStream()
+    eventSource: set.eventSource()
   }
   '''))
 
-  initialPage = response.data['initialPage']
-  streamToken = response.data['streamToken']
+  initial_page = response.data['initialPage']
+  event_source = response.data['eventSource']
 
-  client.stream(streamToken)
+  client.stream(event_source)
 ```
 
-You can also pass a query that produces a stream token directly to
+You can also pass a query that produces an event source directly to
 ``stream()``:
 
 ```python
-  query = fql('Product.all().changesOn(.price, .stock)')
+  query = fql('Product.all().eventsOn(.price, .stock)')
 
   client.stream(query)
 ```
@@ -492,18 +488,18 @@ You can also pass a query that produces a stream token directly to
 use a generator expression to iterate through the events:
 
 ```python
-query = fql('Product.all().changesOn(.price, .stock)')
+query = fql('Product.all().eventsOn(.price, .stock)')
 
 with client.stream(query) as stream:
   for event in stream:
-    eventType = event['type']
-    if (eventType == 'add'):
+    event_type = event['type']
+    if (event_type == 'add'):
       print('Add event: ', event)
       ## ...
-    elif (eventType == 'update'):
+    elif (event_type == 'update'):
       print('Update event: ', event)
       ## ...
-    elif (eventType == 'remove'):
+    elif (event_type == 'remove'):
       print('Remove event: ', event)
       ## ...
 ```
@@ -513,7 +509,7 @@ with client.stream(query) as stream:
 Use ``close()`` to close a stream:
 
 ```python
-query = fql('Product.all().changesOn(.price, .stock)')
+query = fql('Product.all().eventsOn(.price, .stock)')
 
 count = 0
 with client.stream(query) as stream:
@@ -540,7 +536,7 @@ client = Client()
 
 try:
   with client.stream(fql(
-    'Product.all().changesOn(.price, .stock)'
+    'Product.all().eventsOn(.price, .stock)'
   )) as stream:
     for event in stream:
       print(event)
@@ -565,7 +561,7 @@ options = StreamOptions(
   status_events=False,
  )
 
-client.stream(fql('Product.all().toStream()'), options)
+client.stream(fql('Product.all().eventSource()'), options)
 ```
 
 ## Setup

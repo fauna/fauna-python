@@ -11,7 +11,7 @@ from fauna import fql
 from fauna.client import Client, Header, QueryOptions, Endpoints, StreamOptions
 from fauna.errors import QueryCheckError, ProtocolError, QueryRuntimeError, NetworkError, AbortError
 from fauna.http import HTTPXClient
-from fauna.query.models import StreamToken
+from fauna.query import EventSource
 
 
 def test_client_defaults(monkeypatch):
@@ -429,7 +429,7 @@ def test_client_stream(subtests, httpx_mock: HTTPXMock):
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
-    with c.stream(StreamToken("token")) as stream:
+    with c.stream(EventSource("token")) as stream:
       ret = [obj for obj in stream]
 
       assert stream.last_ts == 3
@@ -456,7 +456,7 @@ def test_client_close_stream(subtests, httpx_mock: HTTPXMock):
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
-    with c.stream(StreamToken("token")) as stream:
+    with c.stream(EventSource("token")) as stream:
       assert next(stream) == {"type": "add", "txn_ts": 2, "cursor": "b"}
       stream.close()
 
@@ -484,7 +484,7 @@ def test_client_retry_stream(subtests, httpx_mock: HTTPXMock):
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
-    with c.stream(StreamToken("token")) as stream:
+    with c.stream(EventSource("token")) as stream:
       ret = [obj for obj in stream]
 
       assert stream.last_ts == 4
@@ -508,7 +508,7 @@ def test_client_close_stream_on_error(subtests, httpx_mock: HTTPXMock):
     with httpx.Client() as mockClient:
       http_client = HTTPXClient(mockClient)
       c = Client(http_client=http_client)
-      with c.stream(StreamToken("token")) as stream:
+      with c.stream(EventSource("token")) as stream:
         for obj in stream:
           ret.append(obj)
 
@@ -533,7 +533,7 @@ def test_client_ignore_start_event(subtests, httpx_mock: HTTPXMock):
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
-    with c.stream(StreamToken("token")) as stream:
+    with c.stream(EventSource("token")) as stream:
       for obj in stream:
         ret.append(obj)
 
@@ -565,7 +565,7 @@ def test_client_handle_status_events(subtests, httpx_mock: HTTPXMock):
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
     c = Client(http_client=http_client)
-    with c.stream(StreamToken("token"),
+    with c.stream(EventSource("token"),
                   StreamOptions(status_events=True)) as stream:
       for obj in stream:
         ret.append(obj)

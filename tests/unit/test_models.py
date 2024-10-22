@@ -1,4 +1,5 @@
 import datetime
+import pytest
 
 from fauna.query.models import Document, Module, NamedDocument, BaseReference, DocumentReference, \
   NamedDocumentReference, Page
@@ -131,3 +132,9 @@ def test_document_equality(subtests):
     other = 123
     _ = d1 == other
     _ = d1 != other
+
+
+def test_stream_token_deprecation():
+  with pytest.deprecated_call():
+    from fauna.query.models import StreamToken, EventSource
+    assert StreamToken == EventSource  # same runtime.

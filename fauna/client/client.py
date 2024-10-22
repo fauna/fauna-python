@@ -11,8 +11,7 @@ from fauna.encoding import QuerySuccess, QueryTags, QueryStats
 from fauna.errors import FaunaError, ClientError, ProtocolError, \
   RetryableFaunaException, NetworkError
 from fauna.http.http_client import HTTPClient
-from fauna.query import Query, Page, fql
-from fauna.query.models import StreamToken
+from fauna.query import EventSource, Query, Page, fql
 
 DefaultHttpConnectTimeout = timedelta(seconds=5)
 DefaultHttpReadTimeout: Optional[timedelta] = None
@@ -71,7 +70,7 @@ class StreamOptions:
 
 
 @dataclass
-class ChangeFeedOptions:
+class FeedOptions:
   """
     A dataclass representing options available for an Event Feed.
 
@@ -420,13 +419,13 @@ class Client:
 
   def stream(
       self,
-      fql: Union[StreamToken, Query],
+      fql: Union[EventSource, Query],
       opts: StreamOptions = StreamOptions()
   ) -> "StreamIterator":
     """
         Opens a Stream in Fauna and returns an iterator that consume Fauna events.
 
-        :param fql: A Query that returns a StreamToken or a StreamToken.
+        :param fql: An EventSource or a Query that returns an EventSource.
         :param opts: (Optional) Stream Options.
 
         :return: a :class:`StreamIterator`
@@ -442,14 +441,14 @@ class Client:
     if isinstance(fql, Query):
       if opts.cursor is not None:
         raise ClientError(
-            "The 'cursor' configuration can only be used with a stream token.")
+            "The 'cursor' configuration can only be used with an event source.")
 
-      token = self.query(fql).data
+      source = self.query(fql).data
     else:
-      token = fql
+      source = fql
 
-    if not isinstance(token, StreamToken):
-      err_msg = f"'fql' must be a StreamToken, or a Query that returns a StreamToken but was a {type(token)}."
+    if not isinstance(source, EventSource):
+      err_msg = f"'fql' must be an EventSource, or a Query that returns an EventSource but was a {type(source)}."
       raise TypeError(err_msg)
 
     headers = self._headers.copy()
@@ -457,20 +456,20 @@ class Client:
     headers[_Header.Authorization] = self._auth.bearer()
 
     return StreamIterator(self._session, headers, self._endpoint + "/stream/1",
-                          self._max_attempts, self._max_backoff, opts, token)
+                          self._max_attempts, self._max_backoff, opts, source)
 
-  def change_feed(
+  def feed(
       self,
-      fql: Union[StreamToken, Query],
-      opts: ChangeFeedOptions = ChangeFeedOptions()
-  ) -> "ChangeFeedIterator":
+      source: Union[EventSource, Query],
+      opts: FeedOptions = FeedOptions(),
+  ) -> "FeedIterator":
     """
         Opens an Event Feed in Fauna and returns an iterator that consume Fauna events.
 
-        :param fql: A Query that returns a StreamToken or a StreamToken.
+        :param source: An EventSource or a Query that returns an EventSource.
         :param opts: (Optional) Event Feed options.
 
-        :return: a :class:`ChangeFeedIterator`
+        :return: a :class:`FeedIterator`
 
         :raises ClientError: Invalid options provided
         :raises NetworkError: HTTP Request failed in transit
@@ -480,13 +479,11 @@ class Client:
         :raises TypeError: Invalid param types
         """
 
-    if isinstance(fql, Query):
-      token = self.query(fql).data
-    else:
-      token = fql
+    if isinstance(source, Query):
+      source = self.query(source).data
 
-    if not isinstance(token, StreamToken):
-      err_msg = f"'fql' must be a StreamToken, or a Query that returns a StreamToken but was a {type(token)}."
+    if not isinstance(source, EventSource):
+      err_msg = f"'source' must be an EventSource, or a Query that returns an EventSource but was a {type(source)}."
       raise TypeError(err_msg)
 
     headers = self._headers.copy()
@@ -499,10 +496,8 @@ class Client:
     elif self._query_timeout_ms is not None:
       headers[Header.QueryTimeoutMs] = str(self._query_timeout_ms)
 
-    return ChangeFeedIterator(self._session, headers,
-                              self._endpoint + "/changefeed/1",
-                              self._max_attempts, self._max_backoff, opts,
-                              token)
+    return FeedIterator(self._session, headers, self._endpoint + "/feed/1",
+                        self._max_attempts, self._max_backoff, opts, source)
 
   def _check_protocol(self, response_json: Any, status_code):
     # TODO: Logic to validate wire protocol belongs elsewhere.
@@ -542,14 +537,14 @@ class StreamIterator:
 
   def __init__(self, http_client: HTTPClient, headers: Dict[str, str],
                endpoint: str, max_attempts: int, max_backoff: int,
-               opts: StreamOptions, token: StreamToken):
+               opts: StreamOptions, source: EventSource):
     self._http_client = http_client
     self._headers = headers
     self._endpoint = endpoint
     self._max_attempts = max_attempts
     self._max_backoff = max_backoff
     self._opts = opts
-    self._token = token
+    self._source = source
     self._stream = None
     self.last_ts = None
     self.last_cursor = None
@@ -628,7 +623,7 @@ class StreamIterator:
     raise RetryableFaunaException
 
   def _create_stream(self):
-    data: Dict[str, Any] = {"token": self._token.token}
+    data: Dict[str, Any] = {"token": self._source.token}
     if self.last_cursor is not None:
       data["cursor"] = self.last_cursor
     elif self._opts.cursor is not None:
@@ -644,7 +639,7 @@ class StreamIterator:
       self._stream.close()
 
 
-class ChangeFeedPage:
+class FeedPage:
 
   def __init__(self, events: List[Any], cursor: str, stats: QueryStats):
     self._events = events
@@ -661,22 +656,22 @@ class ChangeFeedPage:
       yield event
 
 
-class ChangeFeedIterator:
+class FeedIterator:
   """A class to provide an iterator on top of Event Feed pages."""
 
   def __init__(self, http: HTTPClient, headers: Dict[str, str], endpoint: str,
-               max_attempts: int, max_backoff: int, opts: ChangeFeedOptions,
-               token: StreamToken):
+               max_attempts: int, max_backoff: int, opts: FeedOptions,
+               source: EventSource):
     self._http = http
     self._headers = headers
     self._endpoint = endpoint
     self._max_attempts = opts.max_attempts or max_attempts
     self._max_backoff = opts.max_backoff or max_backoff
-    self._request: Dict[str, Any] = {"token": token.token}
+    self._request: Dict[str, Any] = {"token": source.token}
     self._is_done = False
 
     if opts.start_ts is not None and opts.cursor is not None:
-      err_msg = "Only one of 'start_ts' or 'cursor' can be defined in the ChangeFeedOptions."
+      err_msg = "Only one of 'start_ts' or 'cursor' can be defined in the FeedOptions."
       raise TypeError(err_msg)
 
     if opts.page_size is not None:
@@ -687,11 +682,11 @@ class ChangeFeedIterator:
     elif opts.start_ts is not None:
       self._request["start_ts"] = opts.start_ts
 
-  def __iter__(self) -> Iterator[ChangeFeedPage]:
+  def __iter__(self) -> Iterator[FeedPage]:
     self._is_done = False
     return self
 
-  def __next__(self) -> ChangeFeedPage:
+  def __next__(self) -> FeedPage:
     if self._is_done:
       raise StopIteration
 
@@ -699,7 +694,7 @@ class ChangeFeedIterator:
                                self._next_page)
     return retryable.run().response
 
-  def _next_page(self) -> ChangeFeedPage:
+  def _next_page(self) -> FeedPage:
     with self._http.request(
         method="POST",
         url=self._endpoint,
@@ -718,8 +713,8 @@ class ChangeFeedIterator:
       if "start_ts" in self._request:
         del self._request["start_ts"]
 
-      return ChangeFeedPage(decoded["events"], decoded["cursor"],
-                            QueryStats(decoded["stats"]))
+      return FeedPage(decoded["events"], decoded["cursor"],
+                      QueryStats(decoded["stats"]))
 
   def flatten(self) -> Iterator:
     """A generator that yields events instead of pages of events."""
