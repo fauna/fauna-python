@@ -171,7 +171,7 @@ def test_last_ts_is_monotonic(scoped_client):
 def test_providing_start_ts(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
 
-  stream_token = scoped_client.query(fql("Product.all().toStream()")).data
+  source = scoped_client.query(fql("Product.all().toStream()")).data
 
   createOne = scoped_client.query(fql("Product.create({})"))
   createTwo = scoped_client.query(fql("Product.create({})"))
@@ -182,7 +182,7 @@ def test_providing_start_ts(scoped_client):
 
   def thread_fn():
     # replay excludes the ts that was passed in, it provides events for all ts after the one provided
-    stream = scoped_client.stream(stream_token,
+    stream = scoped_client.stream(source,
                                   StreamOptions(start_ts=createOne.txn_ts))
     barrier.wait()
     with stream as iter:
@@ -205,12 +205,12 @@ def test_providing_start_ts(scoped_client):
 def test_providing_cursor(scoped_client):
   scoped_client.query(fql("Collection.create({name: 'Product'})"))
 
-  stream_token = scoped_client.query(fql("Product.all().toStream()")).data
+  source = scoped_client.query(fql("Product.all().toStream()")).data
   create1 = scoped_client.query(fql("Product.create({ value: 1 })"))
   create2 = scoped_client.query(fql("Product.create({ value: 2 })"))
 
   cursor = None
-  with scoped_client.stream(stream_token) as iter:
+  with scoped_client.stream(source) as iter:
     for event in iter:
       assert event["type"] == "add"
       assert event["data"]["value"] == 1
@@ -218,7 +218,7 @@ def test_providing_cursor(scoped_client):
       break
 
   opts = StreamOptions(cursor=cursor)
-  with scoped_client.stream(stream_token, opts) as iter:
+  with scoped_client.stream(source, opts) as iter:
     for event in iter:
       assert event["type"] == "add"
       assert event["data"]["value"] == 2
@@ -228,9 +228,21 @@ def test_providing_cursor(scoped_client):
 def test_rejects_cursor_with_fql_query(scoped_client):
   with pytest.raises(
       ClientError,
-      match="The 'cursor' configuration can only be used with a stream token."):
+      match="The 'cursor' configuration can only be used with an event source."
+  ):
     opts = StreamOptions(cursor="abc1234==")
     scoped_client.stream(fql("Collection.create({name: 'Product'})"), opts)
+
+
+def test_rejects_when_both_start_ts_and_cursor_provided(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  response = scoped_client.query(fql("Product.all().toStream()"))
+  source = response.data
+
+  with pytest.raises(TypeError):
+    opts = StreamOptions(cursor="abc1234==", start_ts=response.txn_ts)
+    scoped_client.stream(source, opts)
 
 
 def test_handle_status_events(scoped_client):

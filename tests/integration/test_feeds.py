@@ -2,26 +2,26 @@ import time
 import pytest
 
 from fauna import fql
-from fauna.client import ChangeFeedOptions
+from fauna.client import FeedOptions
 from fauna.errors import AbortError
 
 
-def test_change_feed_requires_stream(client, a_collection):
+def test_feed_requires_stream(client, a_collection):
   with pytest.raises(
       TypeError,
-      match="'fql' must be a StreamToken, or a Query that returns a StreamToken but was a <class 'int'>."
+      match="'source' must be an EventSource, or a Query that returns an EventSource but was a <class 'int'>."
   ):
-    client.change_feed(fql("42"))
+    client.feed(fql("42"))
 
 
-def test_change_feed_query(client, a_collection):
-  feed = client.change_feed(fql("${col}.all().toStream()", col=a_collection))
+def test_feed_query(client, a_collection):
+  feed = client.feed(fql("${col}.all().toStream()", col=a_collection))
   _pull_one_event(client, a_collection, feed)
 
 
-def test_change_feed_token(client, a_collection):
-  token = client.query(fql("${col}.all().toStream()", col=a_collection)).data
-  feed = client.change_feed(token)
+def test_feed_event_source(client, a_collection):
+  source = client.query(fql("${col}.all().toStream()", col=a_collection)).data
+  feed = client.feed(source)
   _pull_one_event(client, a_collection, feed)
 
 
@@ -37,8 +37,8 @@ def _pull_one_event(client, col, feed):
   assert events[0]['data']['foo'] == 'bar'
 
 
-def test_change_feeds_error_event(client, a_collection):
-  feed = client.change_feed(
+def test_feeds_error_event(client, a_collection):
+  feed = client.feed(
       fql("${col}.all().map(_ => abort('oops')).toStream()", col=a_collection))
 
   client.query(fql("${col}.create({ foo: 'bar' })", col=a_collection))
@@ -48,8 +48,8 @@ def test_change_feeds_error_event(client, a_collection):
 
 
 @pytest.mark.xfail(reason="pending core support")
-def test_change_feeds_continue_after_an_error(client, a_collection):
-  feed = client.change_feed(
+def test_feeds_continue_after_an_error(client, a_collection):
+  feed = client.feed(
       fql('''
       ${col}
         .all()
@@ -81,8 +81,8 @@ def test_change_feeds_continue_after_an_error(client, a_collection):
   assert events == [0, 2]
 
 
-def test_change_feed_start_ts(client, a_collection):
-  token = client.query(
+def test_feed_start_ts(client, a_collection):
+  source = client.query(
       fql("${col}.all().map(.n).toStream()", col=a_collection)).data
 
   # NB. Issue separate queries to ensure they get different txn times.
@@ -91,33 +91,43 @@ def test_change_feed_start_ts(client, a_collection):
 
   # NB. Use a short page size to ensure that more than one roundtrip is made,
   # thus testing the interator's internal cursoring is correct.
-  first = next(client.change_feed(token).flatten())
-  opts = ChangeFeedOptions(start_ts=first['txn_ts'], page_size=5)
-  feed = client.change_feed(token, opts)
+  first = next(client.feed(source).flatten())
+  opts = FeedOptions(start_ts=first['txn_ts'], page_size=5)
+  feed = client.feed(source, opts)
 
   nums = [event['data'] for event in feed.flatten()]
   assert nums == list(range(1, 64))
 
 
-def test_change_feed_cursor(client, a_collection):
-  token = client.query(
+def test_feed_cursor(client, a_collection):
+  source = client.query(
       fql("${col}.all().map(.n).toStream()", col=a_collection)).data
 
   _create_docs(client, a_collection, 0, 64)
 
   # NB. Use a short page size to ensure that more than one roundtrip is made,
   # thus testing the interator's internal cursoring is correct.
-  first = next(client.change_feed(token).flatten())
-  opts = ChangeFeedOptions(cursor=first['cursor'], page_size=5)
-  feed = client.change_feed(token, opts)
+  first = next(client.feed(source).flatten())
+  opts = FeedOptions(cursor=first['cursor'], page_size=5)
+  feed = client.feed(source, opts)
 
   nums = [event['data'] for event in feed.flatten()]
   assert nums == list(range(1, 64))
 
 
-def test_change_feed_reusable_iterator(client, a_collection):
-  feed = client.change_feed(
-      fql("${col}.all().map(.n).toStream()", col=a_collection))
+def test_rejects_when_both_start_ts_and_cursor_provided(scoped_client):
+  scoped_client.query(fql("Collection.create({name: 'Product'})"))
+
+  response = scoped_client.query(fql("Product.all().toStream()"))
+  source = response.data
+
+  with pytest.raises(TypeError):
+    opts = FeedOptions(cursor="abc1234==", start_ts=response.txn_ts)
+    scoped_client.feed(source, opts)
+
+
+def test_feed_reusable_iterator(client, a_collection):
+  feed = client.feed(fql("${col}.all().map(.n).toStream()", col=a_collection))
 
   _create_docs(client, a_collection, 0, 5)
   nums = [event['data'] for event in feed.flatten()]

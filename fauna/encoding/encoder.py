@@ -3,7 +3,7 @@ from datetime import datetime, date
 from typing import Any, Optional, List, Union
 
 from fauna.query.models import DocumentReference, Module, Document, NamedDocument, NamedDocumentReference, NullDocument, \
-  StreamToken
+  EventSource
 from fauna.query.query_builder import Query, Fragment, LiteralFragment, ValueFragment
 
 _RESERVED_TAGS = [
@@ -62,7 +62,7 @@ class FaunaEncoder:
     +-------------------------------+---------------+
     | TemplateFragment              | string        |
     +-------------------------------+---------------+
-    | StreamToken                   | string        |
+    | EventSource                   | string        |
     +-------------------------------+---------------+
 
     """
@@ -82,7 +82,7 @@ class FaunaEncoder:
             - Query encodes to { "fql": [...] }
             - ValueFragment encodes to { "value": <encoded_val> }
             - LiteralFragment encodes to a string
-            - StreamToken encodes to a string
+            - EventSource encodes to a string
 
         :raises ValueError: If value cannot be encoded, cannot be encoded safely, or there's a circular reference.
         :param obj: the object to decode
@@ -163,7 +163,7 @@ class FaunaEncoder:
     return {"fql": [FaunaEncoder.from_fragment(f) for f in obj.fragments]}
 
   @staticmethod
-  def from_streamtoken(obj: StreamToken):
+  def from_streamtoken(obj: EventSource):
     return {"@stream": obj.token}
 
   @staticmethod
@@ -208,7 +208,7 @@ class FaunaEncoder:
       return FaunaEncoder._encode_dict(o, _markers)
     elif isinstance(o, Query):
       return FaunaEncoder.from_query_interpolation_builder(o)
-    elif isinstance(o, StreamToken):
+    elif isinstance(o, EventSource):
       return FaunaEncoder.from_streamtoken(o)
     else:
       raise ValueError(f"Object {o} of type {type(o)} cannot be encoded")
