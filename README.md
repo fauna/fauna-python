@@ -287,17 +287,17 @@ for products in pages:
 
 ## Event Feeds (beta)
 
-The driver supports [Event Feeds](https://docs.fauna.com/fauna/current/learn/track-changes/streaming/#event-feeds).
+The driver supports [Event Feeds](https://docs.fauna.com/fauna/current/learn/cdc/#event-feeds).
 
 ### Request an Event Feed
 
-An Event Feed asynchronously polls an [event source](https://docs.fauna.com/fauna/current/learn/streaming),
+An Event Feed asynchronously polls an [event source](https://docs.fauna.com/fauna/current/learn/cdc/#create-an-event-source)
 for paginated events.
 
 To get an event source, append ``eventSource()`` or ``eventsOn()`` to a
-[supported Set](https://docs.fauna.com/fauna/current/reference/streaming_reference/#sets). 
+[supported Set](https://docs.fauna.com/fauna/current/reference/cdc/#sets).
 
-To get paginated events for the source, pass the event source to ``feed()``:
+To get paginated events, pass the event source to ``feed()``:
 
 ```python
   from fauna import fql
@@ -443,12 +443,17 @@ client.feed(fql('Product.all().eventSource()'), options)
 
 ## Event Streaming
 
-The driver supports [Event Streaming](https://docs.fauna.com/fauna/current/learn/streaming).
+The driver supports [Event
+Streaming](https://docs.fauna.com/fauna/current/reference/cdc/#event-streaming).
 
 ### Start a stream
 
+An Event Stream lets you consume events from an [event
+source](https://docs.fauna.com/fauna/current/learn/cdc/#create-an-event-source)
+as a real-time subscription.
+
 To get an event source, append ``eventSource()`` or ``eventsOn()`` to a
-[supported Set](https://docs.fauna.com/fauna/current/reference/streaming_reference/#sets).
+[supported Set](https://docs.fauna.com/fauna/current/reference/cdc/#sets).
 
 
 To start and subscribe to the stream, pass the event source to ``stream()``:
