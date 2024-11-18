@@ -83,7 +83,8 @@ class FeedOptions:
     * start_ts - The starting timestamp of the Event Feed, exclusive. If set, Fauna will return events starting after
     the timestamp.
     * cursor - The starting event cursor, exclusive. If set, Fauna will return events starting after the cursor.
-    * page_size - The desired number of events per page.
+    * page_size - Maximum number of events returned per page. Must be in the
+    range 1 to 16000 (inclusive). Defaults to 16.
     """
   max_attempts: Optional[int] = None
   max_backoff: Optional[int] = None
