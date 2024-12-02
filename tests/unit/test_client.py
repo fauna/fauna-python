@@ -188,7 +188,7 @@ def test_query_tags(
         json={"data": "mocked"},
     )
 
-  httpx_mock.add_callback(validate_tags)
+  httpx_mock.add_callback(validate_tags, is_reusable=True)
 
   with httpx.Client() as mockClient:
     with subtests.test("should not be set"):
@@ -246,7 +246,7 @@ def test_client_headers(
         json={"data": "mocked"},
     )
 
-  httpx_mock.add_callback(validate_headers)
+  httpx_mock.add_callback(validate_headers, is_reusable=True)
 
   with httpx.Client() as mockClient:
     http_client = HTTPXClient(mockClient)
