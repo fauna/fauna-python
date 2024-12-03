@@ -17,7 +17,7 @@ def __getattr__(name):
 
 
 def __dir__():
-  return list(super.__dir__(None)) + list("StreamToken")
+  return list(super.__dir__(None)) + list("StreamToken")  # pyright: ignore
 
 
 class Page:
