@@ -285,7 +285,7 @@ for products in pages:
         print(products)
 ```
 
-## Event Feeds (beta)
+## Event Feeds
 
 The driver supports [Event Feeds](https://docs.fauna.com/fauna/current/learn/cdc/#event-feeds).
 
