@@ -75,12 +75,12 @@ class StreamOptions:
 @dataclass
 class FeedOptions:
   """
-    A dataclass representing options available for an Event Feed.
+    A dataclass representing options available for an event feed.
 
-    * max_attempts - The maximum number of times to attempt an Event Feed query when a retryable exception is thrown.
+    * max_attempts - The maximum number of times to attempt an event feed query when a retryable exception is thrown.
     * max_backoff - The maximum backoff in seconds for an individual retry.
     * query_timeout - Controls the maximum amount of time Fauna will execute a query before returning a page of events.
-    * start_ts - The starting timestamp of the Event Feed, exclusive. If set, Fauna will return events starting after
+    * start_ts - The starting timestamp of the event feed, exclusive. If set, Fauna will return events starting after
     the timestamp.
     * cursor - The starting event cursor, exclusive. If set, Fauna will return events starting after the cursor.
     * page_size - Maximum number of events returned per page. Must be in the
@@ -468,10 +468,10 @@ class Client:
       opts: FeedOptions = FeedOptions(),
   ) -> "FeedIterator":
     """
-        Opens an Event Feed in Fauna and returns an iterator that consume Fauna events.
+        Opens an event feed in Fauna and returns an iterator that consume Fauna events.
 
         :param source: An EventSource or a Query that returns an EventSource.
-        :param opts: (Optional) Event Feed options.
+        :param opts: (Optional) Event feed options.
 
         :return: a :class:`FeedIterator`
 
@@ -661,7 +661,7 @@ class FeedPage:
 
 
 class FeedIterator:
-  """A class to provide an iterator on top of Event Feed pages."""
+  """A class to provide an iterator on top of event feed pages."""
 
   def __init__(self, http: HTTPClient, headers: Dict[str, str], endpoint: str,
                max_attempts: int, max_backoff: int, opts: FeedOptions,

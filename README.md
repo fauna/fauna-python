@@ -285,13 +285,13 @@ for products in pages:
         print(products)
 ```
 
-## Event Feeds
+## Event feeds
 
-The driver supports [Event Feeds](https://docs.fauna.com/fauna/current/learn/cdc/#event-feeds).
+The driver supports [event feeds](https://docs.fauna.com/fauna/current/learn/cdc/#event-feeds).
 
-### Request an Event Feed
+### Request an event feed
 
-An Event Feed asynchronously polls an [event source](https://docs.fauna.com/fauna/current/learn/cdc/#create-an-event-source)
+An event feed asynchronously polls an [event source](https://docs.fauna.com/fauna/current/learn/cdc/#create-an-event-source)
 for paginated events.
 
 To get an event source, append ``eventSource()`` or ``eventsOn()`` to a
@@ -327,7 +327,7 @@ You can also pass a query that produces an event source directly to ``feed()``:
   client.feed(query)
 ```
 
-### Iterate on an Event Feed
+### Iterate on an event feed
 
 ``feed()`` returns an iterator that emits pages of events. You can use a
 generator expression to iterate through the pages:
@@ -364,11 +364,11 @@ Alternatively, you can iterate through events instead of pages with
     ## ...
 ```
 
-The Event Feed iterator stops when there are no more events to poll.
+The event feed iterator stops when there are no more events to poll.
 
 ### Error handling
 
-If a non-retryable error occurs when opening or processing an Event Feed, Fauna
+If a non-retryable error occurs when opening or processing an event feed, Fauna
 raises a ``FaunaException``:
 
 ```python
@@ -422,7 +422,7 @@ processing. For example:
       print('error ocurred with event processing: ', e)
 ```
 
-### Event Feed options
+### Event feed options
 
 The client configuration sets default options for the ``feed()`` method.
 
@@ -441,14 +441,14 @@ options = FeedOptions(
 client.feed(fql('Product.all().eventSource()'), options)
 ```
 
-## Event Streaming
+## Event streams
 
-The driver supports [Event
-Streaming](https://docs.fauna.com/fauna/current/reference/cdc/#event-streaming).
+The driver supports [event
+streams](https://docs.fauna.com/fauna/current/reference/cdc/#event-streaming).
 
 ### Start a stream
 
-An Event Stream lets you consume events from an [event
+An event stream lets you consume events from an [event
 source](https://docs.fauna.com/fauna/current/learn/cdc/#create-an-event-source)
 as a real-time subscription.
 
