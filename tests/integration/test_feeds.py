@@ -99,6 +99,20 @@ def test_feed_start_ts(client, a_collection):
   assert nums == list(range(1, 64))
 
 
+def test_page_size_is_retained_across_requests(client, a_collection):
+  source = client.query(
+      fql("${col}.all().map(.n).toStream()", col=a_collection)).data
+  _create_docs(client, a_collection, 0, 15)
+
+  feed = client.feed(source, FeedOptions(page_size=5))
+  page_count = 0
+  for page in feed:
+    page_count = page_count + 1
+    assert len(page) == 5
+
+  assert page_count == 3
+
+
 def test_feed_cursor(client, a_collection):
   source = client.query(
       fql("${col}.all().map(.n).toStream()", col=a_collection)).data
